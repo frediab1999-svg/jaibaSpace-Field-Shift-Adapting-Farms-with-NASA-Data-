@@ -7,22 +7,24 @@
 - **Cliente:** PWA en JavaScript con capacidad de uso sin conexión.
 - **Servidor:** API en FastAPI para validar solicitudes, sincronizar registros y ofrecer catálogos y estadísticas.
 - **Base de datos:** PostgreSQL con PostGIS para consultas geográficas.
+- **Acceso del prototipo:** sin login ni cuentas de usuario.
 - **Datos de productor:** registros de parcelas y cosechas con consentimiento explícito; estadísticas colectivas consultables por zona.
 - **Proyecciones:** escenarios climáticos futuros. No se plantea pronosticar rendimientos en la primera versión.
 - **Datos de semillas:** integrar información básica o moderada cuando exista una fuente confiable y utilizable.
 - **Cuestionario:** registro breve de siembra y cosecha, con cantidades opcionales y unidades locales.
 - **Idioma:** español y maya; textos y audios deben revisarse con hablantes competentes.
 
-Las decisiones sobre fuentes concretas para proyecciones, catálogos de semillas, autenticación, retención de datos y alcance de la traducción todavía requieren definición. Esta estructura permite avanzar el diseño sin inventar esos detalles.
+Las fuentes concretas para proyecciones y semillas, la retención de datos y el alcance de la traducción todavía requieren definición. El prototipo no implementa autenticación ni recuperación de datos entre dispositivos.
 
 ## Principios de arquitectura
 
 1. **Offline primero:** la PWA permite consultar datos previamente descargados y registrar información local aunque no haya conexión.
-2. **Sincronización posterior:** los registros pendientes se envían a la API cuando hay conexión y de acuerdo con los permisos concedidos.
-3. **Separar dato personal de estadística:** los registros individuales tienen controles de acceso; las estadísticas colectivas se calculan y publican agregadas.
-4. **Catálogos configurables:** cultivos, variedades, etapas, semillas y estrategias se modelan como datos, no como supuestos fijos del código.
-5. **Trazabilidad:** cada conjunto climático o catálogo conserva fuente, fecha, versión y limitaciones.
-6. **Escenarios, no certezas:** una proyección climática identifica escenario, periodo y fuente, y no se expresa como rendimiento garantizado.
+2. **Sincronización posterior:** las contribuciones autorizadas se envían a la API cuando hay conexión; el historial de uso permanece en el dispositivo.
+3. **Sin login en el prototipo:** no hay cuentas ni endpoints para recuperar parcelas individuales desde el servidor. La API recibe solo contribuciones destinadas a agregación, con consentimiento.
+4. **Separar dato individual de estadística:** el servidor calcula y publica estadísticas colectivas, sin ofrecer consulta de parcelas o historiales individuales.
+5. **Catálogos configurables:** cultivos, variedades, etapas, semillas y estrategias se modelan como datos, no como supuestos fijos del código.
+6. **Trazabilidad:** cada conjunto climático o catálogo conserva fuente, fecha, versión y limitaciones.
+7. **Escenarios, no certezas:** una proyección climática identifica escenario, periodo y fuente, y no se expresa como rendimiento garantizado.
 
 ## Estructura de carpetas
 
@@ -54,7 +56,7 @@ Repositorio/
 │   ├── app/
 │   │   ├── api/v1/                   # Rutas versionadas
 │   │   ├── modules/
-│   │   │   ├── parcels/              # Parcelas y permisos
+│   │   │   ├── parcels/              # Validar contribuciones geográficas
 │   │   │   ├── harvests/             # Registros de siembra y cosecha
 │   │   │   ├── catalogs/             # Cultivos, variedades y semillas
 │   │   │   ├── climate/              # Metadatos y escenarios climáticos
@@ -94,20 +96,20 @@ La estructura es una propuesta lógica; no exige crear todos los directorios des
 |---|---|---|
 | PWA | Captura, comparación disponible localmente, consulta de datos descargados y presentación | Sí, con datos previamente sincronizados |
 | IndexedDB | Borradores de parcela, historial local, catálogos y cola de cambios | Sí |
-| API FastAPI | Validar y recibir sincronizaciones; servir catálogos, proyecciones y estadísticas autorizadas | No; la PWA conserva funciones locales |
-| PostgreSQL/PostGIS | Guardar registros autorizados y consultar relaciones espaciales y agregados | No |
+| API FastAPI | Recibir contribuciones seudónimas consentidas; servir catálogos, proyecciones y estadísticas colectivas | No; la PWA conserva funciones locales |
+| PostgreSQL/PostGIS | Guardar contribuciones para agregación y consultar relaciones espaciales y agregados; no contiene cuentas del prototipo | No |
 | Pipeline Python | Descargar, normalizar y versionar clima, escenarios y catálogos | Se ejecuta fuera del flujo del usuario |
 
 ## Entidades que deberá contemplar el contrato nuevo
 
-- **Parcela:** identificador, ubicación o zona, suelo conocido, cultivo y permisos asociados.
+- **Contribución de parcela:** identificador aleatorio de envío, zona o ubicación generalizada, suelo conocido, cultivo y consentimiento. Es seudónima, no es una cuenta ni habilita recuperar un expediente individual.
 - **Cultivo y variedad:** catálogo extensible con etapas, calendario y fuentes.
 - **Estrategia:** cultivos, secuencia o asociación, objetivo, reglas y limitaciones.
 - **Registro de temporada/cosecha:** fechas aproximadas, cultivo, resultado cualitativo, causa y cantidad opcional con unidad local.
 - **Conjunto climático:** fuente, resolución, periodo histórico o escenario futuro, versión y fecha de actualización.
 - **Estadística agregada:** zona, cultivo, periodo, cantidad de registros usados y método de cálculo.
 - **Semilla:** variedad, atributos disponibles, fuente y fecha de vigencia, cuando exista información confiable.
-- **Consentimiento:** finalidad autorizada y estado de sincronización/uso estadístico.
+- **Consentimiento:** finalidad autorizada y estado de envío/uso estadístico.
 
 El esquema v0.2 de cuatro estrategias agrícolas para maíz fue retirado como especificación vigente. El nuevo contrato de dominio y API debe definirse y versionarse antes de conectar cliente, servidor y base de datos.
 
@@ -133,4 +135,4 @@ Los campos desconocidos deben poder omitirse. Una respuesta subjetiva se almacen
 5. Incorporar fuentes verificadas para semillas y escenarios climáticos.
 6. Añadir español y maya con revisión humana y probar el flujo sin conexión.
 
-La prioridad es entregar incrementos utilizables y explicables. No se deben mostrar estadísticas con tan pocos registros que puedan identificar a una persona o representar mal una zona; el umbral de publicación debe definirse junto con las reglas de privacidad.
+La prioridad es entregar incrementos utilizables y explicables. El historial personal permanece local en el prototipo. El usuario puede autorizar una contribución para estadísticas colectivas; estas no deben mostrar grupos tan pequeños que permitan inferir un registro individual. El umbral se define antes de publicar agregados.
