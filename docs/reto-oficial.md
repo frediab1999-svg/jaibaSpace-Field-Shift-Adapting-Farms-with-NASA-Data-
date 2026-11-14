@@ -1,6 +1,6 @@
 # Texto oficial del reto — Field Shift: Adapting Farms with NASA Data
 
-> Copiado de las pestañas *Details* y *Resources* del sitio de NASA Space Apps Challenge 2026 el 2026‑11‑14. El sitio no abre desde algunas máquinas del equipo por un error de certificado HTTPS. Es la referencia para verificar requisitos; nuestra interpretación está en `00-contexto-general.md` y `requisitos-y-modelo.md`.
+> Copiado de las pestañas *Details* y *Resources* del sitio de NASA Space Apps Challenge 2026 el 2026‑11‑14. El sitio no abre desde algunas máquinas del equipo por un error de certificado HTTPS. Es la referencia oficial del reto; la interpretación vigente del proyecto está en `contexto-general-proyecto.md` y `requisitos-del-sistema.md`.
 >
 > Enlaces: [Details](https://www.spaceappschallenge.org/2026/challenges/adapting-farms-with-nasa-data/?tab=details) · [Resources](https://www.spaceappschallenge.org/2026/challenges/adapting-farms-with-nasa-data/?tab=resources)
 

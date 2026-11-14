@@ -1,253 +1,167 @@
 @startuml
-title Field Shift v0.3 - Modelo conceptual de clases
+title jaibaSpace - Modelo de dominio multicultivo
 hide methods
 skinparam classAttributeIconSize 0
 
 class Parcela {
+  id: UUID
+  alias: String
+  ubicacion: Point
+  municipioId: String
+  sueloId: String
+  sincronizada: Boolean
+}
+
+class Consentimiento {
+  id: UUID
+  finalidad: String
+  otorgadoEn: DateTime
+  revocadoEn: DateTime
+  usarParaEstadistica: Boolean
+}
+
+class Cultivo {
+  id: String
+  nombreEs: String
+  nombreMaya: String
+  descripcion: String
+  fuentes: List
+}
+
+class Variedad {
+  id: String
+  cultivoId: String
+  nombre: String
+  cicloDias: Integer
+  atributosDisponibles: Map
+  fuente: String
+}
+
+class EtapaCultivo {
   id: String
   nombre: String
+  desdeDia: Integer
+  hastaDia: Integer
+  sensibilidadAgua: String
+  sensibilidadCalor: String
+}
+
+class EstrategiaManejo {
+  id: UUID
+  cultivoPrincipalId: String
+  objetivo: String
+  secuencia: List
+  criterios: List
+  beneficios: List
+  riesgos: List
+  porConfirmar: List
+}
+
+class RegistroTemporada {
+  id: UUID
+  parcelaId: UUID
+  ciclo: Integer
+  fechaSiembra: Date
+  fechaCosecha: Date
+  resultadoCualitativo: String
+  causaPercibida: String
   esEjemplo: Boolean
-  modalidad: String
-  cultivoActual: String
-  cicloAnterior: Object
+  creadoEn: DateTime
 }
 
-class SueloParcela {
-  tipoLocal: String
-  profundidad: String
-  pedregosidad: String
+class CantidadCosechada {
+  valor: Decimal
+  unidadLocal: String
+  conversionKg: Decimal
+  esEstimacion: Boolean
 }
 
-class Ubicacion {
-  lat: Decimal
-  lon: Decimal
-  municipio: String
-  estado: String
-  origen: OrigenUbicacion
+class Semilla {
+  id: String
+  cultivoId: String
+  variedadId: String
+  disponibilidad: String
   zonaId: String
-  distanciaZonaKm: Decimal
-}
-
-enum OrigenUbicacion {
-  gps
-  lista
+  fuente: String
+  fechaActualizacion: Date
 }
 
 class ZonaAgroclimatica {
   id: String
   nombre: String
-  estado: String
-  punto: Coordenadas
-  suelosPredominantes: List
-}
-
-class Coordenadas {
-  lat: Decimal
-  lon: Decimal
-}
-
-class Municipio {
-  clave: String
-  nombre: String
-  estado: String
-  lat: Decimal
-  lon: Decimal
-}
-
-class TipoSuelo {
-  id: String
-  nombre: String
-  equivalenteWRB: String
-  ajusteRachaDias: Integer
-  aptitudPorCultivo: Map
-}
-
-enum Prioridad {
-  agua
-  suelo
-  nitrogeno
-  ingreso
-}
-
-class Estrategia {
-  id: String {actual, cobertura, otro-grano}
-  nombre: String
-  tipo: String {continuo, rotacion}
-  objetivo: String
-  esEjemplo: Boolean
-  descripcionCorta: String
-  atributos: Map
-  beneficios: List
-  riesgos: List
-  fuentes: List
-  porConfirmar: List
-}
-
-class CicloCultivo {
-  numero: Integer {1, 2 en secuencia}
-  cultivoId: String
-  siembra: MM_DD
-  cosecha: MM_DD
-  proposito: String
-}
-
-class Cultivo {
-  id: String
-  nombre: String
-}
-
-class EtapaCultivo {
-  id: String
-  desdeDia: Integer
-  hastaDia: Integer
-  sensibilidad: Nivel
-}
-
-enum Nivel {
-  bajo
-  medio
-  alto
+  geometria: Polygon
+  puntoRepresentativo: Point
 }
 
 class ConjuntoClimatico {
-  version: String
-  esEjemplo: Boolean
+  id: UUID
   zonaId: String
-  definiciones: Map
-  resumen: Map
-}
-
-class Temporada {
-  anio: Integer
-  completa: Boolean
-  diasConDato: Integer
-  diasEsperados: Integer
-}
-
-class RachaSeca {
-  inicio: Date
-  fin: Date
-  dias: Integer
-}
-
-class EpisodioCalor {
-  inicio: Date
-  fin: Date
-  dias: Integer
-}
-
-class FuenteDatos {
-  nombre: String
-  producto: String
-  parametro: String
-  unidades: String
-  resolucionAprox: String
-  url: String
-  fechaDescarga: Date
-  fechaCorte: Date
-}
-
-class ReglasAgricolas {
-  umbralDiaSecoMm: Decimal
-  rachaRelevanteDias: Integer
-  umbralCalorC: Decimal
-  episodioCalorRelevanteDias: Integer
-  cobertura: Object
-  niveles: Map
-  pesosPorPrioridad: Map
-  toleranciaEmpate: Map
-}
-
-class Comparacion {
+  tipo: String
+  fuente: String
+  escenario: String
+  periodoInicio: Integer
+  periodoFin: Integer
+  resolucion: String
   version: String
-  prioridad: Prioridad
-  planesSolicitados: List
+  fechaActualizacion: Date
 }
 
-class ResultadoEstrategia {
-  id: String
-  nombre: String
-  puntajeTotal: Decimal
-  posicion: Integer
-  porQue: String
-  calendario: List
-  beneficios: List
-  riesgos: List
-  faltaConfirmar: List
-  datosNasa: List
-}
-
-enum IdCriterio {
-  rachasSecas
-  estresCalor
-  coberturaSuelo
-  fijacionNitrogeno
-  ingresoForraje
-}
-
-class CriterioEvaluado {
-  id: IdCriterio
+class EstadisticaAgregada {
+  id: UUID
+  zonaId: String
+  cultivoId: String
+  periodo: String
+  nRegistros: Integer
+  metrica: String
   valor: Decimal
-  puntaje: Decimal
-  explicacion: String
-  unidad: String
+  metodo: String
+  calculadaEn: DateTime
 }
 
-class Evidencia {
-  anio: Integer
-  cultivo: String
-  etapa: String
-  inicio: Date
-  fin: Date
-  dias: Integer
-  diasTraslape: Integer
+class Usuario {
+  id: UUID
+  idiomaPreferido: String
+  creadoEn: DateTime
 }
 
-class Ranking {
-  estrategiasOrdenadas: List
-  recomendados: List
-  mensaje: String
+class CambioPendiente {
+  id: UUID
+  tipoEntidad: String
+  entidadId: UUID
+  accion: String
+  creadoEn: DateTime
+  estado: String
 }
 
-class SalidaComparacion {
-  version: String
-  generado: DateTime
-  pesosAplicados: Map
-  temporadasAnalizadas: Object
-  datosPendientes: List
-  avisos: List
-}
+Usuario "1" o-- "0..*" Parcela : administra
+Parcela "1" *-- "0..*" RegistroTemporada : historial
+Parcela "1" *-- "0..*" Consentimiento : permisos
+RegistroTemporada "1" *-- "0..1" CantidadCosechada : cantidad opcional
+RegistroTemporada "*" --> "1" Cultivo : corresponde a
+RegistroTemporada "*" --> "0..1" Variedad : usa
+Cultivo "1" *-- "1..*" EtapaCultivo : define etapas
+Cultivo "1" *-- "0..*" Variedad : tiene variedades
+Cultivo "1" <-- "0..*" EstrategiaManejo : aplica a
+Cultivo "1" <-- "0..*" Semilla : catalogo
+Parcela "*" --> "1" ZonaAgroclimatica : se asigna a
+ZonaAgroclimatica "1" *-- "0..*" ConjuntoClimatico : contiene
+ZonaAgroclimatica "1" *-- "0..*" EstadisticaAgregada : publica agregados
+Cultivo "1" <-- "0..*" EstadisticaAgregada : agrupa por cultivo
+Usuario "1" o-- "0..*" CambioPendiente : cola local
 
-Parcela "1" *-- "1" Ubicacion : contiene
-Ubicacion "*" --> "1" ZonaAgroclimatica : asignada por cercania
-Ubicacion "*" --> "0..1" Municipio : seleccion opcional
-Parcela "1" *-- "1" SueloParcela : captura suelo conocido o no se
-SueloParcela "*" --> "0..1" TipoSuelo : tipo local opcional
-ZonaAgroclimatica "1" *-- "1" Coordenadas : punto representativo
-ZonaAgroclimatica "1" --> "1" ConjuntoClimatico : tiene clima
-ConjuntoClimatico "1" *-- "1..*" Temporada : contiene
-Temporada "1" *-- "0..*" RachaSeca : detecta
-Temporada "1" *-- "0..*" EpisodioCalor : detecta
-ConjuntoClimatico "1" *-- "2" FuenteDatos : lluvia y temperatura
-Estrategia "1" *-- "2" CicloCultivo : contiene (ciclo 1 y ciclo 2)
-CicloCultivo "*" --> "1" Cultivo : refiere a
-Cultivo "1" *-- "1..*" EtapaCultivo : define
-ReglasAgricolas "1" o-- "1..*" TipoSuelo : configura
-ReglasAgricolas "1" o-- "1..*" Cultivo : define etapas
-Comparacion "1" --> "1" Parcela : evalua
-Comparacion "1" --> "1" Prioridad : usa
-Comparacion "1" --> "1" ReglasAgricolas : consulta
-Comparacion "1" --> "1" ConjuntoClimatico : consulta zona
-Comparacion "1" --> "3..*" Estrategia : compara e incluye actual
-Comparacion "1" --> "1" SalidaComparacion : produce
-SalidaComparacion "1" *-- "3..*" ResultadoEstrategia : contiene
-ResultadoEstrategia "1" *-- "5" CriterioEvaluado : contiene
-CriterioEvaluado "1" *-- "0..*" Evidencia : sustenta
-SalidaComparacion "1" *-- "1" Ranking : resume
+note right of Parcela
+  La ubicacion precisa se mantiene bajo controles
+  de acceso y consentimiento. Para estadisticas se
+  usa una unidad geografica agregada.
+end note
 
-note right of Comparacion
-  Criterios: rachas secas, calor,
-  cobertura, nitrogeno e ingreso/forraje.
-  No incluye pronostico meteorologico.
+note right of ConjuntoClimatico
+  Historico y proyeccion son tipos distintos.
+  Guardar fuente, escenario, periodo y version.
+end note
+
+note bottom of EstadisticaAgregada
+  Publicar solo agregados que superen un umbral
+  minimo de registros, pendiente de definicion.
 end note
 @enduml

@@ -1,6 +1,8 @@
 # Pipeline de datos
 
-Esta carpeta es responsabilidad del Rol 2. Usa Python para descargar y procesar datos de la NASA para cada zona de la Península de Yucatán y exporta el JSON acordado en `docs/contrato-datos.md` (sección 2).
+> **Alcance actual:** este pipeline implementa la preparación climática histórica del MVP v0.2 centrado en maíz. La arquitectura nueva se describe en `../docs/arquitectura-y-estructura.md`; antes de integrar escenarios climáticos o catálogos de semillas, se ampliará el pipeline con fuentes verificadas y salidas versionadas.
+
+Esta carpeta contiene el pipeline Python de datos climáticos de jaibaSpace. El script actual procesa el conjunto histórico del MVP inicial. La arquitectura destino y los requisitos de salidas nuevas están descritos en `../docs/arquitectura-y-estructura.md` y `../docs/requisitos-del-sistema.md`.
 
 ## Uso
 
@@ -13,12 +15,12 @@ python clima.py ../app/data
 - Guarda la respuesta original en `raw/<zona>.json` y escribe `../app/data/clima/<zona>.json`.
 - Solo usa la biblioteca estándar de Python y no necesita clave de API.
 
-Verificado el 2026‑11‑14 con las 7 zonas; `yuc-noroeste` reproduce la tabla de referencia de `docs/roles/2-ingenieria-de-datos.md`.
+La ejecución histórica se verificó el 2026‑11‑14 con las 7 zonas. Antes de usar estos archivos en la API nueva, se deben validar y publicar con el contrato de datos versionado correspondiente.
 
 ## Límite de responsabilidad
 
 - `clima.py` descarga, normaliza faltantes (`-999` → `null`), calcula rachas secas y episodios de calor y escribe el JSON.
 - No compara estrategias: esa lógica pertenece al motor JavaScript del Rol 4.
-- No es un servidor de la aplicación. La PWA carga los JSON versionados en `app/data/` y calcula en el teléfono para funcionar sin conexión.
+- Este script solo procesa clima histórico. La nueva API FastAPI y la base PostgreSQL/PostGIS son componentes separados; el pipeline se ampliará para publicar conjuntos climáticos y catálogos trazables.
 - Los umbrales (`UMBRAL_SECO_MM`, `UMBRAL_CALOR_C`) están al inicio del script. Si el Rol 3 los cambia, se actualizan ahí y se regeneran los archivos.
-- Los formatos solo cambian con una nueva versión de `docs/contrato-datos.md`, coordinada por el Rol 1.
+- Los formatos de salida nuevos se definirán en el contrato de API/dominio versionado antes de integrar fuentes de escenarios o catálogos.
