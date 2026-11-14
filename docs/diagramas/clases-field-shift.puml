@@ -1,5 +1,5 @@
 @startuml
-title Field Shift v0.2 - Modelo conceptual de clases
+title Field Shift v0.3 - Modelo conceptual de clases
 hide methods
 skinparam classAttributeIconSize 0
 
@@ -70,8 +70,10 @@ enum Prioridad {
 }
 
 class Estrategia {
-  id: String
+  id: String {actual, cobertura, otro-grano}
   nombre: String
+  tipo: String {continuo, rotacion}
+  objetivo: String
   esEjemplo: Boolean
   descripcionCorta: String
   atributos: Map
@@ -82,6 +84,7 @@ class Estrategia {
 }
 
 class CicloCultivo {
+  numero: Integer {1, 2 en secuencia}
   cultivoId: String
   siembra: MM_DD
   cosecha: MM_DD
@@ -226,7 +229,7 @@ ConjuntoClimatico "1" *-- "1..*" Temporada : contiene
 Temporada "1" *-- "0..*" RachaSeca : detecta
 Temporada "1" *-- "0..*" EpisodioCalor : detecta
 ConjuntoClimatico "1" *-- "2" FuenteDatos : lluvia y temperatura
-Estrategia "1" *-- "1..*" CicloCultivo : contiene
+Estrategia "1" *-- "2" CicloCultivo : contiene (ciclo 1 y ciclo 2)
 CicloCultivo "*" --> "1" Cultivo : refiere a
 Cultivo "1" *-- "1..*" EtapaCultivo : define
 ReglasAgricolas "1" o-- "1..*" TipoSuelo : configura

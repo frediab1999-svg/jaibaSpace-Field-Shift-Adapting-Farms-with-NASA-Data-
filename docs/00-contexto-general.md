@@ -11,7 +11,7 @@
 
 | El reto sugiere | Cómo lo cubrimos |
 |---|---|
-| Comparar **al menos 3 estrategias**, incluida la actual | 4 estrategias: actual, cobertura, milpa y relevo |
+| Comparar **al menos 3 estrategias**, incluida la actual | 3 estrategias: actual (maíz → maíz), rotación con cobertura (canavalia → maíz) y rotación con otro grano (caupí → maíz) |
 | Mostrar cuándo el campo queda **desnudo** | Calendario de 12 meses con los meses descubiertos |
 | Mostrar cuándo el cultivo actual es **más vulnerable** | Días críticos del cultivo que caen en rachas secas o en calor |
 | Por estrategia: **por qué**, **evidencia**, **beneficios**, **vacíos de información** y **riesgos** | `porQue`, `evidencia` y `datosNasa`, `beneficios`, `faltaConfirmar`, `riesgos` |
@@ -22,16 +22,23 @@
 
 ## 2. Nuestra propuesta (MVP de un día)
 
-**Una PWA para productores de temporal de la Península de Yucatán** (Yucatán, Campeche y Quintana Roo). El productor indica dónde está su parcela, qué suelo tiene y qué quiere priorizar. La app compara su práctica actual con tres estrategias de rotación usando 28 años de datos de la NASA de **su zona** y le explica cada resultado. Funciona sin conexión.
+**Una PWA para productores de temporal de la Península de Yucatán** (Yucatán, Campeche y Quintana Roo). El productor indica dónde está su parcela, qué suelo tiene y qué quiere priorizar. La app compara su práctica actual (maíz continuo) con dos estrategias de rotación usando 28 años de datos de la NASA de **su zona** y le explica cada resultado. Funciona sin conexión.
 
-### Las 4 estrategias
+### Las 3 estrategias (acordadas por el equipo, contrato v0.3)
 
-| Estrategia | Ciclos | Idea |
-|---|---|---|
-| **Actual** | Maíz de temporal (15 jun – 31 oct) | La práctica de referencia; suelo desnudo en secas |
-| **Cobertura** | Maíz + mucuna o canavalia intercalada (15 jul – 28 feb) | Cubrir el suelo y fijar nitrógeno |
-| **Milpa** | Maíz + frijol + calabaza | La asociación tradicional maya; más ingreso y alimento |
-| **Relevo** | Maíz precoz (1 jul) + frijol de relevo (1 oct) | Dos cosechas al año y suelo cubierto hasta diciembre |
+Una **estrategia de rotación** es el plan de qué sembrar, en qué orden y para qué objetivo, durante varios ciclos en la misma parcela. Cada fila es un plan completo:
+
+| Plan | Primer ciclo | Segundo ciclo | Objetivo |
+|---|---|---|---|
+| **Actual** (`actual`) | Maíz de temporal | Maíz de temporal | Cosechar maíz en ambos ciclos |
+| **Rotación con cobertura** (`cobertura`) | Canavalia | Maíz de temporal | Dedicar un ciclo a cubrir el suelo antes de volver al maíz |
+| **Rotación con otro grano** (`otro-grano`) | Frijol caupí | Maíz de temporal | Cosechar un grano distinto en el primer ciclo |
+
+- El **primero es cultivo continuo**: repite maíz y sirve como **referencia**. Los otros dos son **rotaciones**, porque cambian el cultivo entre ciclos.
+- **Lo que debe quedar visible:** el plan de cobertura dedica el ciclo 1 a la canavalia y en ese ciclo **no hay cosecha de maíz**. Cosechas de maíz: actual 2, cobertura 1, otro grano 1 (más 1 de caupí).
+- **Rotación y asociación no son lo mismo.** Si se siembran maíz y frijol **juntos en el mismo ciclo**, es **asociación de cultivos** (como la milpa). Si se siembra frijol en un ciclo y maíz en el siguiente, es **rotación**.
+- **Fechas y etapas:** las de `planes.json` y `reglas.json` son de ejemplo. Las confirma el Rol 3.
+- **Pendiente del Rol 4:** cómo cuenta el motor dos ciclos en secuencia (contrato, sección 8).
 
 ### Los 5 criterios
 
@@ -48,17 +55,32 @@ El productor elige **una** prioridad y la prioridad cambia el peso de cada crite
 ### Pantallas
 
 1. **Mi parcela.** Ubicación por GPS, municipio o mapa de zonas; tipo de suelo (con «no sé»); y la pregunta *«¿Qué quieres priorizar?»*.
-2. **Tus opciones.** Las 4 estrategias ordenadas, con la recomendada (o el empate) arriba y un calendario de 12 meses por estrategia.
+2. **Tus opciones.** Las 3 estrategias ordenadas, con la recomendada (o el empate) arriba. Cada una muestra su calendario del ciclo 1 y del ciclo 2, cuántas cosechas de maíz da y si algún ciclo es de cobertura.
 3. **¿Por qué?** Para cada estrategia: razón en lenguaje simple, dato de la NASA con su fecha, beneficios, riesgos y qué falta confirmar en campo.
 4. **Tu zona en la península.** Cómo se compara la zona del productor con el resto: lluvia, rachas secas y peores años.
 
-### Decisiones de arquitectura
+### Arquitectura (pendiente)
 
-- **No hay backend.** El motor `comparar()` es una función de JavaScript que corre en el teléfono.
-- **Python solo prepara datos.** El Rol 2 descarga NASA POWER y exporta un JSON por zona; no es un servidor.
-- **Datos precalculados.** `zonas.json`, `clima/*.json` (unos 120 KB por zona), `planes.json` y `reglas.json` son archivos estáticos que el *service worker* guarda en caché. La app funciona aunque la NASA no responda o el teléfono esté en modo avión.
-- **Hosting estático con HTTPS**, por ejemplo GitHub Pages, Netlify o Vercel. El *service worker* y el GPS solo funcionan con HTTPS (o en `localhost`).
+> **La arquitectura va a cambiar y está PENDIENTE.** La decide el Rol 1 con el equipo. Hasta entonces, ninguna IA ni integrante debe dar por hecha la propuesta anterior.
+
+**Propuesta anterior (no vigente):** PWA estática sin backend; el motor `comparar()` como función de JavaScript en el teléfono; datos en caché con *service worker* para funcionar en modo avión; hosting estático con HTTPS (GitHub Pages, Netlify o Vercel).
+
+**Qué hay que decidir:**
+
+| Tema | Pendiente |
+|---|---|
+| Backend | Si hay servidor o no, y qué hace |
+| Dónde corre la comparación (`comparar()`) | En el teléfono, en un servidor o en ambos |
+| Modo sin conexión | Si se mantiene y cómo |
+| Hosting y despliegue | Dónde se publica |
+| Almacenamiento de la parcela | En el teléfono, en un servidor o ninguno |
+| Stack del frontend y del backend | Sin definir |
+
+**Lo que sigue definido y no depende de la arquitectura:**
+- **Python prepara los datos antes de usarlos.** El Rol 2 descarga NASA POWER y exporta un JSON por zona (`data-pipeline/clima.py` ya existe).
+- **Formatos de datos** del contrato (`zonas.json`, `clima/<zona>.json`, `planes.json`, `reglas.json`).
 - **Sin pronóstico meteorológico** en el MVP. El reto no lo pide; queda como idea a futuro.
+- **Dato técnico:** el GPS del navegador y un *service worker* solo funcionan con HTTPS (o en `localhost`).
 
 ## 3. Fuentes de datos
 
@@ -98,17 +120,17 @@ Resultado de `data-pipeline/clima.py` con GPM IMERG, 1998–2025 (28 temporadas 
 2. **Más lluvia al año no significa menos sequía en verano.** Quintana Roo llueve más al año que el noroeste de Yucatán, pero tiene las rachas secas de verano más largas de la península (mediana de 10 días contra 7).
 3. **Dónde siembras importa más que cuándo siembras.** En un cálculo exploratorio con las reglas provisionales y suelo *k'ankab*, la proporción de días críticos del maíz dentro de una racha seca va de **5 %** (sur de Campeche) a **28 %** (Quintana Roo); en suelo *tsek'el* sube a 9 % y 34 %. En cambio, mover la siembra dos semanas casi no la cambia (10 % contra 11 % en el noroeste).
 4. **El calor pega al sembrar, no al florecer.** Según MERRA‑2, en el noroeste de Yucatán hay una mediana de 24 días de 35 °C o más en mayo y casi ninguno en agosto. El riesgo de calor se concentra en el establecimiento de junio.
-5. **La prioridad cambia la recomendación.** Con prioridad en el agua empatan cobertura y milpa; con suelo o nitrógeno gana la cobertura; con ingreso empatan milpa y relevo. Esto se repite en las 7 zonas: **la zona no cambia tanto qué estrategia gana, sino cuánto riesgo de sequía tiene cada una**. En el sur de Quintana Roo, con prioridad en el agua, hasta el relevo queda empatado con las mejores, porque allí todas las opciones sufren la sequía de verano.
+5. **La prioridad cambia la recomendación** *(por recalcular)*. Este hallazgo se calculó en v0.2, con las 4 estrategias anteriores (actual, cobertura intercalada, milpa y relevo), y ya no aplica a las 3 estrategias de v0.3. Hay que repetir el cálculo cuando el Rol 4 defina cómo contar los dos ciclos (contrato, sección 8).
 
-> Los hallazgos 3 y 5 dependen de reglas provisionales (umbrales, etapas, atributos) que el Rol 3 debe confirmar. Se presentan como exploración, no como recomendación agronómica.
+> Los hallazgos 3 y 5 dependen de reglas provisionales (umbrales, etapas, atributos) que el Rol 3 debe confirmar. Se presentan como exploración, no como recomendación agronómica. Los hallazgos 1, 2 y 4 son solo de clima y no dependen de las estrategias.
 
 ## 5. Roles
 
 | # | Rol | Archivo | Entregable del día |
 |---|---|---|---|
-| 1 | Líder técnico e integración | `roles/1-lider-tecnico-e-integracion.md` | Contrato v0.2 con ejemplos falsos en la primera hora, flujo completo, PWA publicada en HTTPS y decisión de qué recortar |
+| 1 | Líder técnico e integración | `roles/1-lider-tecnico-e-integracion.md` | Contrato v0.3 con ejemplos falsos en la primera hora, flujo completo, PWA publicada en HTTPS y decisión de qué recortar |
 | 2 | Ingeniería de datos | `roles/2-ingenieria-de-datos.md` | `zonas.json` (puntos) y `clima/<zona>.json` para cada zona, con lluvia, calor, rachas y resumen |
-| 3 | Reglas agrícolas | `roles/3-reglas-agricolas.md` | `planes.json` (4 estrategias con beneficios y riesgos) y `reglas.json` (cultivos, suelos, pesos), cada valor con fuente o «por confirmar» |
+| 3 | Reglas agrícolas | `roles/3-reglas-agricolas.md` | `planes.json` (3 estrategias de dos ciclos, con objetivo, beneficios y riesgos) y `reglas.json` (cultivos, suelos, pesos), cada valor con fuente o «por confirmar» |
 | 4 | Motor y PWA sin conexión | `roles/4-motor-y-pwa-sin-conexion.md` | `comparar()`, instalación, funcionamiento sin conexión y parcela guardada en el teléfono |
 | 5 | Frontend y captura | `roles/5-frontend-y-captura.md` | Pantalla «Mi parcela»: ubicación, asignación de zona, suelo y prioridad |
 | 6 | Frontend y resultados | `roles/6-frontend-y-resultados.md` | Ranking de estrategias, «¿Por qué?», vista de la península y guion de la demo en modo avión |
@@ -116,7 +138,7 @@ Resultado de `data-pipeline/clima.py` con GPM IMERG, 1998–2025 (28 temporadas 
 ### Dependencias entre roles
 
 ```
-            contrato-datos.md v0.2 (Rol 1, hora 1)
+            contrato-datos.md v0.3 (Rol 1, hora 1)
            /         |           \          \
   Rol 2 zonas    Rol 3 planes    Rol 5 UI   Rol 6 UI
   y clima        y reglas          |          |
@@ -138,6 +160,8 @@ Todos trabajan desde el primer minuto con **datos falsos que respetan el contrat
 - Si falta un dato de campo, se dice qué falta en lugar de inventarlo.
 
 ## 7. Estructura del repositorio y propiedad de archivos
+
+> La parte de `/app` (PWA, `sw.js`, motor en `src/`) es de la propuesta anterior y queda **pendiente** de la nueva arquitectura. `data-pipeline/` y los JSON de datos siguen igual.
 
 ```
 /app                         PWA estática (Roles 1, 4, 5, 6)

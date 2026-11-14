@@ -1,10 +1,10 @@
 # Rol 3 — Reglas agrícolas
 
-> **Para tu IA:** eres asistente del responsable de reglas agrícolas de jaibaSpace, equipo del NASA Space Apps Challenge 2026 en el reto *Field Shift*. Tu trabajo es respaldar **cuatro estrategias de rotación** para productores de temporal de la **Península de Yucatán** y escribir las reglas como JSON (`planes.json` y `reglas.json`, secciones 3 y 4 de `docs/contrato-datos.md`). **Toda fecha, umbral, ajuste o atributo necesita una fuente o queda en «por confirmar».** No presentes como hecho algo que no esté respaldado.
+> **Para tu IA:** eres asistente del responsable de reglas agrícolas de jaibaSpace, equipo del NASA Space Apps Challenge 2026 en el reto *Field Shift*. Tu trabajo es respaldar las **tres estrategias de dos ciclos** que acordó el equipo para productores de temporal de la **Península de Yucatán** y escribir las reglas como JSON (`planes.json` y `reglas.json`, secciones 3 y 4 de `docs/contrato-datos.md`). **Toda fecha, umbral, ajuste o atributo necesita una fuente o queda en «por confirmar».** No presentes como hecho algo que no esté respaldado.
 
 ## Entregable del día
 
-> `planes.json` con 4 estrategias (calendario, atributos, beneficios, riesgos y fuentes) y `reglas.json` con cultivos y etapas, tipos de suelo, prioridades, pesos y tolerancias. Una nota con las fuentes consultadas.
+> `planes.json` con las 3 estrategias (dos ciclos cada una, objetivo, calendario, atributos, beneficios, riesgos y fuentes) y `reglas.json` con cultivos y etapas, tipos de suelo, prioridades, pesos y tolerancias. Una nota con las fuentes consultadas.
 
 El contrato ya trae una propuesta completa. Tu trabajo es **confirmarla, corregirla o marcarla como por confirmar**, no empezar de cero.
 
@@ -15,27 +15,45 @@ El contrato ya trae una propuesta completa. Tu trabajo es **confirmarla, corregi
 - **Datos de la NASA disponibles por zona:** lluvia diaria GPM IMERG y temperatura máxima MERRA‑2 desde 1998, con todas las rachas secas y episodios de calor por año. Los produce el Rol 2.
 - **Prioridades del productor:** `agua`, `suelo`, `nitrogeno` o `ingreso`.
 
-## Las 4 estrategias (propuesta por validar)
+## Las 3 estrategias (acordadas por el equipo; contrato v0.3, sección 3)
 
-| | Actual | Cobertura | Milpa | Relevo |
-|---|---|---|---|---|
-| Ciclos | Maíz 15 jun–31 oct | Maíz + mucuna o canavalia (15 jul–28 feb) | Maíz + frijol (15 jun–15 sep) + calabaza (15 jun–15 oct) | Maíz precoz (1 jul–15 oct) + frijol de relevo (1 oct–31 dic) |
-| Meses descubiertos | 7 | 3 | 7 | 6 |
-| Nitrógeno | bajo | alto | medio | medio |
-| Ingreso o forraje | medio | bajo | alto | alto |
-| Idea | Referencia | Cubrir el suelo y fijar nitrógeno | Tradición maya, tres cosechas | Dos cosechas al año |
+Una **estrategia de rotación** es el plan de qué sembrar, en qué orden y para qué objetivo, durante varios ciclos en la misma parcela. Cada fila es un plan completo:
 
-Si cambias una estrategia, documenta por qué. Opciones que también podrías evaluar: canavalia en lugar de mucuna; sorgo o cacahuate como cultivo tolerante a la sequía; frijol x'pelón (*Vigna unguiculata*) en la milpa.
+| Plan | Primer ciclo | Segundo ciclo | Objetivo |
+|---|---|---|---|
+| **Actual** (`actual`) | Maíz de temporal | Maíz de temporal | Cosechar maíz en ambos ciclos |
+| **Rotación con cobertura** (`cobertura`) | Canavalia | Maíz de temporal | Dedicar un ciclo a cubrir el suelo antes de volver al maíz |
+| **Rotación con otro grano** (`otro-grano`) | Frijol caupí | Maíz de temporal | Cosechar un grano distinto en el primer ciclo |
+
+- **El primero es cultivo continuo** (repite maíz) y sirve como **referencia**. Los otros dos son **rotaciones** porque cambian el cultivo entre ciclos.
+- **Asociación no es rotación.** Maíz y frijol **juntos en el mismo ciclo** es asociación de cultivos (como la milpa). Frijol en un ciclo y maíz en el siguiente es rotación. Ninguna de las 3 estrategias usa asociación.
+- **Lo que debe quedar visible:** el plan `cobertura` no tiene cosecha de maíz en el ciclo 1. Cosechas de maíz: actual 2, cobertura 1, otro grano 1 (más 1 de caupí).
+
+**Valores de ejemplo que ya están en el contrato y debes confirmar o corregir:**
+
+| | Actual | Cobertura | Otro grano |
+|---|---|---|---|
+| Ciclo 1 | Maíz, 15 jun–31 oct | Canavalia, 15 jun–30 abr (corte o incorporación) | Caupí, 15 jun–15 sep |
+| Ciclo 2 | Maíz, 15 jun–31 oct | Maíz, 15 jun–31 oct | Maíz, 15 jun–31 oct |
+| Nitrógeno | bajo | alto | medio |
+| Ingreso o forraje | alto (2 cosechas de maíz) | bajo (sin cosecha en el ciclo 1) | alto (caupí y maíz) |
+
+Los niveles son **relativos entre los 3 planes**. Todo valor sin fuente va en `porConfirmar`.
+
+**Cultivos en `reglas.json`:** `maiz`, `canavalia` y `caupi`. Se retiraron `maiz-precoz`, `frijol`, `calabaza` y `mucuna`.
+
+- La canavalia **no tiene etapas de sensibilidad alta**, porque no se cosecha. Por eso no suma días críticos.
+- El caupí tiene floración de sensibilidad alta (días 35–50, provisional). Con siembra el 15 de junio, eso cae del 20 de julio al 4 de agosto.
 
 ## Lo que debes investigar y citar
 
 | Dato | Para qué | Fuentes sugeridas |
 |---|---|---|
 | Fecha típica de siembra de maíz de temporal en cada estado | `siembra` de los planes | SIAP (calendario agrícola), INIFAP (guías para la península), SADER |
-| Duración del ciclo y días a floración (maíz criollo, maíz precoz, frijol, calabaza) | `etapas[].desdeDia` y `hastaDia` | INIFAP, FAO‑56, fichas de variedades locales |
+| Duración del ciclo y días a floración (maíz criollo y caupí o x'pelón) | `etapas[].desdeDia` y `hastaDia` | INIFAP, FAO‑56, fichas de variedades locales |
 | Sensibilidad al déficit hídrico por etapa | `sensibilidad` | FAO‑56 y literatura agronómica |
-| Leguminosa de cobertura adaptada a suelos pedregosos | Estrategia de cobertura | INIFAP, CIMMYT, experiencias de abonos verdes en la península |
-| Frijol de relevo con humedad residual | Estrategia de relevo | INIFAP, ECOSUR |
+| Canavalia como cobertura: fecha de siembra, cuándo se corta o incorpora y si sirve de forraje | Estrategia `cobertura` | Ensayo de leguminosas de cobertura con maíz en el sur de Yucatán (SciELO), INIFAP, CIMMYT |
+| Caupí (x'pelón): variedades locales, ciclo, mercado y tolerancia a sequía y encharcamiento | Estrategia `otro-grano` | INIFAP, ECOSUR, SIAP |
 | Tipos de suelo maya y su equivalencia | `reglas.suelos` | INEGI (edafología 1:250 000); Bautista y Zinck (2010), clasificación maya de suelos y su comparación con WRB; FAO GAEZ |
 | Suelos predominantes por zona | `zonas.json → suelosPredominantes` | INEGI |
 | Umbral de calor para el maíz | `umbralCalorC` | Literatura sobre viabilidad del polen y estrés térmico en maíz |
@@ -47,9 +65,9 @@ Si cambias una estrategia, documenta por qué. Opciones que también podrías ev
 2. **`rachaRelevanteDias`** (provisional: 5) y el **ajuste por suelo**: *tsek'el* −1, *k'ankab* 0, *ak'alche* +1. La idea es que un suelo pedregoso y poco profundo retiene menos agua y el cultivo se estresa antes.
 3. **Sensibilidad alta del establecimiento del maíz.** Es una propuesta nueva: los datos muestran que las rachas largas caen sobre todo en **junio**, justo después de la siembra, y una racha seca ahí obliga a resembrar. Confírmala o cámbiala a `media`.
 4. **`umbralCalorC`** (provisional: 35 °C) y **`episodioCalorRelevanteDias`** (provisional: 3).
-5. **Aptitud por suelo y cultivo** (`alta`, `media`, `baja`). Por ejemplo, en *ak'alche* el maíz y el frijol se proponen como `baja` por encharcamiento.
+5. **Aptitud por suelo y cultivo** (`alta`, `media`, `baja`). Por ejemplo, en *ak'alche* el maíz y el caupí se proponen como `baja` por encharcamiento.
 6. **Cobertura:** un mes cuenta como cubierto si un ciclo está en pie al menos 15 días. Decide si el rastrojo cuenta; si sí, agrégalo como ciclo con `proposito: "rastrojo"`.
-7. **`atributos`** de cada estrategia (`fijacionNitrogeno`, `ingresoForraje`).
+7. **`atributos`** de las 3 estrategias (`fijacionNitrogeno`, `ingresoForraje`).
 8. **`pesosPorPrioridad`** (cada fila suma 1) y **`toleranciaEmpate`**.
 
 ### Cómo usa el motor tus reglas
@@ -66,11 +84,11 @@ Si cambias una estrategia, documenta por qué. Opciones que también podrías ev
 
 Con tus reglas provisionales y los datos reales:
 
-- **Mover la siembra del maíz dos semanas casi no cambia la exposición a sequía** (10 % contra 11 % de los días críticos en el noroeste de Yucatán). Por eso la cuarta estrategia es un relevo y no solo un cambio de fecha.
+- **Mover la siembra del maíz dos semanas casi no cambia la exposición a sequía** (10 % contra 11 % de los días críticos en el noroeste de Yucatán).
 - **La zona sí la cambia mucho:** del 5 % en el sur de Campeche al 28 % en Quintana Roo.
-- **El frijol de relevo se expone más** (23 % a 36 %), porque florece al empezar las secas. Es un riesgo real que debe verse en la app.
 - **El calor pega en el establecimiento de junio**, no en la floración de agosto.
-- **La recomendación cambia con la prioridad:** agua → empatan cobertura y milpa; suelo o nitrógeno → cobertura; ingreso → empatan milpa y relevo. Pasa igual en las 7 zonas: la zona cambia el nivel de riesgo, no tanto el orden. Si quieres que la zona pese más en la recomendación, una vía es una estrategia con un cultivo tolerante a la sequía (sorgo, cacahuate) que gane en las zonas más secas.
+- **Con las 3 estrategias, el maíz del ciclo 2 es el mismo en los tres planes.** Si se siembra en las mismas fechas, tiene la misma exposición a rachas secas: **empate** en ese ciclo. Las diferencias de sequía vienen del ciclo 1: maíz en `actual`, canavalia sin días críticos en `cobertura`, y floración del caupí en `otro-grano`.
+- *(Por recalcular)* Los resultados por prioridad del cálculo exploratorio eran de las 4 estrategias de v0.2 y ya no aplican. Se repiten cuando el Rol 4 defina cómo contar los dos ciclos.
 
 ## Por cada estrategia, documenta también
 
@@ -84,7 +102,7 @@ Con tus reglas provisionales y los datos reales:
 Escribe 1 o 2 frases sencillas para la ayuda «¿Qué significa?»:
 - qué es un cultivo fijador de nitrógeno,
 - qué es un cultivo de cobertura,
-- qué es una siembra de relevo,
+- qué es una rotación y en qué se diferencia de una asociación de cultivos,
 - por qué el suelo desnudo pierde humedad y materia orgánica.
 
 ## A quién le entregas qué
@@ -99,7 +117,8 @@ Escribe 1 o 2 frases sencillas para la ayuda «¿Qué significa?»:
 
 ## Criterios de terminado
 
-- [ ] 4 estrategias en `planes.json`, cada una con calendario, atributos, beneficios, riesgos y fuentes.
+- [ ] Las 3 estrategias en `planes.json` (dos ciclos cada una), con objetivo, calendario, atributos, beneficios, riesgos y fuentes.
+- [ ] Fechas de la canavalia y del caupí, y etapas del caupí, con fuente o en `porConfirmar`.
 - [ ] `reglas.json` válido, con cultivos, suelos, prioridades, pesos y tolerancias; cada fila de pesos suma 1.
 - [ ] Cada número tiene una fuente o aparece en `porConfirmar`.
 - [ ] Una nota corta (debajo) con las fuentes consultadas y sus enlaces.

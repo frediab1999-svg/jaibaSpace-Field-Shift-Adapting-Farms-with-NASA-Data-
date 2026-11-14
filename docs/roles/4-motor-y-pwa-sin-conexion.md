@@ -1,10 +1,33 @@
 # Rol 4 — Motor y PWA sin conexión
 
+> **Arquitectura PENDIENTE (2026‑11‑14).** El equipo va a cambiar la arquitectura. Lo que este documento dice sobre PWA, backend o falta de backend, motor en el teléfono, *service worker*, hosting, almacenamiento local o modo sin conexión es la **propuesta anterior** y **no está decidido**. No lo implementes ni lo des por hecho hasta que el Rol 1 publique la nueva arquitectura. Ver `docs/00-contexto-general.md`, sección «Arquitectura (pendiente)».
+
 > **Para tu IA:** eres asistente del desarrollador del motor y la PWA de jaibaSpace, equipo del NASA Space Apps Challenge 2026 en el reto *Field Shift*. Implementa `comparar(entrada, { clima, planes, reglas })` como función pura de JavaScript que compara **3 o más estrategias de rotación** con 5 criterios para una parcela de la **Península de Yucatán**, usando el clima de su zona y el ajuste de su tipo de suelo. Además, la carga de datos, la instalación, el funcionamiento sin conexión y el almacenamiento local de la parcela. No hay backend. El contexto completo está en `docs/00-contexto-general.md` y el algoritmo en `docs/contrato-datos.md` (sección 8).
 
 ## Entregable del día
 
 > `comparar()` con los datos de clima del Rol 2 y las reglas del Rol 3, que devuelva el ranking, el detalle de cada estrategia (criterios, evidencia, beneficios, riesgos) y los datos pendientes. La PWA se instala y funciona en modo avión con todas las zonas.
+
+## Cambio en v0.3: las 3 estrategias de dos ciclos
+
+El equipo acordó **3 estrategias**, cada una con **dos ciclos en secuencia** en la misma parcela (contrato v0.3, sección 3):
+
+| Plan (`id`) | Ciclo 1 | Ciclo 2 | Objetivo |
+|---|---|---|---|
+| `actual` | Maíz | Maíz | Cosechar maíz en ambos ciclos |
+| `cobertura` | Canavalia (sin cosecha) | Maíz | Cubrir el suelo un ciclo antes de volver al maíz |
+| `otro-grano` | Frijol caupí | Maíz | Cosechar un grano distinto en el primer ciclo |
+
+Se retiran `milpa` y `relevo`, y los cultivos `maiz-precoz`, `frijol`, `calabaza` y `mucuna`. `entrada.planes` es `["actual", "cobertura", "otro-grano"]`.
+
+**Decisiones que te tocan** (contrato, sección 8, recuadro de pendientes). Antes de recalcular, documéntalas en el contrato con el Rol 1:
+
+1. **Qué temporada histórica usa cada ciclo:** la misma para los dos ciclos, o años consecutivos.
+2. **Cómo se mide la cobertura en dos ciclos.** El año de referencia de v0.2 encima los dos ciclos.
+3. **La canavalia no tiene días críticos** (no se cosecha). El riesgo de sequía de `cobertura` viene solo del maíz del ciclo 2.
+4. **Explicaciones y salida:** `calendario[].ciclo` y `cosechasMaiz` (nuevos en v0.3). La explicación debe dejar claro que `cobertura` no tiene cosecha de maíz en el ciclo 1.
+
+El algoritmo de abajo es el de v0.2 y sirve de base hasta que lo actualices.
 
 ## Parte A — El motor
 
@@ -74,15 +97,17 @@ const qroo = j('../../data/clima/qroo-centro.json');
 const s = comparar(entrada, { clima, planes, reglas });
 const plan = id => s.planes.find(p => p.id === id);
 
-// 4 estrategias y ranking completo
-assert.equal(s.planes.length, 4);
-assert.equal(s.ranking.length, 4);
-// Cobertura: actual 7 meses descubiertos, cobertura 3, milpa 7, relevo 6
-assert.equal(plan('actual').criterios.coberturaSuelo.mesesDescubierto, 7);
-assert.equal(plan('cobertura').criterios.coberturaSuelo.mesesDescubierto, 3);
-assert.equal(plan('relevo').criterios.coberturaSuelo.mesesDescubierto, 6);
-// Actual y cobertura tienen los mismos días críticos → misma exposición a sequía
-assert.equal(plan('actual').criterios.rachasSecas.valor, plan('cobertura').criterios.rachasSecas.valor);
+// 3 estrategias (v0.3) y ranking completo
+assert.equal(s.planes.length, 3);
+assert.equal(s.ranking.length, 3);
+// La canavalia cubre el suelo: cobertura deja menos meses descubiertos que actual
+// (los números exactos dependen de cómo midas la cobertura en dos ciclos: pendiente, sección 8)
+assert.ok(plan('cobertura').criterios.coberturaSuelo.mesesDescubierto
+          < plan('actual').criterios.coberturaSuelo.mesesDescubierto);
+// Cosechas de maíz: actual 2, cobertura 1, otro-grano 1
+assert.equal(plan('actual').cosechasMaiz, 2);
+assert.equal(plan('cobertura').cosechasMaiz, 1);
+assert.equal(plan('otro-grano').cosechasMaiz, 1);
 // El suelo cambia el umbral: tsek'el usa 4 días, k'ankab 5
 assert.equal(s.suelo.umbralRachaDias, 4);
 const kankab = { ...entrada, parcela: { ...entrada.parcela, suelo: { ...entrada.parcela.suelo, tipoLocal: 'kankab' } } };
@@ -91,24 +116,16 @@ assert.ok(comparar(kankab, { clima, planes, reglas }).planes.find(p => p.id === 
 // La prioridad cambia los pesos y el primer lugar
 const ingreso = comparar({ ...entrada, prioridad: 'ingreso' }, { clima, planes, reglas });
 assert.notDeepEqual(ingreso.pesosAplicados, s.pesosAplicados);
-assert.ok(ingreso.comparacion.recomendados.includes('milpa'));
 // La zona importa: Quintana Roo se expone más a la sequía que el noroeste de Yucatán
 const enQroo = { ...entrada, parcela: { ...entrada.parcela, ubicacion: { ...entrada.parcela.ubicacion, zonaId: 'qroo-centro' } } };
 assert.ok(comparar(enQroo, { clima: qroo, planes, reglas }).planes.find(p => p.id === 'actual').criterios.rachasSecas.valor
           > plan('actual').criterios.rachasSecas.valor);
 // Menos de 3 estrategias es error
-assert.throws(() => comparar({ ...entrada, planes: ['actual', 'milpa'] }, { clima, planes, reglas }));
+assert.throws(() => comparar({ ...entrada, planes: ['actual', 'cobertura'] }, { clima, planes, reglas }));
 console.log('ok');
 ```
 
-**Valores esperados con las reglas provisionales** (cálculo exploratorio sobre los datos reales de `yuc-noroeste`, suelo *tsek'el*, prioridad `agua`; tu motor debe acercarse a estos):
-
-| Plan | Rachas secas (valor) | Calor (valor) | Meses descubiertos | Total |
-|---|---:|---:|---:|---:|
-| cobertura | 0.145 | 0.099 | 3 | 0.78 |
-| milpa | 0.154 | 0.111 | 7 | 0.77 |
-| relevo | 0.347 | 0.057 | 6 | 0.71 |
-| actual | 0.145 | 0.099 | 7 | 0.68 |
+**Valores esperados:** *pendientes de recalcular*. La tabla anterior era de las 4 estrategias de v0.2 (un ciclo de maíz por año) y ya no aplica. Cuando definas cómo contar los dos ciclos, calcula los valores de `actual`, `cobertura` y `otro-grano` con los datos reales de `yuc-noroeste` y ponlos aquí para que el equipo los verifique.
 
 Caso conocido para verificar traslapes: en 2025, la racha del 6 al 17 de junio se traslapa **3 días** con el establecimiento de un maíz sembrado el 15 de junio (del 15 al 17).
 
