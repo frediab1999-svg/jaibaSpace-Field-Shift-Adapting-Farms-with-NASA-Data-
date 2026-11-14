@@ -20,7 +20,7 @@ Captura entrega `parcela.ubicacion.zonaId`. El motor busca ese ID en `zonas.json
 
 | ID | Punto exacto (latitud, longitud) | Temporadas completas | Mediana de lluvia jun–ago | Mediana de racha máxima jun–ago |
 |---|---|---:|---:|---:|
-| `yuc-noroeste` | Umán (20.88194, −89.75) | 28 | 492.25 mm | 6 días |
+| `yuc-noroeste` | Umán (20.834, −89.787) | 28 | 492.25 mm | 6 días |
 | `camp-chenes` | Hopelchén (19.75, −89.84) | 28 | 536.81 mm | 6.5 días |
 | `qroo-centro` | Felipe Carrillo Puerto (19.58, −88.05) | 28 | 482.48 mm | 10 días |
 
@@ -30,7 +30,7 @@ Los tipos de suelo del catálogo se conservan como sugerencias provisionales del
 
 ## Actualización del ejemplo del Noroeste
 
-El `develop` revisado todavía documenta `20.49, -89.75` y cifras del entorno de Muna bajo la etiqueta Noroeste. La entrega usa **20.88194, −89.75** y sus cifras recalculadas. Actualicen los ejemplos en el README, el contexto general, el contrato y los documentos de datos y captura antes de volver a usar el ejemplo en pantalla o en el pitch. En ejemplos agrícolas que dependan de la parcela anterior, revisen también el traslape calculado.
+El `develop` revisado todavía documenta `20.49, -89.75` y cifras del entorno de Muna bajo la etiqueta Noroeste. La entrega usa **20.834, −89.787** (coordenadas de Umán) y sus cifras recalculadas. Esas cifras coinciden con las del punto anterior de Umán (20.88194, −89.75), porque ambos puntos caen en la misma celda de IMERG y de MERRA-2. Actualicen los ejemplos en el README, el contexto general, el contrato y los documentos de datos y captura antes de volver a usar el ejemplo en pantalla o en el pitch. En ejemplos agrícolas que dependan de la parcela anterior, revisen también el traslape calculado.
 
 Texto listo para pegar en el README o el pitch:
 
