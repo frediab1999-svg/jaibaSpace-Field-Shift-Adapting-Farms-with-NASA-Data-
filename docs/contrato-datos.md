@@ -1,15 +1,42 @@
-# Contrato de datos v0.2 — Península de Yucatán
+# Contrato de datos v0.3 — Península de Yucatán
 
-> **Dueño:** Rol 1, líder técnico. Si cambia algo, se sube la versión (`0.3`, `0.4`, …) y se avisa a todo el equipo.
+> **Dueño:** Rol 1, líder técnico. Si cambia algo, se sube la versión (`0.4`, `0.5`, …) y se avisa a todo el equipo.
 >
 > **Convenciones:**
-> - Las claves van en español y en `camelCase`. Los identificadores (`id`) van en minúsculas, sin acentos y con guiones: `yuc-noroeste`, `tsekel`, `maiz-precoz`.
+> - Las claves van en español y en `camelCase`. Los identificadores (`id`) van en minúsculas, sin acentos y con guiones: `yuc-noroeste`, `tsekel`, `otro-grano`.
 > - Las fechas completas usan `YYYY-MM-DD`. Las fechas de calendario que se repiten cada año usan `MM-DD`.
 > - La lluvia va en mm y la temperatura en °C.
 > - Un dato faltante es `null`, nunca `-999` ni `0`.
 > - Todo dato inventado lleva `"esEjemplo": true`. Todo valor sin fuente va en `porConfirmar`.
 
-## Cambios respecto a v0.1
+> **Arquitectura PENDIENTE (2026‑11‑14).** El equipo va a cambiar la arquitectura. Lo que este documento dice sobre PWA, backend o falta de backend, motor en el teléfono, *service worker*, hosting, almacenamiento local o modo sin conexión es la **propuesta anterior** y **no está decidido**. No lo implementes ni lo des por hecho hasta que el Rol 1 publique la nueva arquitectura. Ver `docs/00-contexto-general.md`, sección «Arquitectura (pendiente)».
+>
+> Los formatos de **datos** (secciones 1 a 5) no dependen de la arquitectura. La firma de `comparar()` (sección 6) y el algoritmo (sección 8) sí pueden cambiar.
+
+## Cambios en v0.3 (2026‑11‑14): las estrategias de rotación
+
+| Cambio | Por qué |
+|---|---|
+| **3 estrategias** en lugar de 4: `actual` (maíz → maíz), `cobertura` (canavalia → maíz) y `otro-grano` (frijol caupí → maíz). Se retiran `milpa` y `relevo`. | Es el plan de rotaciones que acordó el equipo. El reto pide comparar al menos 3 estrategias, incluida la actual. |
+| Cada plan tiene **dos ciclos en secuencia** (`ciclos[].numero` = 1 y 2), un `tipo` (`continuo` o `rotacion`) y un `objetivo` | En v0.2, los `ciclos` eran cultivos del **mismo año** (intercalados o asociados). Una rotación cambia el cultivo **entre** ciclos. |
+| `planes.json` agrega `definiciones` (estrategia, rotación, asociación) | Para que todo el equipo y sus IAs usen las palabras igual |
+| `reglas.cultivos` queda con `maiz`, `canavalia` y `caupi`. Se retiran `maiz-precoz`, `frijol`, `calabaza` y `mucuna`. La aptitud por suelo se actualiza. | Son los cultivos de las 3 estrategias |
+| Entrada: `planes` = `["actual", "cobertura", "otro-grano"]` | Los ids nuevos |
+| **Pendiente del Rol 4:** cómo cuenta el motor dos ciclos en secuencia (sección 8) | La lógica del motor la define el Rol 4, no los datos |
+
+### Vocabulario (obligatorio en textos, código e IAs)
+
+| Término | Significado | Ejemplo |
+|---|---|---|
+| **Estrategia de rotación** (plan) | Qué sembrar, en qué orden y para qué objetivo, durante varios ciclos en la misma parcela | Canavalia en el primer ciclo, maíz en el segundo |
+| **Cultivo continuo** | Repetir el mismo cultivo en todos los ciclos. Es la referencia. | Maíz → maíz (`actual`) |
+| **Rotación** | Cambiar el cultivo entre ciclos en la misma parcela | Caupí → maíz |
+| **Asociación** | Sembrar dos o más cultivos **juntos en el mismo ciclo**. **No es rotación.** | Maíz y frijol juntos (milpa) |
+| **Ciclo** | Cada temporada de siembra del plan, numerada 1 y 2. No es un año histórico de la NASA. | Ciclo 1 = canavalia |
+
+## Cambios respecto a v0.1 (historial de v0.2)
+
+> Las filas que hablan de `milpa`, `relevo` y «4 estrategias» quedaron **reemplazadas por v0.3**.
 
 | Cambio | Por qué |
 |---|---|
@@ -150,84 +177,93 @@ Un archivo por zona, generado por `data-pipeline/clima.py`. Fragmento real de `y
 
 ## 3. `planes.json` (Rol 3)
 
+Las **3 estrategias** que acordó el equipo. Cada fila es un plan completo de dos ciclos en la misma parcela:
+
+| Plan (`id`) | Tipo | Primer ciclo | Segundo ciclo | Objetivo | Cosechas de maíz |
+|---|---|---|---|---|---|
+| **Actual** (`actual`) | Cultivo continuo (referencia) | Maíz de temporal | Maíz de temporal | Cosechar maíz en ambos ciclos | 2 |
+| **Rotación con cobertura** (`cobertura`) | Rotación | Canavalia (cobertura, sin cosecha) | Maíz de temporal | Dedicar un ciclo a cubrir el suelo antes de volver al maíz | 1 |
+| **Rotación con otro grano** (`otro-grano`) | Rotación | Frijol caupí | Maíz de temporal | Cosechar un grano distinto en el primer ciclo | 1 (más 1 de caupí) |
+
 ```json
 {
-  "version": "0.2",
+  "version": "0.3",
+  "definiciones": {
+    "estrategia": "Plan de qué sembrar, en qué orden y para qué objetivo, durante varios ciclos en la misma parcela.",
+    "cultivoContinuo": "Repetir el mismo cultivo en todos los ciclos; sirve como referencia.",
+    "rotacion": "Cambiar el cultivo entre ciclos en la misma parcela.",
+    "asociacion": "Sembrar dos o más cultivos juntos en el mismo ciclo; no es rotación."
+  },
   "planes": [
     {
       "id": "actual",
-      "nombre": "Maíz de temporal (práctica actual)",
+      "nombre": "Actual: maíz continuo",
+      "tipo": "continuo",
+      "objetivo": "Cosechar maíz en ambos ciclos.",
       "esEjemplo": true,
-      "descripcionCorta": "Una siembra de maíz con las primeras lluvias; el suelo queda sin cubrir en secas.",
+      "descripcionCorta": "Maíz de temporal en los dos ciclos. Es la práctica de referencia.",
       "ciclos": [
-        { "cultivo": "maiz", "siembra": "06-15", "cosecha": "10-31", "proposito": "grano" }
+        { "numero": 1, "cultivo": "maiz", "siembra": "06-15", "cosecha": "10-31", "proposito": "grano" },
+        { "numero": 2, "cultivo": "maiz", "siembra": "06-15", "cosecha": "10-31", "proposito": "grano" }
       ],
-      "atributos": { "fijacionNitrogeno": "bajo", "ingresoForraje": "medio" },
-      "beneficios": ["Práctica conocida; no requiere semilla ni mano de obra adicional", "El rastrojo puede servir de forraje"],
-      "riesgos": ["Suelo descubierto de noviembre a mayo: pierde humedad y materia orgánica"],
+      "atributos": { "fijacionNitrogeno": "bajo", "ingresoForraje": "alto" },
+      "beneficios": ["Práctica conocida; no requiere semilla nueva ni otra mano de obra", "Cosecha de maíz en los dos ciclos", "El rastrojo puede servir de forraje"],
+      "riesgos": ["Repetir maíz no corta el ciclo de plagas y enfermedades del maíz", "Suelo descubierto en secas: pierde humedad y materia orgánica", "No aporta nitrógeno al suelo"],
       "fuentes": ["pendiente: calendario agrícola SIAP/INIFAP para la península"],
-      "porConfirmar": ["fecha real de siembra del productor"]
+      "porConfirmar": ["fecha real de siembra del productor", "nivel de ingreso relativo (precios locales)"]
     },
     {
       "id": "cobertura",
-      "nombre": "Maíz + leguminosa de cobertura",
+      "nombre": "Rotación con cobertura",
+      "tipo": "rotacion",
+      "objetivo": "Dedicar un ciclo a cubrir el suelo antes de volver al maíz.",
       "esEjemplo": true,
-      "descripcionCorta": "Maíz con mucuna o canavalia intercalada que mantiene el suelo cubierto en secas.",
+      "descripcionCorta": "Primer ciclo con canavalia para cubrir el suelo; en el segundo ciclo se vuelve al maíz.",
       "ciclos": [
-        { "cultivo": "maiz", "siembra": "06-15", "cosecha": "10-31", "proposito": "grano" },
-        { "cultivo": "mucuna", "siembra": "07-15", "cosecha": "02-28", "proposito": "cobertura" }
+        { "numero": 1, "cultivo": "canavalia", "siembra": "06-15", "cosecha": "04-30", "proposito": "cobertura" },
+        { "numero": 2, "cultivo": "maiz",      "siembra": "06-15", "cosecha": "10-31", "proposito": "grano" }
       ],
       "atributos": { "fijacionNitrogeno": "alto", "ingresoForraje": "bajo" },
-      "beneficios": ["Fija nitrógeno", "Cubre el suelo 9 meses y aporta materia orgánica", "Reduce maleza"],
-      "riesgos": ["Puede competir por agua con el maíz en la floración", "Si se siembra temprano, trepa sobre el maíz", "Requiere conseguir semilla"],
-      "fuentes": ["pendiente: experiencias de abonos verdes en la península (INIFAP, CIMMYT)"],
-      "porConfirmar": ["disponibilidad de semilla de cobertura", "fecha de intercalado"]
+      "beneficios": ["Cubre el suelo y le aporta materia orgánica", "La canavalia fija nitrógeno para el maíz del segundo ciclo", "Corta el ciclo de plagas del maíz por un ciclo"],
+      "riesgos": ["En el primer ciclo no hay cosecha de maíz", "Hay que conseguir semilla de canavalia", "La canavalia no da cosecha para comer o vender (por confirmar su uso como forraje)"],
+      "fuentes": ["Ensayo de leguminosas de cobertura (mucuna y canavalia) con maíz en el sur de Yucatán: https://www.scielo.org.mx/scielo.php?pid=S0187-57792009000100008&script=sci_arttext"],
+      "porConfirmar": ["fecha de siembra y de corte o incorporación de la canavalia", "disponibilidad de semilla de canavalia"]
     },
     {
-      "id": "milpa",
-      "nombre": "Milpa (maíz, frijol y calabaza)",
+      "id": "otro-grano",
+      "nombre": "Rotación con otro grano",
+      "tipo": "rotacion",
+      "objetivo": "Cosechar un grano distinto en el primer ciclo.",
       "esEjemplo": true,
-      "descripcionCorta": "La asociación tradicional maya: maíz, frijol y calabaza en la misma parcela.",
+      "descripcionCorta": "Primer ciclo con frijol caupí (x'pelón) para cosechar grano; en el segundo ciclo se vuelve al maíz.",
       "ciclos": [
-        { "cultivo": "maiz", "siembra": "06-15", "cosecha": "10-31", "proposito": "grano" },
-        { "cultivo": "frijol", "siembra": "06-15", "cosecha": "09-15", "proposito": "grano" },
-        { "cultivo": "calabaza", "siembra": "06-15", "cosecha": "10-15", "proposito": "fruto y semilla" }
+        { "numero": 1, "cultivo": "caupi", "siembra": "06-15", "cosecha": "09-15", "proposito": "grano" },
+        { "numero": 2, "cultivo": "maiz",  "siembra": "06-15", "cosecha": "10-31", "proposito": "grano" }
       ],
       "atributos": { "fijacionNitrogeno": "medio", "ingresoForraje": "alto" },
-      "beneficios": ["Tres cosechas: diversifica el ingreso y la alimentación", "El frijol aporta nitrógeno", "La calabaza cubre el suelo en lluvias"],
-      "riesgos": ["Más mano de obra", "La floración del frijol en julio puede caer en la sequía de medio verano"],
-      "fuentes": ["pendiente: literatura sobre milpa maya (INIFAP, ECOSUR)"],
-      "porConfirmar": ["variedades locales de frijol y calabaza"]
-    },
-    {
-      "id": "relevo",
-      "nombre": "Maíz precoz + frijol de relevo",
-      "esEjemplo": true,
-      "descripcionCorta": "Maíz de ciclo corto sembrado más tarde y, al final de las lluvias, frijol que aprovecha la humedad que queda.",
-      "ciclos": [
-        { "cultivo": "maiz-precoz", "siembra": "07-01", "cosecha": "10-15", "proposito": "grano" },
-        { "cultivo": "frijol", "siembra": "10-01", "cosecha": "12-31", "proposito": "grano" }
-      ],
-      "atributos": { "fijacionNitrogeno": "medio", "ingresoForraje": "alto" },
-      "beneficios": ["Dos cosechas al año", "El suelo queda cubierto hasta diciembre", "La siembra de julio esquiva parte del calor de junio"],
-      "riesgos": ["El frijol de relevo florece al inicio de las secas", "Depende de la humedad residual del suelo", "Requiere semilla de maíz precoz"],
-      "fuentes": ["pendiente: INIFAP (variedades precoces para la península)"],
-      "porConfirmar": ["disponibilidad de variedad precoz", "humedad residual en el suelo de la parcela"]
+      "beneficios": ["Dos cosechas de grano distintas: diversifica la alimentación y el ingreso", "El caupí fija nitrógeno", "Corta el ciclo de plagas del maíz por un ciclo"],
+      "riesgos": ["Solo una cosecha de maíz en los dos ciclos", "La floración del caupí puede caer en la sequía de medio verano", "El caupí tolera mal el encharcamiento (suelo ak'alche)"],
+      "fuentes": ["pendiente: INIFAP (variedades de caupí o x'pelón para la península)"],
+      "porConfirmar": ["fechas de siembra y cosecha del caupí", "variedad local de caupí", "mercado local del caupí"]
     }
   ]
 }
 ```
 
-- `siembra` y `cosecha` usan `MM-DD`. Si `cosecha` es anterior a `siembra`, el ciclo continúa al año siguiente.
+- **`ciclos[].numero`** es el orden dentro del plan (1 y 2). **No** es un año histórico de la NASA. El año histórico que se use como escenario es otra cosa y no se guarda en el plan.
+- **`tipo`** vale `"continuo"` (repite el cultivo) o `"rotacion"` (cambia el cultivo entre ciclos). Si se siembran dos cultivos juntos en el mismo ciclo, eso es **asociación**. Ninguna de las 3 estrategias la usa.
+- **`siembra` y `cosecha`** usan `MM-DD`. Si `cosecha` es anterior a `siembra`, el ciclo continúa al año siguiente. En un ciclo de `proposito: "cobertura"` no hay cosecha: `cosecha` es la fecha en que se corta o incorpora la cobertura.
+- **Todas las fechas son de ejemplo** (`esEjemplo: true`). Las confirma el Rol 3.
 - `cultivo` debe existir como clave en `reglas.json → cultivos`.
-- `atributos` usa los niveles `"bajo"`, `"medio"` o `"alto"`. Cada nivel necesita una fuente en `fuentes` o una entrada en `porConfirmar`.
+- `atributos` usa los niveles `"bajo"`, `"medio"` o `"alto"`, **relativos entre los 3 planes**. Cada nivel necesita una fuente en `fuentes` o una entrada en `porConfirmar`.
 - `beneficios` y `riesgos` son frases cortas en lenguaje de productor. El motor agrega riesgos calculados (ver sección 8).
+- **Cosechas de maíz por plan:** se deducen de los ciclos con `cultivo: "maiz"` y `proposito: "grano"` (actual 2, cobertura 1, otro-grano 1). La interfaz debe dejar claro que el plan `cobertura` no tiene cosecha en el ciclo 1.
 
 ## 4. `reglas.json` (Rol 3)
 
 ```json
 {
-  "version": "0.2",
+  "version": "0.3",
   "esEjemplo": true,
   "umbralDiaSecoMm": 1.0,
   "rachaRelevanteDias": 5,
@@ -244,38 +280,23 @@ Un archivo por zona, generado por `data-pipeline/clima.py`. Fragmento real de `y
       "fuentes": ["pendiente: FAO-56 / INIFAP"],
       "porConfirmar": ["sensibilidad alta del establecimiento: una racha seca tras la siembra obliga a resembrar"]
     },
-    "maiz-precoz": {
-      "nombre": "Maíz de ciclo corto",
-      "etapas": [
-        { "id": "establecimiento", "nombre": "Germinación y establecimiento", "desdeDia": 0,  "hastaDia": 15, "sensibilidad": "alta" },
-        { "id": "floracion",       "nombre": "Floración",                     "desdeDia": 45, "hastaDia": 60, "sensibilidad": "alta" },
-        { "id": "llenado",         "nombre": "Llenado de grano",              "desdeDia": 61, "hastaDia": 80, "sensibilidad": "media" }
-      ],
-      "fuentes": ["pendiente: INIFAP"]
-    },
-    "frijol": {
-      "nombre": "Frijol",
-      "etapas": [
-        { "id": "establecimiento", "nombre": "Establecimiento",    "desdeDia": 0,  "hastaDia": 15, "sensibilidad": "media" },
-        { "id": "floracion",       "nombre": "Floración",          "desdeDia": 30, "hastaDia": 45, "sensibilidad": "alta" },
-        { "id": "llenado",         "nombre": "Llenado de vaina",   "desdeDia": 46, "hastaDia": 65, "sensibilidad": "media" }
-      ],
-      "fuentes": ["pendiente: FAO-56 / INIFAP"]
-    },
-    "calabaza": {
-      "nombre": "Calabaza",
-      "etapas": [
-        { "id": "establecimiento", "nombre": "Establecimiento", "desdeDia": 0,  "hastaDia": 15, "sensibilidad": "media" },
-        { "id": "floracion",       "nombre": "Floración",       "desdeDia": 35, "hastaDia": 50, "sensibilidad": "media" }
-      ],
-      "fuentes": ["pendiente"]
-    },
-    "mucuna": {
-      "nombre": "Mucuna (frijol terciopelo)",
+    "canavalia": {
+      "nombre": "Canavalia (cobertura)",
       "etapas": [
         { "id": "establecimiento", "nombre": "Establecimiento", "desdeDia": 0, "hastaDia": 20, "sensibilidad": "media" }
       ],
-      "fuentes": ["pendiente"]
+      "fuentes": ["pendiente: ensayo de leguminosas de cobertura en el sur de Yucatán (SciELO)"],
+      "porConfirmar": ["etapas de la canavalia; como no se cosecha, no tiene etapas de sensibilidad alta"]
+    },
+    "caupi": {
+      "nombre": "Frijol caupí (x'pelón)",
+      "etapas": [
+        { "id": "establecimiento", "nombre": "Establecimiento",  "desdeDia": 0,  "hastaDia": 15, "sensibilidad": "media" },
+        { "id": "floracion",       "nombre": "Floración",        "desdeDia": 35, "hastaDia": 50, "sensibilidad": "alta" },
+        { "id": "llenado",         "nombre": "Llenado de vaina", "desdeDia": 51, "hastaDia": 75, "sensibilidad": "media" }
+      ],
+      "fuentes": ["pendiente: FAO-56 / INIFAP"],
+      "porConfirmar": ["días a floración y a cosecha del caupí local"]
     }
   },
   "suelos": {
@@ -283,21 +304,21 @@ Un archivo por zona, generado por `data-pipeline/clima.py`. Fragmento real de `y
       "nombre": "Tsek'el (pedregoso y poco profundo)",
       "equivalenteWRB": "Leptosol",
       "ajusteRachaDias": -1,
-      "aptitud": { "maiz": "media", "maiz-precoz": "media", "frijol": "media", "calabaza": "media", "mucuna": "media" },
+      "aptitud": { "maiz": "media", "canavalia": "media", "caupi": "media" },
       "nota": "Retiene poca agua: el cultivo se estresa con menos días secos."
     },
     "kankab": {
       "nombre": "K'ankab (rojo y más profundo)",
       "equivalenteWRB": "Luvisol",
       "ajusteRachaDias": 0,
-      "aptitud": { "maiz": "alta", "maiz-precoz": "alta", "frijol": "alta", "calabaza": "alta", "mucuna": "alta" },
-      "nota": "Mejor retención de agua; el suelo más apto para la milpa."
+      "aptitud": { "maiz": "alta", "canavalia": "alta", "caupi": "alta" },
+      "nota": "Mejor retención de agua."
     },
     "akalche": {
       "nombre": "Ak'alche (bajo que se inunda)",
       "equivalenteWRB": "Gleysol / Vertisol",
       "ajusteRachaDias": 1,
-      "aptitud": { "maiz": "baja", "maiz-precoz": "baja", "frijol": "baja", "calabaza": "media", "mucuna": "media" },
+      "aptitud": { "maiz": "baja", "canavalia": "media", "caupi": "baja" },
       "nota": "Se encharca en lluvias intensas y se agrieta en secas."
     },
     "fuentes": ["sugeridas: INEGI edafología 1:250 000; Bautista y Zinck (2010), clasificación maya de suelos; FAO GAEZ"],
@@ -352,7 +373,7 @@ Un archivo por zona, generado por `data-pipeline/clima.py`. Fragmento real de `y
 
 ```json
 {
-  "version": "0.2",
+  "version": "0.3",
   "parcela": {
     "id": "ejemplo-01",
     "esEjemplo": true,
@@ -372,17 +393,17 @@ Un archivo por zona, generado por `data-pipeline/clima.py`. Fragmento real de `y
     "suelo": { "tipoLocal": "tsekel", "profundidad": null, "pedregosidad": null }
   },
   "prioridad": "agua",
-  "planes": ["actual", "cobertura", "milpa", "relevo"]
+  "planes": ["actual", "cobertura", "otro-grano"]
 }
 ```
 
 - `origen` es `"gps"` o `"lista"`. `prioridad` es una clave de `reglas.prioridades`.
 - `zonaId` es la zona cuyo punto está más cerca (Haversine) y `distanciaZonaKm` es la distancia a ese punto, redondeada a 1 decimal.
 - `suelo.tipoLocal` es una clave de `reglas.suelos` o `null` ("no sé").
-- `planes` incluye `"actual"` y al menos 3 ids en total.
+- `planes` son los 3 ids de `planes.json`: `"actual"`, `"cobertura"` y `"otro-grano"`. Siempre incluye `"actual"` (el reto pide al menos 3 estrategias, incluida la actual).
 - Si un campo de la parcela es `null`, el motor lo agrega a `datosPendientes`. No lo inventa.
 
-**Firma:**
+**Firma** *(propuesta anterior; pendiente de la nueva arquitectura)*:
 
 ```js
 // Función pura y síncrona. No hace fetch dentro de la función.
@@ -392,11 +413,13 @@ comparar(entrada, { clima, planes, reglas }) -> salida
 
 ## 7. Salida de `comparar()` (Rol 4 → Rol 6)
 
-Ejemplo para la parcela de la sección 6. Los valores salen del cálculo exploratorio con los datos reales de `yuc-noroeste` y las reglas provisionales; el motor real los recalcula.
+Ejemplo para la parcela de la sección 6.
+
+> **Aviso v0.3:** los números de `rachasSecas`, `estresCalor` y `coberturaSuelo` de `actual` vienen del cálculo exploratorio de v0.2, que tomaba **un** ciclo de maíz por año. Con los planes de dos ciclos, el **Rol 4** debe definir cómo se cuentan (sección 8, pendientes) y **recalcularlos**. Por eso `puntajeTotal`, `posicion`, `ranking`, `recomendados` y los `mejores` de rachas y calor aparecen como `null` o vacíos. En la salida real son números e ids. Lo que **no** depende del motor ya está actualizado: ids, ciclos, atributos, beneficios y riesgos.
 
 ```json
 {
-  "version": "0.2",
+  "version": "0.3",
   "generado": "2026-11-14T15:00:00Z",
   "prioridad": "agua",
   "pesosAplicados": { "rachasSecas": 0.45, "estresCalor": 0.20, "coberturaSuelo": 0.15, "fijacionNitrogeno": 0.10, "ingresoForraje": 0.10 },
@@ -405,17 +428,27 @@ Ejemplo para la parcela de la sección 6. Los valores salen del cálculo explora
   "planes": [
     {
       "id": "actual",
-      "nombre": "Maíz de temporal (práctica actual)",
-      "descripcionCorta": "Una siembra de maíz con las primeras lluvias; el suelo queda sin cubrir en secas.",
+      "nombre": "Actual: maíz continuo",
+      "tipo": "continuo",
+      "objetivo": "Cosechar maíz en ambos ciclos.",
+      "descripcionCorta": "Maíz de temporal en los dos ciclos. Es la práctica de referencia.",
       "calendario": [
         {
-          "cultivo": "maiz", "nombreCultivo": "Maíz", "siembra": "06-15", "cosecha": "10-31",
+          "ciclo": 1, "cultivo": "maiz", "nombreCultivo": "Maíz", "proposito": "grano", "siembra": "06-15", "cosecha": "10-31",
+          "etapasCriticas": [
+            { "id": "establecimiento", "nombre": "Germinación y establecimiento", "inicio": "06-15", "fin": "07-05" },
+            { "id": "floracion", "nombre": "Floración (espiga y jilote)", "inicio": "08-09", "fin": "08-29" }
+          ]
+        },
+        {
+          "ciclo": 2, "cultivo": "maiz", "nombreCultivo": "Maíz", "proposito": "grano", "siembra": "06-15", "cosecha": "10-31",
           "etapasCriticas": [
             { "id": "establecimiento", "nombre": "Germinación y establecimiento", "inicio": "06-15", "fin": "07-05" },
             { "id": "floracion", "nombre": "Floración (espiga y jilote)", "inicio": "08-09", "fin": "08-29" }
           ]
         }
       ],
+      "cosechasMaiz": 2,
       "criterios": {
         "rachasSecas": {
           "valor": 0.15, "unidad": "proporción de días críticos dentro de una racha seca",
@@ -440,13 +473,13 @@ Ejemplo para la parcela de la sección 6. Los valores salen del cálculo explora
           "explicacion": "El suelo queda descubierto de noviembre a mayo."
         },
         "fijacionNitrogeno": { "nivel": "bajo", "puntaje": 0, "explicacion": "Ningún cultivo del plan fija nitrógeno." },
-        "ingresoForraje": { "nivel": "medio", "puntaje": 0.5, "explicacion": "Una cosecha de grano y rastrojo para forraje." }
+        "ingresoForraje": { "nivel": "alto", "puntaje": 1, "explicacion": "Dos cosechas de maíz (una por ciclo) y rastrojo para forraje." }
       },
-      "puntajeTotal": 0.68,
-      "posicion": 4,
-      "porQue": "Con prioridad en el agua, este plan se expone a la sequía igual que la cobertura, pero deja el suelo descubierto 7 meses y no aporta nitrógeno.",
-      "beneficios": ["Práctica conocida; no requiere semilla ni mano de obra adicional", "El rastrojo puede servir de forraje"],
-      "riesgos": ["Suelo descubierto de noviembre a mayo: pierde humedad y materia orgánica"],
+      "puntajeTotal": null,
+      "posicion": null,
+      "porQue": "(lo genera el motor; pendiente de recalcular con los planes de dos ciclos)",
+      "beneficios": ["Práctica conocida; no requiere semilla nueva ni otra mano de obra", "Cosecha de maíz en los dos ciclos", "El rastrojo puede servir de forraje"],
+      "riesgos": ["Repetir maíz no corta el ciclo de plagas y enfermedades del maíz", "Suelo descubierto en secas: pierde humedad y materia orgánica", "No aporta nitrógeno al suelo"],
       "datosNasa": [
         { "parametro": "IMERG_PRECTOT", "descripcion": "Lluvia diaria GPM IMERG vía NASA POWER, 1998–2025", "fechaCorte": "2025-12-31" },
         { "parametro": "T2M_MAX", "descripcion": "Temperatura máxima diaria MERRA-2 vía NASA POWER, 1998–2025", "fechaCorte": "2025-12-31" }
@@ -455,21 +488,20 @@ Ejemplo para la parcela de la sección 6. Los valores salen del cálculo explora
     }
   ],
   "ranking": [
-    { "id": "cobertura", "puntajeTotal": 0.78, "posicion": 1 },
-    { "id": "milpa",     "puntajeTotal": 0.77, "posicion": 2 },
-    { "id": "relevo",    "puntajeTotal": 0.71, "posicion": 3 },
-    { "id": "actual",    "puntajeTotal": 0.68, "posicion": 4 }
+    { "id": "actual",     "puntajeTotal": null, "posicion": null },
+    { "id": "cobertura",  "puntajeTotal": null, "posicion": null },
+    { "id": "otro-grano", "puntajeTotal": null, "posicion": null }
   ],
   "comparacion": {
     "porCriterio": {
-      "rachasSecas":       { "mejores": ["actual", "cobertura", "milpa"], "sinDiferencia": false },
-      "estresCalor":       { "mejores": ["relevo", "actual", "cobertura"], "sinDiferencia": false },
+      "rachasSecas":       { "mejores": [], "sinDiferencia": false },
+      "estresCalor":       { "mejores": [], "sinDiferencia": false },
       "coberturaSuelo":    { "mejores": ["cobertura"], "sinDiferencia": false },
       "fijacionNitrogeno": { "mejores": ["cobertura"], "sinDiferencia": false },
-      "ingresoForraje":    { "mejores": ["milpa", "relevo"], "sinDiferencia": false }
+      "ingresoForraje":    { "mejores": ["actual", "otro-grano"], "sinDiferencia": false }
     },
-    "recomendados": ["cobertura", "milpa"],
-    "mensaje": "Con prioridad en el agua, la cobertura y la milpa quedan prácticamente empatadas: las dos resisten la sequía como tu plan actual, la cobertura cuida más el suelo y la milpa da más ingreso."
+    "recomendados": [],
+    "mensaje": "(lo genera el motor; pendiente de recalcular)"
   },
   "fuentes": {
     "lluvia":      { "nombre": "NASA POWER / GPM IMERG", "url": "https://power.larc.nasa.gov/", "fechaCorte": "2025-12-31", "fechaDescarga": "2026-11-14" },
@@ -485,13 +517,26 @@ Ejemplo para la parcela de la sección 6. Los valores salen del cálculo explora
 }
 ```
 
-> En el ejemplo solo aparece el detalle de `actual`; la salida real incluye los 4 planes con la misma estructura.
+> En el ejemplo solo aparece el detalle de `actual`. La salida real incluye los 3 planes con la misma estructura.
+>
+> Los `mejores` de cobertura, nitrógeno e ingreso se deducen directo de los datos: la canavalia cubre el suelo casi todo el año, solo `cobertura` tiene nitrógeno `alto`, y `actual` y `otro-grano` tienen ingreso `alto`. Aun así, el motor los calcula.
+>
+> El campo `calendario[].ciclo` y `cosechasMaiz` son nuevos en v0.3, para que la interfaz muestre los dos ciclos y cuántas cosechas de maíz da cada plan.
 
 **Valores posibles:**
 - `comparacion.porCriterio.<criterio>.mejores`: ids de los planes empatados en el mejor puntaje. Si todos empatan, `sinDiferencia: true`.
 - `comparacion.recomendados`: uno o más ids. Más de uno significa empate técnico.
 
 ## 8. Algoritmo de referencia del motor
+
+> **Pendiente del Rol 4 (con el Rol 1), desde v0.3.** Este algoritmo se escribió para v0.2, donde todos los `ciclos` de un plan ocurrían en el **mismo año**. En v0.3 cada plan tiene **dos ciclos en secuencia** (ciclo 1 y luego ciclo 2). El Rol 4 debe decidir y documentar:
+>
+> 1. **Qué temporada histórica usa cada ciclo.** Opción A: la misma temporada para los dos ciclos, para comparar ciclo por ciclo bajo las mismas lluvias. Opción B: años consecutivos (Y para el ciclo 1, Y+1 para el ciclo 2). Si se hace como en el paso 2 actual (siembra = `Y-MM-DD` para cada ciclo), en la práctica es la opción A.
+> 2. **Cómo se mide la cobertura en dos ciclos.** El paso 5 usa un año de referencia. Con dos ciclos en secuencia, los meses de ambos ciclos se encimarían en ese año. Habría que medir sobre los dos ciclos (unos 24 meses) o por ciclo.
+> 3. **Cómo mostrar que la canavalia no tiene días críticos.** No tiene etapas de sensibilidad alta porque no se cosecha. Su ciclo no suma días críticos, y el riesgo de sequía del plan `cobertura` viene solo del maíz del ciclo 2.
+> 4. **Cómo reflejar en la explicación que `cobertura` no tiene cosecha de maíz en el ciclo 1** (ver `cosechasMaiz`).
+>
+> Los pasos de abajo siguen siendo la referencia de v0.2 hasta que el Rol 4 los actualice.
 
 1. **Preparación.**
    - Valida que `clima.zona.id === entrada.parcela.ubicacion.zonaId`.
@@ -506,7 +551,7 @@ Ejemplo para la parcela de la sección 6. Los valores salen del cálculo explora
 7. **Total.** `puntajeTotal = Σ peso × puntaje` con `pesosPorPrioridad[prioridad]`. `ranking` va de mayor a menor.
 8. **Empates.** Por criterio, `mejores` = planes cuyo puntaje esté a `toleranciaEmpate[criterio]` o menos del mejor. `recomendados` = planes a `toleranciaEmpate.total` o menos del primer lugar.
 9. **Riesgos calculados.** El motor agrega a `riesgos` de cada plan:
-   - cada cultivo con `aptitud: "baja"` en el suelo elegido: «El frijol tiene aptitud baja en suelo ak'alche (por confirmar).»
+   - cada cultivo con `aptitud: "baja"` en el suelo elegido: «El caupí tiene aptitud baja en suelo ak'alche (por confirmar).»
    - si `rachasSecas.valor ≥ 0.25`: «Una cuarta parte o más de los días críticos cayó en racha seca en esta zona.»
 10. **Explicaciones** en español simple y con números concretos: frecuencias («6 de 42 días», «25 de 28 años»), no decimales.
 11. **Evidencia:** hasta 5 traslapes por criterio y por plan, primero los más largos.

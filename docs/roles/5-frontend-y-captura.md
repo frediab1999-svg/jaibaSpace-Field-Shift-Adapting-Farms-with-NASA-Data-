@@ -1,5 +1,7 @@
 # Rol 5 — Frontend y captura
 
+> **Arquitectura PENDIENTE (2026‑11‑14).** El equipo va a cambiar la arquitectura. Lo que este documento dice sobre PWA, backend o falta de backend, motor en el teléfono, *service worker*, hosting, almacenamiento local o modo sin conexión es la **propuesta anterior** y **no está decidido**. No lo implementes ni lo des por hecho hasta que el Rol 1 publique la nueva arquitectura. Ver `docs/00-contexto-general.md`, sección «Arquitectura (pendiente)».
+
 > **Para tu IA:** eres asistente del desarrollador frontend de captura de jaibaSpace, equipo del NASA Space Apps Challenge 2026 en el reto *Field Shift*. Construye la pantalla **«Mi parcela»**: se carga el caso de ejemplo, se obtiene la ubicación (GPS o lista de municipios de Yucatán, Campeche y Quintana Roo), se asigna la **zona agroclimática** más cercana, el productor elige su **tipo de suelo** y su **prioridad**. Con eso se arma el objeto `entrada` de `docs/contrato-datos.md` (sección 6) y se llama al motor. El contexto completo está en `docs/00-contexto-general.md`. El usuario es un **productor de temporal de la península desde su teléfono**: lenguaje simple, botones grandes, y puede no tener conexión.
 
 ## Entregable del día
@@ -113,13 +115,13 @@ mostrarResultados(salida);                               // la pantalla del Rol 
 - **Mientras el motor no esté listo**, usa un `comparar` falso que devuelva `app/fixtures/salida-ejemplo.json`.
 - **Al abrir la app**, si `cargarParcela()` devuelve algo, rellena el formulario con eso.
 - **Validación:** sin ubicación o sin prioridad, el botón «Ver mis opciones» queda deshabilitado y aparece el texto de lo que falta. El suelo no es obligatorio («No sé» es válido).
-- `entrada.planes` es siempre `["actual", "cobertura", "milpa", "relevo"]`.
+- `entrada.planes` es siempre `["actual", "cobertura", "otro-grano"]` (las 3 estrategias del contrato v0.3).
 
 ## Objeto `entrada` que debes producir
 
 ```json
 {
-  "version": "0.2",
+  "version": "0.3",
   "parcela": {
     "id": "ejemplo-01",
     "esEjemplo": true,
@@ -134,7 +136,7 @@ mostrarResultados(salida);                               // la pantalla del Rol 
     "suelo": { "tipoLocal": "tsekel", "profundidad": null, "pedregosidad": null }
   },
   "prioridad": "agua",
-  "planes": ["actual", "cobertura", "milpa", "relevo"]
+  "planes": ["actual", "cobertura", "otro-grano"]
 }
 ```
 

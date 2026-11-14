@@ -1,26 +1,28 @@
 # Rol 1 — Líder técnico e integración
 
-> **Para tu IA:** eres asistente del líder técnico de jaibaSpace, equipo del NASA Space Apps Challenge 2026 en el reto *Field Shift*. El contexto completo está en `docs/00-contexto-general.md`, el texto oficial en `docs/reto-oficial.md` y los formatos en `docs/contrato-datos.md` (v0.2). Tu prioridad es que exista **un flujo completo funcionando y publicado** al final del día, aunque tenga menos funciones. Ayuda a decidir qué recortar.
+> **Arquitectura PENDIENTE (2026‑11‑14).** El equipo va a cambiar la arquitectura. Lo que este documento dice sobre PWA, backend o falta de backend, motor en el teléfono, *service worker*, hosting, almacenamiento local o modo sin conexión es la **propuesta anterior** y **no está decidido**. No lo implementes ni lo des por hecho hasta que el Rol 1 publique la nueva arquitectura. Ver `docs/00-contexto-general.md`, sección «Arquitectura (pendiente)».
+
+> **Para tu IA:** eres asistente del líder técnico de jaibaSpace, equipo del NASA Space Apps Challenge 2026 en el reto *Field Shift*. El contexto completo está en `docs/00-contexto-general.md`, el texto oficial en `docs/reto-oficial.md` y los formatos en `docs/contrato-datos.md` (v0.3). Tu prioridad es que exista **un flujo completo funcionando y publicado** al final del día, aunque tenga menos funciones. Ayuda a decidir qué recortar.
 
 ## Entregable del día
 
-> En la primera hora congela el contrato v0.2 y sube ejemplos con datos falsos. Arma el flujo completo y publica la PWA estática en un hosting HTTPS, requisito para que funcione sin conexión. Decide qué recortar.
+> En la primera hora congela el contrato v0.3 y sube ejemplos con datos falsos. Arma el flujo completo y publica la PWA estática en un hosting HTTPS, requisito para que funcione sin conexión. Decide qué recortar.
 
 ## Qué construye el equipo (en una línea)
 
-Una PWA sin backend que ayuda a un productor de temporal de la **Península de Yucatán** a explorar **4 estrategias de rotación** (actual, cobertura, milpa y relevo) con 5 criterios: rachas secas y estrés por calor (datos NASA de su zona), cobertura del suelo, fijación de nitrógeno e ingreso o forraje. El tipo de suelo ajusta el cálculo y la prioridad del productor cambia el peso de cada criterio.
+Una app (arquitectura pendiente) que ayuda a un productor de temporal de la **Península de Yucatán** a explorar **3 estrategias de dos ciclos**: actual (maíz → maíz), rotación con cobertura (canavalia → maíz) y rotación con otro grano (caupí → maíz). Usa 5 criterios: rachas secas y estrés por calor (datos NASA de su zona), cobertura del suelo, fijación de nitrógeno e ingreso o forraje. El tipo de suelo ajusta el cálculo y la prioridad del productor cambia el peso de cada criterio.
 
 ## Tus tareas, en orden
 
 ### Hora 0–1: contrato y esqueleto
 
-1. Revisa `docs/contrato-datos.md` (v0.2). Ajusta lo necesario y **congélalo** en `develop`.
+1. Revisa `docs/contrato-datos.md` (v0.3). Ajusta lo necesario y **congélalo** en `develop`.
 2. Sube estos archivos que respetan el contrato, para que nadie espere a nadie:
    - `app/data/zonas.json` (la sección 1 del contrato),
    - `app/data/clima/yuc-noroeste.json` (si el Rol 2 aún no lo genera, el ejemplo del contrato con 2–3 temporadas y `"esEjemplo": true`),
    - `app/data/planes.json` y `app/data/reglas.json` (copiados del contrato),
    - `app/data/parcela-ejemplo.json` (la entrada del contrato),
-   - `app/fixtures/salida-ejemplo.json` (la salida del contrato, con los 4 planes).
+   - `app/fixtures/salida-ejemplo.json` (la salida del contrato, con los 3 planes).
 3. Crea el esqueleto del repositorio (sección 7 del contexto general): PWA con HTML, CSS y JavaScript sin framework, o Vite + JS. La PWA no necesita servidor.
 4. Asigna las ramas y avisa a cada rol qué archivos son suyos.
 
@@ -43,7 +45,7 @@ Una PWA sin backend que ayuda a un productor de temporal de la **Península de Y
    1. abrir la app,
    2. cargar la parcela de ejemplo,
    3. elegir suelo y prioridad,
-   4. ver las 4 estrategias ordenadas,
+   4. ver las 3 estrategias ordenadas, con sus dos ciclos y cuántas cosechas de maíz da cada una,
    5. abrir el «¿Por qué?» de una estrategia,
    6. cambiar de zona (por ejemplo, a Quintana Roo) y ver que el resultado cambia,
    7. activar el modo avión, recargar y comprobar que todo sigue funcionando.
@@ -76,15 +78,16 @@ Recorta en este orden si el tiempo no alcanza:
 | Decisión | Recomendación | Por qué |
 |---|---|---|
 | ¿IMERG o PRECTOTCORR? | **IMERG** (1998–2025, unos 10 km) | Dato satelital de la NASA con mejor resolución. PRECTOTCORR llega a 1981, pero con unos 50 km de rejilla. |
-| ¿Backend? | **No** | La PWA estática basta, es más robusta en la demo y funciona offline. |
+| ¿Backend? ¿PWA? ¿Sin conexión? | **Pendiente:** la arquitectura va a cambiar | Lo decides con el equipo y lo documentas en `00-contexto-general.md` |
 | ¿Cuántas zonas? | **7**; mínimo 3 (una por estado) | El script tarda segundos por zona; cada archivo pesa unos 120 KB. |
-| ¿Cuántas estrategias? | **4** | El reto sugiere al menos 3, incluida la actual. |
+| ¿Cuántas estrategias? | **3, acordadas por el equipo** (contrato v0.3) | El reto sugiere al menos 3, incluida la actual. |
+| ¿Cómo cuenta el motor dos ciclos en secuencia? | **Pendiente:** lo decide el Rol 4 contigo | Contrato, sección 8 |
 | ¿Pronóstico de 7 días? | **No** en el MVP | El reto no lo pide y agrega riesgo (proveedor externo, CORS, caducidad). |
 | ¿Un idioma? | Español | El usuario es un productor de la península. El pitch puede ir en inglés. |
 
 ## Criterios de terminado
 
-- [ ] Contrato v0.2 congelado en la primera hora y ejemplos falsos en el repo.
+- [ ] Contrato v0.3 congelado en la primera hora y ejemplos falsos en el repo.
 - [ ] URL HTTPS pública que carga la app.
 - [ ] La app se puede instalar (manifest con iconos) y funciona en modo avión después de la primera visita.
 - [ ] El flujo completo funciona con datos reales de NASA POWER en al menos 3 zonas.

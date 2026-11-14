@@ -6,9 +6,17 @@ Participación del equipo jaibaSpace en el **NASA Space Apps Challenge 2026**, r
 
 **Una app para que un productor de temporal de la Península de Yucatán explore estrategias de rotación para su parcela.**
 
-El productor indica dónde está su parcela, qué suelo tiene (*tsek'el*, *k'ankab* o *ak'alche*) y qué quiere priorizar: cuidar el agua, cuidar el suelo, aportar nitrógeno o tener más ingreso. La app compara su práctica actual con tres alternativas (**maíz + cobertura**, **milpa** y **maíz precoz + frijol de relevo**) usando 28 años de lluvia satelital (GPM IMERG) y temperatura (MERRA‑2) de la NASA para su zona. Para cada estrategia explica por qué se sugiere, con qué dato, qué beneficios y riesgos tiene, y qué debe confirmar en campo.
+El productor indica dónde está su parcela, qué suelo tiene (*tsek'el*, *k'ankab* o *ak'alche*) y qué quiere priorizar: cuidar el agua, cuidar el suelo, aportar nitrógeno o tener más ingreso. La app compara tres estrategias de dos ciclos en la misma parcela:
 
-Funciona en el teléfono y **sin conexión**. No predice cosechas y no reemplaza el juicio del productor ni de un técnico: le muestra patrones para que decida mejor.
+| Plan | Primer ciclo | Segundo ciclo | Objetivo |
+|---|---|---|---|
+| **Actual** (referencia) | Maíz de temporal | Maíz de temporal | Cosechar maíz en ambos ciclos |
+| **Rotación con cobertura** | Canavalia | Maíz de temporal | Dedicar un ciclo a cubrir el suelo antes de volver al maíz |
+| **Rotación con otro grano** | Frijol caupí | Maíz de temporal | Cosechar un grano distinto en el primer ciclo |
+
+La comparación usa 28 años de lluvia satelital (GPM IMERG) y temperatura (MERRA‑2) de la NASA para su zona. Para cada estrategia explica por qué se sugiere, con qué dato, qué beneficios y riesgos tiene, y qué debe confirmar en campo.
+
+*(La arquitectura —servidor, app en el teléfono, modo sin conexión— está pendiente; ver el [contexto general](docs/00-contexto-general.md).)* No predice cosechas y no reemplaza el juicio del productor ni de un técnico: le muestra patrones para que decida mejor.
 
 ### Lo que encontramos en los datos
 
@@ -24,7 +32,7 @@ Detalle en el [contexto general](docs/00-contexto-general.md#4-la-península-en-
 |---|---|
 | [Texto oficial del reto](docs/reto-oficial.md) | Qué pide la NASA y qué recursos aplican a la península |
 | [Contexto general](docs/00-contexto-general.md) | Qué construimos, por qué y con qué datos |
-| [Contrato de datos v0.2](docs/contrato-datos.md) | Formatos JSON compartidos y algoritmo del motor |
+| [Contrato de datos v0.3](docs/contrato-datos.md) | Formatos JSON compartidos, las 3 estrategias y el algoritmo del motor (con pendientes del Rol 4) |
 | [Requisitos y modelo](docs/requisitos-y-modelo.md) | Requisitos verificables y entidades |
 | [Guía de trabajo](docs/guia-de-trabajo.md) | Acuerdos del equipo, archivos de cada rol e integración |
 | [Roles](docs/roles/) | Qué entrega cada integrante (cada archivo sirve de contexto para su IA) |

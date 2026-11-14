@@ -1,5 +1,7 @@
 # Diagramas de arquitectura y componentes
 
+> **Arquitectura PENDIENTE (2026‑11‑14).** El equipo va a cambiar la arquitectura. Lo que este documento dice sobre PWA, backend o falta de backend, motor en el teléfono, *service worker*, hosting, almacenamiento local o modo sin conexión es la **propuesta anterior** y **no está decidido**. No lo implementes ni lo des por hecho hasta que el Rol 1 publique la nueva arquitectura. Ver `docs/00-contexto-general.md`, sección «Arquitectura (pendiente)».
+
 Estos diagramas se revisaron contra `docs/contrato-datos.md` v0.2, `docs/requisitos-y-modelo.md` y el codigo presente. A la fecha de revision solo esta implementado `data-pipeline/clima.py`; la PWA, el motor JavaScript y los JSON de entrada/salida aun no existen. Las lineas punteadas representan componentes planificados.
 
 ## Arquitectura de la aplicacion
@@ -52,12 +54,12 @@ flowchart TD
 
 ### Almacenamiento e integraciones
 
-No hay backend de aplicacion ni base de datos. El script existente lee `zonas.json`, consulta NASA POWER por zona, guarda la respuesta original bajo `data-pipeline/raw/` y genera el clima resumido por zona. El contrato v0.2 define ademas `zonas.json`, `planes.json`, `reglas.json`, `municipios.json` y archivos de parcela/resultado, pero esos archivos todavia no estan en el repositorio. La futura PWA consumira esos JSON estaticos y ejecutara la comparacion en el dispositivo. No hay proveedor de pronostico meteorologico en el MVP v0.2.
+No hay backend de aplicacion ni base de datos. El script existente lee `zonas.json`, consulta NASA POWER por zona, guarda la respuesta original bajo `data-pipeline/raw/` y genera el clima resumido por zona. El contrato v0.3 define ademas `zonas.json`, `planes.json`, `reglas.json`, `municipios.json` y archivos de parcela/resultado, pero esos archivos todavia no estan en el repositorio. La futura PWA consumira esos JSON estaticos y ejecutara la comparacion en el dispositivo. No hay proveedor de pronostico meteorologico en el MVP.
 
 ### Decisiones de arquitectura
 
 - El motor previsto es una funcion pura de JavaScript; Python solo prepara observaciones historicas antes de publicar.
-- El contrato v0.2 define siete zonas como meta y al menos una por estado como MVP minimo; la cobertura real depende de los JSON generados.
+- El contrato v0.3 define siete zonas como meta y al menos una por estado como MVP minimo; la cobertura real depende de los JSON generados.
 - El clima representa una zona, no la parcela. Las fuentes y resoluciones de lluvia y temperatura deben mostrarse por separado.
 - Los datos se cachearan para que la PWA funcione sin conexion; esta funcionalidad esta especificada, pero aun no implementada.
 
@@ -127,7 +129,7 @@ flowchart LR
 
 ## Diagrama de clases
 
-El diagrama UML conceptual y sus relaciones estan en [clases-field-shift.puml](../../../../../docs/diagramas/clases-field-shift.puml). Refleja el contrato v0.2; no significa que esas clases esten implementadas en codigo.
+El diagrama UML conceptual y sus relaciones estan en [clases-field-shift.puml](../../../../../docs/diagramas/clases-field-shift.puml). Refleja el contrato v0.3 (3 estrategias de dos ciclos); no significa que esas clases esten implementadas en codigo.
 
 ## Diagrama de casos de uso
 
