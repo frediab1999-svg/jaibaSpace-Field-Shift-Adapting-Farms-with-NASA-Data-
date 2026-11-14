@@ -11,5 +11,5 @@ rama donde tenemos el codigo final
 rama en donde vamos a tener todo el codigo antes de qa
 
 ## QA
-rama de pruebas
+rama de pruebas en donde probaremos el codigo
 
