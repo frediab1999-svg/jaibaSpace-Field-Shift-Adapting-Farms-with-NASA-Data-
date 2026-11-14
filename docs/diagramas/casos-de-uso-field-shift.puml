@@ -1,0 +1,85 @@
+@startuml
+title Field Shift v0.2 - Casos de uso
+left to right direction
+skinparam packageStyle rectangle
+
+actor "Productor de temporal" as Productor
+actor "Tecnico o asesor agricola" as Asesor
+actor "NASA POWER" as NASA
+actor "Rol 2 - Ingenieria de datos" as Rol2
+actor "Rol 3 - Reglas agricolas" as Rol3
+
+rectangle "PWA Field Shift - MVP offline" {
+  usecase "Abrir o instalar la PWA" as UC_Open
+  usecase "Cargar parcela de ejemplo" as UC_Sample
+  usecase "Registrar datos de parcela" as UC_Parcel
+  usecase "Obtener ubicacion por GPS" as UC_GPS
+  usecase "Elegir municipio" as UC_Municipality
+  usecase "Asignar zona agroclimatica cercana" as UC_Zone
+  usecase "Elegir tipo de suelo o no se" as UC_Soil
+  usecase "Elegir prioridad" as UC_Priority
+  usecase "Guardar parcela en dispositivo" as UC_Save
+  usecase "Comparar estrategias" as UC_Compare
+  usecase "Ver ranking y recomendados" as UC_Rank
+  usecase "Ver cinco criterios por estrategia" as UC_Criteria
+  usecase "Ver calendario beneficios y riesgos" as UC_PlanDetails
+  usecase "Consultar evidencia y datos pendientes" as UC_Evidence
+  usecase "Consultar fuentes NASA y zona usada" as UC_Sources
+  usecase "Comparar zonas de la peninsula" as UC_Regions
+  usecase "Consultar glosario agricola" as UC_Glossary
+  usecase "Usar PWA sin conexion" as UC_Offline
+  usecase "Preparar clima historico por zona" as UC_Prepare
+  usecase "Definir estrategias y reglas" as UC_Rules
+}
+
+Productor --> UC_Open
+Productor --> UC_Sample
+Productor --> UC_Parcel
+Productor --> UC_Priority
+Productor --> UC_Compare
+Productor --> UC_Rank
+Productor --> UC_Criteria
+Productor --> UC_PlanDetails
+Productor --> UC_Evidence
+Productor --> UC_Sources
+Productor --> UC_Regions
+Productor --> UC_Glossary
+Productor --> UC_Offline
+Asesor --> UC_Evidence
+Asesor --> UC_Sources
+Rol2 --> UC_Prepare
+NASA --> UC_Prepare
+Rol3 --> UC_Rules
+
+UC_Parcel .> UC_Zone : <<include>>
+UC_Parcel .> UC_Soil : <<include>>
+UC_Parcel .> UC_Save : <<include>>
+UC_GPS .> UC_Zone : <<extend>>
+UC_Municipality .> UC_Zone : <<extend>>
+UC_Compare .> UC_Parcel : <<include>>
+UC_Compare .> UC_Priority : <<include>>
+UC_Compare .> UC_Rank : <<include>>
+UC_Rank .> UC_Criteria : <<include>>
+UC_Rank .> UC_PlanDetails : <<include>>
+UC_PlanDetails .> UC_Evidence : <<include>>
+UC_Rank .> UC_Sources : <<include>>
+
+note bottom of UC_Compare
+  Requiere al menos tres estrategias e incluye actual.
+  Usa clima historico de la zona y cinco criterios.
+end note
+
+note bottom of UC_Offline
+  App, zonas, estrategias, reglas y archivos climaticos
+  deben haberse guardado en cache previamente.
+end note
+
+note bottom of UC_Prepare
+  Flujo de datos previo a publicar la PWA.
+  clima.py esta implementado; la app aun no.
+end note
+
+note bottom of UC_Regions
+  Meta: siete zonas. MVP minimo: una por estado.
+end note
+@enduml

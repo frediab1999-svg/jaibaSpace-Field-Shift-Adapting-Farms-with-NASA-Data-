@@ -1,65 +1,69 @@
 # Rol 2 — Ingeniería de datos
 
-> **Para tu IA:** eres asistente del ingeniero de datos de jaibaSpace, equipo del NASA Space Apps Challenge 2026 en el reto *Field Shift*. Tu trabajo es descargar la lluvia diaria de NASA POWER para el punto de la parcela, normalizarla y entregar `app/data/clima.json` con el formato exacto de `docs/contrato-datos.md` (sección 1). El contexto completo está en `docs/00-contexto-general.md`. No inventes datos. Si algo falta, déjalo en `null` y repórtalo.
+> **Para tu IA:** eres asistente del ingeniero de datos de jaibaSpace, equipo del NASA Space Apps Challenge 2026 en el reto *Field Shift*. Tu trabajo es usar Python en `data-pipeline/` para descargar y procesar lluvia (GPM IMERG) y temperatura máxima (MERRA‑2) de NASA POWER para **cada zona de la Península de Yucatán** y entregar `app/data/clima/<zona>.json` con el formato de `docs/contrato-datos.md` (sección 2). También mantienes los puntos de `app/data/zonas.json` (sección 1). La PWA no depende de un servidor: tu script corre antes del despliegue. El contexto está en `docs/00-contexto-general.md`. No inventes datos.
 
 ## Entregable del día
 
-> Descarga la lluvia diaria de NASA POWER para el municipio, con todos los años disponibles. Entrega un JSON con fuente, coordenadas, unidades, fecha de corte y la racha seca más larga dentro de la ventana del cultivo para cada año, más la mediana y los peores años.
+> Un archivo `clima/<zona>.json` por cada zona de `zonas.json`, generado con `data-pipeline/clima.py`, que reproduzca la tabla de referencia en `yuc-noroeste`. Además, el resumen comparativo de la península para el pitch.
 
-**Primera tarea, en los primeros 30–60 minutos:** comparte el formato de `clima.json` con un ejemplo. El ejemplo ya está en el contrato. Así el Rol 4 programa el motor contra él mientras tú preparas la serie real.
+**Primera tarea, en los primeros 30 minutos:** corre el script y sube los archivos. Ya funciona: se probó el 2026‑11‑14 con las 7 zonas.
+
+```
+cd data-pipeline
+python clima.py ../app/data
+```
+
+- Lee `app/data/zonas.json`, descarga NASA POWER para cada punto, guarda la respuesta cruda en `data-pipeline/raw/<zona>.json` y escribe `app/data/clima/<zona>.json`.
+- No necesita dependencias ni clave de API. Tarda unos segundos por zona.
+- Escribe en UTF‑8. En Windows no uses `>` para redirigir, porque guarda en cp1252.
 
 ## La API
 
 ```
 GET https://power.larc.nasa.gov/api/temporal/daily/point
-    ?parameters=IMERG_PRECTOT,PRECTOTCORR,T2M_MAX
+    ?parameters=IMERG_PRECTOT,T2M_MAX
     &community=AG
     &longitude=-89.75
     &latitude=20.49
-    &start=19810101
+    &start=19980101
     &end=20251231
     &format=JSON
     &time-standard=UTC
 ```
 
-- No requiere clave. Responde en menos de un segundo por punto.
-- **Estructura de la respuesta:**
-  - `properties.parameter.<PARAM>` es un objeto `{ "YYYYMMDD": valor }`.
-  - `parameters.<PARAM>.units` da las unidades (`mm/day` y `C`).
-  - `header.fill_value` es `-999.0`, el valor para dato faltante.
-  - `header.sources` lista las fuentes (`["MERRA2", "IMERG", "POWER"]`).
-  - `header.api.version` es `v2.10.3`.
-  - `geometry.coordinates` es `[lon, lat, elevación]`, con elevación de 24.93 m en este punto.
-- La API también acepta `time-standard=LST` (hora local). Usa `UTC`, como en la consulta verificada, y anótalo en `fuente.timeStandard`.
+- `properties.parameter.<PARAM>` es un objeto `{ "YYYYMMDD": valor }`.
+- `parameters.<PARAM>.units` da las unidades (`mm/day` y `C`).
+- `header.fill_value` es `-999.0`, el valor para dato faltante.
+- `header.api.version` es `v2.10.3`.
+- `geometry.coordinates` es `[lon, lat, elevación]`.
+- La API acepta `time-standard=LST` (hora local). Usamos `UTC`, como en la tabla de referencia. En Yucatán (UTC‑6) los totales diarios quedan corridos 6 horas; es aceptable para rachas de varios días, pero conviene saberlo si un juez pregunta.
 
-## Hallazgo importante: qué parámetro y desde cuándo
-
-Verificado el 2026‑11‑14 en el punto 20.49 N, −89.75 O:
+## Qué parámetro y desde cuándo
 
 | Parámetro | Producto | Primer dato válido | Resolución aprox. | Uso |
 |---|---|---|---|---|
-| `IMERG_PRECTOT` | GPM IMERG (satélite) | **1998‑01‑01** (antes de esa fecha viene `-999`) | 0.1°, unos 10 km | **Principal** |
-| `PRECTOTCORR` | MERRA‑2, corregida | 1981‑01‑01 | 0.5° × 0.625°, unos 50 km | Respaldo y serie larga |
-| `T2M_MAX` | MERRA‑2 | 1981 | unos 50 km | Solo contexto |
+| `IMERG_PRECTOT` | GPM IMERG (satélite) | **1998‑01‑01** (antes viene `-999`) | 0.1°, unos 10 km | **Rachas secas** |
+| `T2M_MAX` | MERRA‑2 (reanálisis) | 1981 | 0.5° × 0.625°, unos 50 km | **Episodios de calor** (dato regional) |
+| `PRECTOTCORR` | MERRA‑2, corregida | 1981 | unos 50 km | No se usa: una sola fuente de lluvia |
 
-La frase «hay datos desde 1981» es cierta para **PRECTOTCORR**, no para IMERG. Las dos fuentes **no siempre coinciden**. En 2025, IMERG da una racha de 12 días (6–17 de junio) y PRECTOTCORR una de 8 días (29 de junio–6 de julio). **Usa una sola fuente en el comparador** y declara cuál es en `fuente`. La recomendación es IMERG.
+IMERG y PRECTOTCORR **no siempre coinciden**: en 2025, en el noroeste de Yucatán, IMERG da una racha de 12 días (6–17 de junio) y PRECTOTCORR una de 8 (29 de junio–6 de julio). Por eso se usa solo IMERG para la lluvia.
 
 ## Normalización (reglas obligatorias)
 
 1. Convierte `-999.0` (o el valor de `header.fill_value`) a `null`. **Nunca lo cuentes como 0 mm.**
 2. Conserva todas las fechas, incluso las que no tienen dato.
-3. **Día seco:** lluvia menor que `1.0` mm (`umbralDiaSecoMm`). Es una decisión provisional que el Rol 3 confirma.
-4. **Racha seca:** días secos consecutivos.
-   - Un día `null` **corta** la racha y no cuenta como seco.
-   - Reporta en `temporadas[].rachas` todas las rachas de 3 días o más del año completo.
-5. **Ventana de resumen:** del `06-01` al `08-31` hasta que el Rol 3 entregue la ventana del cultivo. Si la cambian, regenera el archivo.
-6. **Temporada completa:** `ventana.diasConDato == ventana.diasEsperados`. Solo las temporadas completas entran en la mediana y en los peores años.
-7. Redondea la lluvia a 2 decimales.
-8. Llena `fuente.fechaDescarga` (el día que corres el script) y `fuente.fechaCorte` (la última fecha con dato válido).
+3. **Día seco:** lluvia menor que `1.0` mm. **Racha seca:** días secos consecutivos; un día `null` la corta. Se reportan todas las rachas de 3 días o más del año completo.
+4. **Día de calor:** `T2M_MAX ≥ 35.0` °C. **Episodio de calor:** días de calor consecutivos; un `null` lo corta. Se reportan todos los episodios de 1 día o más.
+5. `temporadas[].completa` es `true` si el año no tiene faltantes ni de lluvia ni de temperatura.
+6. **Ventana de resumen:** del `06-01` al `08-31`, solo para `ventana` y `resumen`. Solo las temporadas con la ventana completa entran en la mediana y en los peores años.
+7. Redondea a 2 decimales.
+8. Si el Rol 3 cambia `umbralDiaSecoMm` o `umbralCalorC`, cambia las constantes al inicio de `clima.py` y regenera todo.
 
-## Resultados de referencia (IMERG, 1 de junio–31 de agosto, umbral de 1 mm)
+## Resultados de referencia
 
-Usa esta tabla para validar tu script. Tus números deben coincidir.
+### `yuc-noroeste` (IMERG, 1 de junio–31 de agosto, umbral de 1 mm)
+
+El script debe reproducir esta tabla. Se verificó el 2026‑11‑14.
 
 | Año | Lluvia (mm) | Racha más larga | Inicio | Fin |
 |---|---:|---:|---|---|
@@ -94,107 +98,44 @@ Usa esta tabla para validar tu script. Tus números deben coincidir.
 
 - **Mediana de la racha más larga:** 7 días (28 temporadas completas).
 - **Peores años:** 1998 (18 días), 2025 (12) y 2014 (11).
-- **Para el pitch:** 2022 y 2025 tuvieron una lluvia parecida (488 mm frente a 469 mm), pero la racha de 2025 duró más del doble (12 días frente a 5).
 
-## Script de referencia (Python, sin dependencias)
+### Las 7 zonas (resumen verificado)
 
-```python
-# data-pipeline/clima.py  — uso: python clima.py ../app/data/clima.json
-# (escribe el archivo en UTF-8; no uses ">" en Windows, porque guarda en cp1252)
-import json, statistics, sys, urllib.request
-from datetime import date, timedelta
+| Zona | Lluvia anual (mediana) | Lluvia jun–ago (mediana) | Racha más larga jun–ago (mediana) | Días ≥ 35 °C en mayo (mediana) | Peores años |
+|---|---:|---:|---:|---:|---|
+| `yuc-noroeste` | 1109 mm | 521.8 mm | 7 | 24 | 1998 (18), 2025 (12), 2014 (11) |
+| `yuc-oriente` | 1322 mm | 567.35 mm | 8.5 | 21.5 | 1998 (17), 2010 (15), 2001 (12) |
+| `yuc-sur` | 1133 mm | 521.7 mm | 7 | 25.5 | 2014 (19), 1998 (17), 2019 (11) |
+| `camp-chenes` | 1179 mm | 536.81 mm | 6.5 | 24 | 1998 (19), 2014 (14), 2025 (12) |
+| `camp-sur` | 1488 mm | 765.15 mm | 5 | 26 | 2023 (16), 1998 (10), 2014 (9) |
+| `qroo-centro` | 1344 mm | 482.48 mm | 10 | 7.5 | 2015 (17), 2018 (17), 2022 (17) |
+| `qroo-sur` | 1330 mm | 501.4 mm | 9.5 | 0 | 2019 (23), 1998 (19), 2015 (18) |
 
-LAT, LON = 20.49, -89.75
-PARAM, UMBRAL, MIN_RACHA = "IMERG_PRECTOT", 1.0, 3
-VENT = ("06-01", "08-31")
-URL = ("https://power.larc.nasa.gov/api/temporal/daily/point"
-       f"?parameters={PARAM}&community=AG&longitude={LON}&latitude={LAT}"
-       "&start=19980101&end=20251231&format=JSON&time-standard=UTC")
-
-raw = json.load(urllib.request.urlopen(URL, timeout=120))
-fill = raw["header"]["fill_value"]
-serie = {date(int(k[:4]), int(k[4:6]), int(k[6:])): (None if v == fill else round(v, 2))
-         for k, v in raw["properties"]["parameter"][PARAM].items()}
-
-def rachas(dias):
-    out, ini, n = [], None, 0
-    for d, v in dias + [(None, None)]:
-        if v is not None and v < UMBRAL:
-            ini, n = (ini or d), n + 1
-        else:
-            if n >= MIN_RACHA:
-                out.append({"inicio": ini.isoformat(), "fin": (ini + timedelta(n - 1)).isoformat(), "dias": n})
-            ini, n = None, 0
-    return out
-
-temporadas = []
-for anio in sorted({d.year for d in serie}):
-    dias = sorted((d, v) for d, v in serie.items() if d.year == anio)
-    if all(v is None for _, v in dias):
-        continue
-    vi, vf = date.fromisoformat(f"{anio}-{VENT[0]}"), date.fromisoformat(f"{anio}-{VENT[1]}")
-    vent = [(d, v) for d, v in dias if vi <= d <= vf]
-    validos = [v for _, v in vent if v is not None]
-    rv = rachas(vent)
-    mas_larga = max(rv, key=lambda r: r["dias"], default=None)
-    temporadas.append({
-        "anio": anio,
-        "diasConDato": sum(v is not None for _, v in dias), "diasEsperados": len(dias),
-        "ventana": {"diasConDato": len(validos), "diasEsperados": len(vent),
-                    "lluviaMm": round(sum(validos), 2), "rachaMasLarga": mas_larga},
-        "rachas": rachas(dias),
-    })
-
-completas = [t for t in temporadas
-             if t["ventana"]["diasConDato"] == t["ventana"]["diasEsperados"] and t["ventana"]["rachaMasLarga"]]
-peores = sorted(completas, key=lambda t: -t["ventana"]["rachaMasLarga"]["dias"])[:3]
-ultimo = max(d for d, v in serie.items() if v is not None)
-
-salida = sys.argv[1] if len(sys.argv) > 1 else "clima.json"
-with open(salida, "w", encoding="utf-8") as f:
-  json.dump({
-    "version": "0.1", "esEjemplo": False,
-    "ubicacion": {"lat": LAT, "lon": LON, "elevacionM": raw["geometry"]["coordinates"][2],
-                  "municipio": "por confirmar", "estado": "Yucatán"},
-    "fuente": {"nombre": "NASA POWER Daily API", "versionApi": raw["header"]["api"]["version"],
-               "producto": "GPM IMERG", "parametro": PARAM,
-               "unidades": raw["parameters"][PARAM]["units"], "resolucionAprox": "0.1° (~10 km)",
-               "url": URL, "timeStandard": raw["header"]["time_standard"],
-               "fechaDescarga": date.today().isoformat(), "fechaCorte": ultimo.isoformat(),
-               "primerDatoValido": min(d for d, v in serie.items() if v is not None).isoformat()},
-    "definiciones": {"umbralDiaSecoMm": UMBRAL, "rachaMinimaReportadaDias": MIN_RACHA,
-                     "ventanaResumen": {"inicio": VENT[0], "fin": VENT[1]},
-                     "tratamientoFaltantes": "null; un día null corta la racha y no cuenta como seco"},
-    "temporadas": temporadas,
-    "resumen": {"aniosCompletos": len(completas),
-                "medianaRachaMasLargaDias": statistics.median(t["ventana"]["rachaMasLarga"]["dias"] for t in completas),
-                "peoresAnios": [{"anio": t["anio"], **t["ventana"]["rachaMasLarga"]} for t in peores]},
-  }, f, ensure_ascii=False, indent=2)
-print("escrito", salida)
-```
-
-- Guarda también el JSON crudo de NASA en `data-pipeline/raw/` para poder rehacer el cálculo sin conexión.
-- Si una racha de la ventana empieza antes del `06-01`, el script solo cuenta los días dentro de la ventana. Así se reproducen los números de la tabla.
-- En Windows, algunas máquinas del equipo tienen problemas de certificados HTTPS con ciertos sitios. Con `power.larc.nasa.gov` no hubo problema.
+**Para el pitch:**
+- 2022 y 2025 tuvieron lluvia parecida en el noroeste de Yucatán (488 mm contra 469 mm), pero la racha de 2025 duró más del doble (12 días contra 5).
+- Quintana Roo llueve más al año, pero tiene las rachas secas de verano más largas de la península.
+- Según MERRA‑2, en agosto casi no hay días de 35 °C o más en ninguna zona. El calor pega en mayo y junio, cuando se establece el cultivo.
 
 ## A quién le entregas qué
 
 | Para | Entregas | Lo usa para |
 |---|---|---|
-| Rol 4 (motor) | `app/data/clima.json` con `temporadas[].rachas` | Cruzar las rachas con las etapas de cada plan |
-| Rol 3 (reglas) | La tabla de rachas por año y sus fechas | Ver si la floración del maíz suele caer en rachas y ajustar la ventana y el umbral |
-| Rol 6 (resultados) | `fuente.parametro`, `fuente.fechaCorte`, `fuente.url` y el contraste 2022 vs. 2025 | Mostrar «qué dato de NASA influyó» y su fecha |
-| Rol 1 (líder) | La recomendación de IMERG frente a PRECTOTCORR | Decidir la fuente oficial |
+| Rol 4 (motor) | `app/data/clima/<zona>.json` con `rachas` y `episodiosCalor` | Cruzar rachas y calor con los días críticos de cada estrategia |
+| Rol 3 (reglas) | Las tablas de arriba y, si las pide, las rachas de julio a diciembre | Calibrar etapas, umbrales y la sensibilidad del establecimiento |
+| Rol 5 (captura) | `zonas.json` | Asignar la zona más cercana |
+| Rol 6 (resultados) | `fuentes`, `resumen` de cada zona y los datos del pitch | Mostrar el dato de NASA con su fecha y la vista de la península |
+| Rol 1 (líder) | Confirmación de que las 7 zonas están listas, o cuáles faltan | Decidir si se recorta a 3 zonas |
 
 ## Extras, solo si sobra tiempo
 
-- Generar `clima.json` para varios municipios con las coordenadas de `municipios.json` (Rol 5). Un archivo por municipio, por ejemplo `clima-31052.json` con la clave INEGI.
-- `clima-diario.json` con la serie diaria para graficar.
-- SMAP L4, humedad del suelo en la zona de raíces, como contexto de los años secos.
+- `clima-diario/<zona>.json` con la serie diaria para graficar.
+- SMAP L4 (humedad del suelo en la zona de raíces) como contexto de los años secos.
+- Tendencia de largo plazo: comparar 1998–2011 contra 2012–2025 en cada zona.
 
 ## Criterios de terminado
 
-- [ ] `app/data/clima.json` es válido según el contrato y reproduce la tabla de referencia.
-- [ ] No hay ningún `-999` en el archivo. Los faltantes son `null`.
-- [ ] La fuente, el parámetro, las unidades, la fecha de corte y la URL están completos.
-- [ ] El script queda en `data-pipeline/` y se puede volver a ejecutar.
+- [ ] Hay un `app/data/clima/<zona>.json` por cada zona de `zonas.json`, válido según el contrato.
+- [ ] `yuc-noroeste` reproduce la tabla de referencia.
+- [ ] No hay ningún `-999` en los archivos. Los faltantes son `null`.
+- [ ] Las fuentes de lluvia y temperatura están completas (producto, parámetro, resolución, fecha de corte y URL).
+- [ ] `data-pipeline/clima.py` se puede volver a ejecutar y `data-pipeline/raw/` guarda las respuestas originales.

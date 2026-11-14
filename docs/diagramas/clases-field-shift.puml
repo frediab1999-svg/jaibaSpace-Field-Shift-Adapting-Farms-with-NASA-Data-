@@ -1,0 +1,250 @@
+@startuml
+title Field Shift v0.2 - Modelo conceptual de clases
+hide methods
+skinparam classAttributeIconSize 0
+
+class Parcela {
+  id: String
+  nombre: String
+  esEjemplo: Boolean
+  modalidad: String
+  cultivoActual: String
+  cicloAnterior: Object
+}
+
+class SueloParcela {
+  tipoLocal: String
+  profundidad: String
+  pedregosidad: String
+}
+
+class Ubicacion {
+  lat: Decimal
+  lon: Decimal
+  municipio: String
+  estado: String
+  origen: OrigenUbicacion
+  zonaId: String
+  distanciaZonaKm: Decimal
+}
+
+enum OrigenUbicacion {
+  gps
+  lista
+}
+
+class ZonaAgroclimatica {
+  id: String
+  nombre: String
+  estado: String
+  punto: Coordenadas
+  suelosPredominantes: List
+}
+
+class Coordenadas {
+  lat: Decimal
+  lon: Decimal
+}
+
+class Municipio {
+  clave: String
+  nombre: String
+  estado: String
+  lat: Decimal
+  lon: Decimal
+}
+
+class TipoSuelo {
+  id: String
+  nombre: String
+  equivalenteWRB: String
+  ajusteRachaDias: Integer
+  aptitudPorCultivo: Map
+}
+
+enum Prioridad {
+  agua
+  suelo
+  nitrogeno
+  ingreso
+}
+
+class Estrategia {
+  id: String
+  nombre: String
+  esEjemplo: Boolean
+  descripcionCorta: String
+  atributos: Map
+  beneficios: List
+  riesgos: List
+  fuentes: List
+  porConfirmar: List
+}
+
+class CicloCultivo {
+  cultivoId: String
+  siembra: MM_DD
+  cosecha: MM_DD
+  proposito: String
+}
+
+class Cultivo {
+  id: String
+  nombre: String
+}
+
+class EtapaCultivo {
+  id: String
+  desdeDia: Integer
+  hastaDia: Integer
+  sensibilidad: Nivel
+}
+
+enum Nivel {
+  bajo
+  medio
+  alto
+}
+
+class ConjuntoClimatico {
+  version: String
+  esEjemplo: Boolean
+  zonaId: String
+  definiciones: Map
+  resumen: Map
+}
+
+class Temporada {
+  anio: Integer
+  completa: Boolean
+  diasConDato: Integer
+  diasEsperados: Integer
+}
+
+class RachaSeca {
+  inicio: Date
+  fin: Date
+  dias: Integer
+}
+
+class EpisodioCalor {
+  inicio: Date
+  fin: Date
+  dias: Integer
+}
+
+class FuenteDatos {
+  nombre: String
+  producto: String
+  parametro: String
+  unidades: String
+  resolucionAprox: String
+  url: String
+  fechaDescarga: Date
+  fechaCorte: Date
+}
+
+class ReglasAgricolas {
+  umbralDiaSecoMm: Decimal
+  rachaRelevanteDias: Integer
+  umbralCalorC: Decimal
+  episodioCalorRelevanteDias: Integer
+  cobertura: Object
+  niveles: Map
+  pesosPorPrioridad: Map
+  toleranciaEmpate: Map
+}
+
+class Comparacion {
+  version: String
+  prioridad: Prioridad
+  planesSolicitados: List
+}
+
+class ResultadoEstrategia {
+  id: String
+  nombre: String
+  puntajeTotal: Decimal
+  posicion: Integer
+  porQue: String
+  calendario: List
+  beneficios: List
+  riesgos: List
+  faltaConfirmar: List
+  datosNasa: List
+}
+
+enum IdCriterio {
+  rachasSecas
+  estresCalor
+  coberturaSuelo
+  fijacionNitrogeno
+  ingresoForraje
+}
+
+class CriterioEvaluado {
+  id: IdCriterio
+  valor: Decimal
+  puntaje: Decimal
+  explicacion: String
+  unidad: String
+}
+
+class Evidencia {
+  anio: Integer
+  cultivo: String
+  etapa: String
+  inicio: Date
+  fin: Date
+  dias: Integer
+  diasTraslape: Integer
+}
+
+class Ranking {
+  estrategiasOrdenadas: List
+  recomendados: List
+  mensaje: String
+}
+
+class SalidaComparacion {
+  version: String
+  generado: DateTime
+  pesosAplicados: Map
+  temporadasAnalizadas: Object
+  datosPendientes: List
+  avisos: List
+}
+
+Parcela "1" *-- "1" Ubicacion : contiene
+Ubicacion "*" --> "1" ZonaAgroclimatica : asignada por cercania
+Ubicacion "*" --> "0..1" Municipio : seleccion opcional
+Parcela "1" *-- "1" SueloParcela : captura suelo conocido o no se
+SueloParcela "*" --> "0..1" TipoSuelo : tipo local opcional
+ZonaAgroclimatica "1" *-- "1" Coordenadas : punto representativo
+ZonaAgroclimatica "1" --> "1" ConjuntoClimatico : tiene clima
+ConjuntoClimatico "1" *-- "1..*" Temporada : contiene
+Temporada "1" *-- "0..*" RachaSeca : detecta
+Temporada "1" *-- "0..*" EpisodioCalor : detecta
+ConjuntoClimatico "1" *-- "2" FuenteDatos : lluvia y temperatura
+Estrategia "1" *-- "1..*" CicloCultivo : contiene
+CicloCultivo "*" --> "1" Cultivo : refiere a
+Cultivo "1" *-- "1..*" EtapaCultivo : define
+ReglasAgricolas "1" o-- "1..*" TipoSuelo : configura
+ReglasAgricolas "1" o-- "1..*" Cultivo : define etapas
+Comparacion "1" --> "1" Parcela : evalua
+Comparacion "1" --> "1" Prioridad : usa
+Comparacion "1" --> "1" ReglasAgricolas : consulta
+Comparacion "1" --> "1" ConjuntoClimatico : consulta zona
+Comparacion "1" --> "3..*" Estrategia : compara e incluye actual
+Comparacion "1" --> "1" SalidaComparacion : produce
+SalidaComparacion "1" *-- "3..*" ResultadoEstrategia : contiene
+ResultadoEstrategia "1" *-- "5" CriterioEvaluado : contiene
+CriterioEvaluado "1" *-- "0..*" Evidencia : sustenta
+SalidaComparacion "1" *-- "1" Ranking : resume
+
+note right of Comparacion
+  Criterios: rachas secas, calor,
+  cobertura, nitrogeno e ingreso/forraje.
+  No incluye pronostico meteorologico.
+end note
+@enduml
