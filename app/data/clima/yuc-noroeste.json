@@ -7,8 +7,8 @@
     "estado": "Yucatán"
   },
   "ubicacion": {
-    "lat": 20.88194,
-    "lon": -89.75,
+    "lat": 20.834,
+    "lon": -89.787,
     "elevacionM": 6.43
   },
   "fuentes": {
@@ -19,7 +19,7 @@
       "parametro": "IMERG_PRECTOT",
       "unidades": "mm/day",
       "resolucionAprox": "0.1° (~10 km)",
-      "url": "https://power.larc.nasa.gov/api/temporal/daily/point?parameters=IMERG_PRECTOT,T2M_MAX&community=AG&longitude=-89.75&latitude=20.88194&start=19980101&end=20251231&format=JSON&time-standard=UTC",
+      "url": "https://power.larc.nasa.gov/api/temporal/daily/point?parameters=IMERG_PRECTOT,T2M_MAX&community=AG&longitude=-89.787&latitude=20.834&start=19980101&end=20251231&format=JSON&time-standard=UTC",
       "timeStandard": "UTC",
       "fechaDescarga": "2026-11-14",
       "fechaCorte": "2025-12-31",
@@ -32,7 +32,7 @@
       "parametro": "T2M_MAX",
       "unidades": "C",
       "resolucionAprox": "0.5° x 0.625° (~50 km)",
-      "url": "https://power.larc.nasa.gov/api/temporal/daily/point?parameters=IMERG_PRECTOT,T2M_MAX&community=AG&longitude=-89.75&latitude=20.88194&start=19980101&end=20251231&format=JSON&time-standard=UTC",
+      "url": "https://power.larc.nasa.gov/api/temporal/daily/point?parameters=IMERG_PRECTOT,T2M_MAX&community=AG&longitude=-89.787&latitude=20.834&start=19980101&end=20251231&format=JSON&time-standard=UTC",
       "timeStandard": "UTC",
       "fechaDescarga": "2026-11-14",
       "fechaCorte": "2025-12-31",

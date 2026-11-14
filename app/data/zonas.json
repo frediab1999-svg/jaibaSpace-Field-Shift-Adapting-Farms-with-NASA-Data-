@@ -7,8 +7,8 @@
       "nombre": "Noroeste de Yucatán (Umán)",
       "estado": "Yucatán",
       "punto": {
-        "lat": 20.88194,
-        "lon": -89.75
+        "lat": 20.834,
+        "lon": -89.787
       },
       "archivoClima": "clima/yuc-noroeste.json",
       "suelosPredominantes": [
