@@ -1,0 +1,24 @@
+# Blueprint de Render: un servicio web (PWA + API FastAPI) con la base de datos en Supabase.
+# La única variable secreta es DATABASE_URL: Render la pide al crear el Blueprint y no se guarda en Git.
+# Guía: docs/despliegue-render-supabase.md
+services:
+  - type: web
+    name: jaibaspace
+    runtime: docker
+    plan: free
+    region: ohio # misma zona que el pooler de Supabase (us-east-2)
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/v1/health
+    autoDeploy: true
+    envVars:
+      - key: DATABASE_URL
+        sync: false # Supabase → Connect → Session pooler (puerto 5432), con tu contraseña
+      - key: APP_ENV
+        value: production
+      - key: LOG_LEVEL
+        value: INFO
+      - key: MIN_STATS_SAMPLE_SIZE
+        value: "10"
+      - key: RUN_SEED_ON_START
+        value: "1"

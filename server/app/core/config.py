@@ -1,5 +1,6 @@
 from functools import lru_cache
 from pathlib import Path
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -42,6 +43,10 @@ class Settings(BaseSettings):
     pwa_dist_dir: str = Field(default="", validation_alias="PWA_DIST_DIR")
 
     @property
+    def sqlalchemy_url(self) -> str:
+        return normalize_database_url(self.database_url)
+
+    @property
     def cors_origins(self) -> list[str]:
         return [origin.strip() for origin in self.cors_origins_raw.split(",") if origin.strip()]
 
@@ -61,6 +66,35 @@ class Settings(BaseSettings):
             return None
         path = Path(self.pwa_dist_dir)
         return path if (path / "index.html").is_file() else None
+
+
+def normalize_database_url(url: str) -> str:
+    """Acepta la cadena tal como la copia Supabase o Render y la deja lista para SQLAlchemy.
+
+    - `postgres://` o `postgresql://` → `postgresql+psycopg://` (el driver instalado es psycopg 3).
+    - En hosts de Supabase agrega `sslmode=require` si no viene: Supabase exige TLS.
+    """
+    url = url.strip()
+    for prefix in ("postgres://", "postgresql://"):
+        if url.startswith(prefix):
+            url = "postgresql+psycopg://" + url[len(prefix) :]
+            break
+    parts = urlsplit(url)
+    if "supabase." in (parts.hostname or ""):
+        query = dict(parse_qsl(parts.query))
+        query.setdefault("sslmode", "require")
+        parts = parts._replace(query=urlencode(query))
+    return urlunsplit(parts)
+
+
+def engine_connect_args(url: str) -> dict:
+    """Opciones de conexión según el destino.
+
+    El pooler de Supabase en modo transacción (puerto 6543) no admite sentencias preparadas:
+    se desactivan en psycopg (`prepare_threshold=None`). En el modo sesión (puerto 5432) y en
+    PostgreSQL local no hace falta.
+    """
+    return {"prepare_threshold": None} if urlsplit(url).port == 6543 else {}
 
 
 @lru_cache
