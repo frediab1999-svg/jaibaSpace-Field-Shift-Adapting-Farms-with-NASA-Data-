@@ -1,0 +1,88 @@
+{
+  "version": "0.1-prototipo",
+  "esEjemplo": true,
+  "nota": "Datos de ejemplo claramente marcados (RF: etiquetar datos de ejemplo). Se cargan desde Tus parcelas con 'Ver con parcelas de ejemplo' y nunca se envían al servidor.",
+  "usuario": { "nombreVisible": "don Celestino" },
+  "parcelas": [
+    {
+      "id": "ej-cenote",
+      "nombre": "Milpa del cenote",
+      "superficieM2": 23700,
+      "unidadCaptura": "ha",
+      "dimensiones": null,
+      "sueloTexto": "Tsek'el, con mucha piedra",
+      "usadaAntes": true,
+      "aniosSeguidos": "2-3",
+      "usoPrevio": null,
+      "prioridad": "agua",
+      "plan": null,
+      "ubicacion": { "lat": 20.862, "lon": -89.772, "precisionM": null, "origen": "mapa" },
+      "creadoEn": "2026-05-20T15:10:00.000Z"
+    },
+    {
+      "id": "ej-xbalam",
+      "nombre": "Solar de Xbalam",
+      "superficieM2": 6000,
+      "unidadCaptura": "mecate",
+      "dimensiones": { "largoM": 100, "anchoM": 60 },
+      "sueloTexto": "k'ankab, tierra roja",
+      "usadaAntes": true,
+      "aniosSeguidos": "4+",
+      "usoPrevio": null,
+      "prioridad": "ingreso",
+      "plan": null,
+      "ubicacion": { "lat": 19.772, "lon": -89.801, "precisionM": null, "origen": "mapa" },
+      "creadoEn": "2026-05-22T16:00:00.000Z"
+    },
+    {
+      "id": "ej-santacruz",
+      "nombre": "Monte de Santa Cruz",
+      "superficieM2": 12500,
+      "unidadCaptura": "ha",
+      "dimensiones": null,
+      "sueloTexto": "",
+      "usadaAntes": false,
+      "aniosSeguidos": null,
+      "usoPrevio": "monte",
+      "prioridad": "suelo",
+      "plan": { "cultivos": ["maiz", "frijol", "calabaza"], "mes": 6 },
+      "ubicacion": { "lat": 19.603, "lon": -88.081, "precisionM": null, "origen": "mapa" },
+      "creadoEn": "2026-10-03T14:30:00.000Z"
+    }
+  ],
+  "temporadas": [
+    { "id": "ej-t-cenote-2026", "parcelaId": "ej-cenote", "anio": 2026, "estado": "en_curso", "resultado": "pendiente", "origen": "en_app", "creadoEn": "2026-06-15T13:00:00.000Z" },
+    { "id": "ej-t-cenote-2025", "parcelaId": "ej-cenote", "anio": 2025, "estado": "finalizada", "resultado": "regular", "causa": "sequia", "causaNota": null, "fechaCosecha": { "anio": 2025, "mes": 11, "dia": null, "precision": "mes" }, "origen": "registro_pasado", "observaciones": "La mazorca salió chica después de la seca de agosto.", "creadoEn": "2026-05-20T15:20:00.000Z" },
+    { "id": "ej-t-cenote-2024", "parcelaId": "ej-cenote", "anio": 2024, "estado": "finalizada", "resultado": "bueno", "causa": null, "fechaCosecha": { "anio": 2024, "mes": 11, "dia": null, "precision": "mes" }, "origen": "registro_pasado", "creadoEn": "2026-05-20T15:25:00.000Z" },
+    { "id": "ej-t-cenote-2023", "parcelaId": "ej-cenote", "anio": 2023, "estado": "finalizada", "resultado": "malo", "causa": "sequia", "fechaCosecha": { "anio": 2023, "mes": 10, "dia": null, "precision": "mes" }, "origen": "registro_pasado", "creadoEn": "2026-05-20T15:30:00.000Z" },
+    { "id": "ej-t-xbalam-2026", "parcelaId": "ej-xbalam", "anio": 2026, "estado": "en_curso", "resultado": "pendiente", "origen": "en_app", "creadoEn": "2026-07-10T14:00:00.000Z" },
+    { "id": "ej-t-xbalam-2025", "parcelaId": "ej-xbalam", "anio": 2025, "estado": "finalizada", "resultado": "malo", "causa": "plaga", "causaNota": "mosca blanca", "fechaCosecha": { "anio": 2025, "mes": 10, "dia": null, "precision": "mes" }, "origen": "registro_pasado", "creadoEn": "2026-05-22T16:10:00.000Z" }
+  ],
+  "siembras": [
+    { "id": "ej-s1", "temporadaId": "ej-t-cenote-2026", "parcelaId": "ej-cenote", "semillaId": "maiz-criollo", "superficieM2": 15000, "fecha": { "anio": 2026, "mes": 6, "dia": 15, "precision": "dia" } },
+    { "id": "ej-s2", "temporadaId": "ej-t-cenote-2026", "parcelaId": "ej-cenote", "semillaId": "frijol-ib", "superficieM2": 5000, "fecha": { "anio": 2026, "mes": 6, "dia": 20, "precision": "dia" } },
+    { "id": "ej-s3", "temporadaId": "ej-t-cenote-2026", "parcelaId": "ej-cenote", "semillaId": "calabaza-xtop", "superficieM2": 3700, "fecha": { "anio": 2026, "mes": 6, "dia": 20, "precision": "dia" } },
+    { "id": "ej-s4", "temporadaId": "ej-t-cenote-2026", "parcelaId": "ej-cenote", "semillaId": "chile-xcatik", "superficieM2": 1200, "fecha": { "anio": 2026, "mes": 7, "dia": 2, "precision": "dia" }, "eliminadaEn": "2026-07-30T15:00:00.000Z", "motivo": { "motivoId": "plaga", "motivoTexto": "Plaga o enfermedad", "nota": "Mosca blanca en las hojas" } },
+    { "id": "ej-s5", "temporadaId": "ej-t-cenote-2025", "parcelaId": "ej-cenote", "semillaId": "maiz-criollo", "superficieM2": null, "fecha": { "anio": 2025, "mes": 6, "dia": null, "precision": "mes" } },
+    { "id": "ej-s6", "temporadaId": "ej-t-cenote-2025", "parcelaId": "ej-cenote", "semillaId": "frijol-ib", "superficieM2": null, "fecha": { "anio": 2025, "mes": 6, "dia": null, "precision": "mes" } },
+    { "id": "ej-s7", "temporadaId": "ej-t-cenote-2024", "parcelaId": "ej-cenote", "semillaId": "maiz-criollo", "superficieM2": null, "fecha": { "anio": 2024, "mes": 6, "dia": null, "precision": "mes" } },
+    { "id": "ej-s8", "temporadaId": "ej-t-cenote-2023", "parcelaId": "ej-cenote", "semillaId": "maiz-criollo", "superficieM2": null, "fecha": { "anio": 2023, "mes": 6, "dia": null, "precision": "mes" } },
+    { "id": "ej-s9", "temporadaId": "ej-t-xbalam-2026", "parcelaId": "ej-xbalam", "semillaId": "chile-habanero", "superficieM2": 2000, "fecha": { "anio": 2026, "mes": 7, "dia": 10, "precision": "dia" } },
+    { "id": "ej-s10", "temporadaId": "ej-t-xbalam-2026", "parcelaId": "ej-xbalam", "semillaId": "frijol-xpelon", "superficieM2": 4000, "fecha": { "anio": 2026, "mes": 8, "dia": 1, "precision": "dia" } },
+    { "id": "ej-s11", "temporadaId": "ej-t-xbalam-2025", "parcelaId": "ej-xbalam", "semillaId": "chile-habanero", "superficieM2": null, "fecha": { "anio": 2025, "mes": 7, "dia": null, "precision": "mes" } }
+  ],
+  "cosechas": {
+    "ej-t-cenote-2025": { "ej-s5": { "valor": 18, "unidad": "costal", "esEstimacion": true } },
+    "ej-t-cenote-2024": { "ej-s7": { "valor": 1.1, "unidad": "tonelada", "esEstimacion": true } },
+    "ej-t-xbalam-2025": { "ej-s11": { "valor": 40, "unidad": "kg", "esEstimacion": false } }
+  },
+  "historial": [
+    { "id": "ej-h1", "parcelaId": "ej-cenote", "tipo": "parcela_creada", "titulo": "Registraste la parcela", "detalle": "2.37 hectáreas, cerca de Umán.", "fecha": "2026-05-20T15:10:00.000Z" },
+    { "id": "ej-h2", "parcelaId": "ej-cenote", "tipo": "semilla_agregada", "titulo": "Sembraste Maíz criollo (xnuk nal)", "detalle": "1.5 hectáreas.", "fecha": "2026-06-15T13:00:00.000Z" },
+    { "id": "ej-h3", "parcelaId": "ej-cenote", "tipo": "semilla_agregada", "titulo": "Sembraste Chile xcat ik", "detalle": "3 mecates.", "fecha": "2026-07-02T13:00:00.000Z" },
+    { "id": "ej-h4", "parcelaId": "ej-cenote", "tipo": "semilla_eliminada", "titulo": "Quitaste Chile xcat ik", "detalle": "Plaga o enfermedad", "motivoId": "plaga", "motivoTexto": "Plaga o enfermedad", "nota": "Mosca blanca en las hojas", "fecha": "2026-07-30T15:00:00.000Z" },
+    { "id": "ej-h5", "parcelaId": "ej-xbalam", "tipo": "parcela_creada", "titulo": "Registraste la parcela", "detalle": "15 mecates, cerca de Hopelchén.", "fecha": "2026-05-22T16:00:00.000Z" },
+    { "id": "ej-h6", "parcelaId": "ej-xbalam", "tipo": "semilla_eliminada", "titulo": "Quitaste Soya Huasteca 300", "detalle": "No nació", "motivoId": "no_nacio", "motivoTexto": "No nació", "nota": "Faltó lluvia después de sembrar", "fecha": "2026-07-05T15:00:00.000Z" },
+    { "id": "ej-h7", "parcelaId": "ej-santacruz", "tipo": "parcela_creada", "titulo": "Registraste la parcela", "detalle": "1.25 hectáreas de monte, cerca de Felipe Carrillo Puerto.", "fecha": "2026-10-03T14:30:00.000Z" }
+  ]
+}

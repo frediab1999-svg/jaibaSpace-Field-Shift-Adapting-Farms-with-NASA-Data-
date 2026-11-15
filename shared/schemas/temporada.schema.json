@@ -1,0 +1,186 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://jaibaspace.local/schemas/temporada",
+  "title": "Temporada agrícola (TEMPORADA_AGRICOLA)",
+  "type": "object",
+  "required": [
+    "id",
+    "parcelaId",
+    "anio",
+    "estado",
+    "resultado"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "parcelaId": {
+      "type": "string"
+    },
+    "anio": {
+      "type": "integer"
+    },
+    "nombre": {
+      "type": "string"
+    },
+    "estado": {
+      "enum": [
+        "planeada",
+        "en_curso",
+        "finalizada"
+      ]
+    },
+    "resultado": {
+      "enum": [
+        "pendiente",
+        "bueno",
+        "regular",
+        "malo"
+      ]
+    },
+    "causa": {
+      "enum": [
+        "sequia",
+        "exceso_lluvia",
+        "plaga",
+        "viento",
+        "otra",
+        null
+      ]
+    },
+    "causaNota": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "fechaCosecha": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "#/$defs/fecha"
+        }
+      ]
+    },
+    "cosechas": {
+      "type": "object",
+      "description": "Por id de siembra (CantidadCosechada)",
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "valor",
+          "unidad"
+        ],
+        "properties": {
+          "valor": {
+            "type": "number",
+            "minimum": 0
+          },
+          "unidad": {
+            "enum": [
+              "kg",
+              "costal",
+              "carga",
+              "tonelada"
+            ]
+          },
+          "esEstimacion": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "observaciones": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "prediccion": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "description": "Lo que decían las señales al iniciar",
+      "properties": {
+        "nivel": {
+          "enum": [
+            "bien",
+            "atencion",
+            "riesgo"
+          ]
+        },
+        "aFavor": {
+          "type": "integer"
+        },
+        "total": {
+          "type": "integer"
+        },
+        "fecha": {
+          "type": "string"
+        },
+        "variables": {
+          "type": "array"
+        }
+      }
+    },
+    "origen": {
+      "enum": [
+        "en_app",
+        "registro_pasado",
+        "alta_parcela"
+      ]
+    },
+    "envios": {
+      "type": "object",
+      "description": "siembraId → submission_id",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "esEjemplo": {
+      "type": "boolean"
+    }
+  },
+  "$defs": {
+    "fecha": {
+      "type": "object",
+      "required": [
+        "anio",
+        "precision"
+      ],
+      "properties": {
+        "anio": {
+          "type": "integer",
+          "minimum": 1900
+        },
+        "mes": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1,
+          "maximum": 12
+        },
+        "dia": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1,
+          "maximum": 31
+        },
+        "precision": {
+          "enum": [
+            "anio",
+            "mes",
+            "dia"
+          ]
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

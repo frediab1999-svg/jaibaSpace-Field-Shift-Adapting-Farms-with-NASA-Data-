@@ -1,0 +1,56 @@
+{
+  "version": "0.2",
+  "nota": "Cobertura inicial del MVP: una zona por estado. Los puntos son referencias regionales. Los tipos de suelo sugeridos quedan por confirmar.",
+  "zonas": [
+    {
+      "id": "yuc-noroeste",
+      "nombre": "Noroeste de Yucatán (Umán)",
+      "estado": "Yucatán",
+      "punto": {
+        "lat": 20.834,
+        "lon": -89.787
+      },
+      "archivoClima": "clima/yuc-noroeste.json",
+      "suelosPredominantes": [
+        "tsekel"
+      ],
+      "porConfirmar": [
+        "suelos predominantes (INEGI 1:250 000)"
+      ]
+    },
+    {
+      "id": "camp-chenes",
+      "nombre": "Los Chenes, Campeche (Hopelchén)",
+      "estado": "Campeche",
+      "punto": {
+        "lat": 19.75,
+        "lon": -89.84
+      },
+      "archivoClima": "clima/camp-chenes.json",
+      "suelosPredominantes": [
+        "kankab",
+        "akalche"
+      ],
+      "porConfirmar": [
+        "suelos predominantes (INEGI 1:250 000)"
+      ]
+    },
+    {
+      "id": "qroo-centro",
+      "nombre": "Zona maya de Quintana Roo (Felipe Carrillo Puerto)",
+      "estado": "Quintana Roo",
+      "punto": {
+        "lat": 19.58,
+        "lon": -88.05
+      },
+      "archivoClima": "clima/qroo-centro.json",
+      "suelosPredominantes": [
+        "tsekel",
+        "kankab"
+      ],
+      "porConfirmar": [
+        "suelos predominantes (INEGI 1:250 000)"
+      ]
+    }
+  ]
+}
