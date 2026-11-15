@@ -7,69 +7,71 @@
   "episodioCalorRelevanteDias": 3,
   "cultivos": {
     "maiz": {
-      "nombre": "Maíz de grano (temporal)",
+      "nombre": "Maíz Sac Beh de milpa (temporal)",
       "etapas": [
-        { "id": "inicial", "nombre": "Inicial (siembra a 10 % de cobertura)", "desdeDia": 0, "hastaDia": 19, "sensibilidad": "media" },
-        { "id": "desarrollo", "nombre": "Desarrollo (10 % a 70 % de cobertura)", "desdeDia": 20, "hastaDia": 54, "sensibilidad": "media" },
-        { "id": "intermedia", "nombre": "Floración y llenado de grano", "desdeDia": 55, "hastaDia": 94, "sensibilidad": "alta" },
-        { "id": "final", "nombre": "Maduración, dobla y secado", "desdeDia": 95, "hastaDia": 143, "sensibilidad": "baja" }
+        { "id": "vegetativa", "nombre": "Siembra a antes de la floración", "desdeDia": 0, "hastaDia": 79, "sensibilidad": "media" },
+        { "id": "intermedia", "nombre": "Floración y llenado de grano", "desdeDia": 80, "hastaDia": 129, "sensibilidad": "alta" },
+        { "id": "final", "nombre": "Madurez fisiológica, dobla y secado", "desdeDia": 130, "hastaDia": 150, "sensibilidad": "baja" }
       ],
       "fuentes": [
-        "F05 FAO-56, cuadro 11: maíz grano sembrado en junio, Nigeria (húmedo), etapas de 20, 35, 40 y 30 días",
-        "F04 FAO TM3, cap. 2: etapas inicial, de desarrollo, intermedia (floración y formación del rendimiento) y final; la intermedia es la más sensible a la falta de agua y la final la menos sensible; cuadro 2: maíz, periodo sensible = floración y llenado de grano",
-        "F01 INIFAP (2026) Agenda Técnica Agrícola Yucatán, p. 57: cosecha de milpa de ciclo intermedio a 140–150 dds"
+        "F19 INIFAP (2017) Agenda Técnica Agrícola Yucatán: p. 11, Sac Beh, Chichén Itzá, V-539 y X'nucnal son altos y tardíos, con floración entre los 80 y 85 días; p. 14, cosecha entre los 150 y 160 dds; p. 22, Sac Beh y Chichén Itzá para la milpa en suelos chac-lu'um y k'ankab",
+        "F01 INIFAP (2026) Agenda Técnica Agrícola Yucatán: p. 55, Sac Beh y Nukuch Nah para el sistema tradicional milpa; p. 57, dobla y madurez fisiológica de 45 a 50 días después de la floración, y cosecha a 140–150 dds en variedades de ciclo intermedio",
+        "F04 FAO TM3, cap. 2: la etapa intermedia (floración y formación del rendimiento) es la más sensible a la falta de agua y la final la menos sensible; cuadro 2: maíz, periodo sensible = floración y llenado de grano"
       ],
-      "porConfirmar": ["Días a floración y cosecha de la variedad elegida (Sac Beh, Nukuch Nah o criollo)"]
+      "porConfirmar": ["Días a floración y a cosecha de Sac Beh en Tekax. F19 (p. 22) da a las variedades de milpa en k'ankab un ciclo de 120 días de siembra a cosecha, que no cabe con la floración a los 80–85 días (F19, p. 11) más la madurez 45–50 días después (F01, p. 57)."]
     },
     "canavalia": {
       "nombre": "Canavalia (frijol de machete) de cobertura",
       "etapas": [
         { "id": "establecimiento", "nombre": "Establecimiento y desarrollo de la cobertura", "desdeDia": 0, "hastaDia": 60, "sensibilidad": "media" },
-        { "id": "cobertura", "nombre": "Cobertura en pie", "desdeDia": 61, "hastaDia": 300, "sensibilidad": "baja" }
+        { "id": "cobertura", "nombre": "Cobertura en pie hasta el inicio de la floración", "desdeDia": 61, "hastaDia": 137, "sensibilidad": "baja" }
       ],
       "fuentes": [
-        "F09 USDA-NRCS Plant Guide Canavalia ensiformis: 85 % de cobertura 60 días después de la emergencia; resistente a la sequía; semilla madura a 180–300 días",
-        "F04 FAO TM3, cap. 2: la etapa de desarrollo termina al 70 % de cobertura; la sensibilidad alta corresponde a la floración y la formación del rendimiento"
+        "F09 USDA-NRCS Plant Guide Canavalia ensiformis: 85 % de cobertura 60 días después de la emergencia; florece a los 4–5 meses; como cobertura se termina cuando empieza a florecer; resistente a la sequía",
+        "F04 FAO TM3, cap. 2: la sensibilidad alta corresponde a la floración y la formación del rendimiento"
       ],
-      "porConfirmar": ["Persistencia real hasta marzo en suelo pedregoso"]
+      "porConfirmar": ["Fecha real de inicio de la floración en Tekax. No hay fuente oficial de Yucatán sobre la canavalia: se usa la USDA."]
     },
     "soya": {
       "nombre": "Soya Huasteca 300 (temporal)",
       "etapas": [
-        { "id": "vegetativa", "nombre": "Inicial y desarrollo (hasta antes de la floración)", "desdeDia": 0, "hastaDia": 39, "sensibilidad": "media" },
-        { "id": "intermedia", "nombre": "Floración y formación del grano", "desdeDia": 40, "hastaDia": 100, "sensibilidad": "alta" },
-        { "id": "final", "nombre": "Maduración", "desdeDia": 101, "hastaDia": 115, "sensibilidad": "baja" }
+        { "id": "vegetativa", "nombre": "Siembra a antes de la floración", "desdeDia": 0, "hastaDia": 39, "sensibilidad": "media" },
+        { "id": "reproductiva", "nombre": "Floración, formación de vainas y llenado de grano", "desdeDia": 40, "hastaDia": 115, "sensibilidad": "alta" }
       ],
       "fuentes": [
-        "F01 INIFAP (2026) Agenda Técnica Agrícola Yucatán, pp. 77–78: Huasteca 300 florece a los 40 días y llega a madurez fisiológica a los 115",
-        "F05 FAO-56, cuadro 11: soya en el trópico, etapa final de 15 días",
-        "F04 FAO TM3, cap. 2: la intermedia es la etapa más sensible y la final la menos sensible; cuadro 2: soya, periodo sensible = floración y formación del rendimiento"
+        "F01 INIFAP (2026) Agenda Técnica Agrícola Yucatán, pp. 77–78: Huasteca 300 florece a los 40 días y llega a madurez fisiológica a los 115; p. 79: pueden faltar las lluvias en la época de floración y formación de las vainas, y la principal limitante del rendimiento es que el llenado de grano no coincida con septiembre",
+        "F19 INIFAP (2017) Agenda Técnica Agrícola Yucatán, p. 33: riesgo de que falten las lluvias en la floración y formación de las vainas",
+        "F04 FAO TM3, cap. 2, cuadro 2: soya, periodo sensible = floración y formación del rendimiento"
       ],
-      "porConfirmar": ["Fenología de Huasteca 300 en el Noroeste de Yucatán"]
+      "porConfirmar": ["Fenología de Huasteca 300 en Tekax"]
     }
   },
   "suelos": {
+    "luvisol": {
+      "nombre": "Luvisol (k'ankab y yaax-hom: rojo y profundo)",
+      "equivalenteWRB": "Luvisol",
+      "ajusteRachaDias": 0,
+      "aptitud": { "maiz": "alta", "canavalia": null, "soya": "alta" },
+      "nota": "Predomina en Tekax (38.67 %) y es el suelo de la soya en el Cono Sur. null = sin dato oficial."
+    },
     "leptosol": {
       "nombre": "Leptosol (pedregoso y poco profundo)",
       "equivalenteWRB": "Leptosol",
       "ajusteRachaDias": 0,
-      "aptitud": { "maiz": "media", "canavalia": "alta", "soya": "baja" },
-      "nota": "Predomina en Umán (56.66 %) y en la milpa."
-    },
-    "luvisol": {
-      "nombre": "Luvisol (k'ankab: rojo y profundo)",
-      "equivalenteWRB": "Luvisol",
-      "ajusteRachaDias": 0,
-      "aptitud": { "maiz": "alta", "canavalia": "alta", "soya": "alta" },
-      "nota": "Mejores condiciones para el maíz; es el suelo de la soya en Yucatán."
+      "aptitud": { "maiz": "media", "canavalia": null, "soya": "baja" },
+      "nota": "Segundo suelo de Tekax (22.67 %); predomina en la milpa del estado. null = sin dato oficial."
     },
     "fuentes": [
-      "F02 INEGI, compendio de Umán: Leptosol 56.66 %, Phaeozem 38.61 %",
-      "F01 INIFAP (2026), p. 53: en milpa predominan Leptosoles y Rendzinas, de elevada pedregosidad y baja profundidad; Cambisoles y Luvisoles tienen mejores condiciones para el maíz",
-      "F01 INIFAP (2026), p. 26: k'ankab y yaax-hom corresponden principalmente a Luvisoles; pp. 75–76: la soya se siembra en k'ankab y yaax-hom, suelos profundos y mecanizados",
-      "F09 USDA-NRCS: la canavalia crece en suelos pobres y secos, incluso muy lavados y ácidos"
+      "F02 INEGI, compendio de Tekax: Luvisol 38.67 %, Leptosol 22.67 %, Phaeozem 17.42 %, Vertisol 9.65 %, Nitisol 6.70 % y Cambisol",
+      "F01 INIFAP (2026), p. 54: en milpa predominan Leptosoles y Rendzinas, de elevada pedregosidad y baja profundidad; Cambisoles y Luvisoles tienen mejores condiciones para el maíz",
+      "F19 INIFAP (2017), p. 20: los lunares de k'ankab (Luvisol) y chac-lu'um (Cambisol) de la milpa permiten aumentar 300 % o más la producción de maíz",
+      "F01 INIFAP (2026), pp. 75–76: la soya se siembra en k'ankab (Luvisoles ródicos) y yaax-hom (Luvisoles crómicos), suelos profundos y mecanizados del Cono Sur",
+      "F09 USDA-NRCS: la canavalia crece en suelos pobres y secos, incluso muy lavados y ácidos; no habla de suelos pedregosos ni calizos"
     ],
-    "porConfirmar": ["El Phaeozem (38.61 % de Umán) no se modela: las fuentes oficiales revisadas no dan su aptitud para estos cultivos"]
+    "porConfirmar": [
+      "Phaeozem, Vertisol y Nitisol de Tekax no se modelan: las fuentes oficiales revisadas no dan su aptitud para estos tres cultivos",
+      "Aptitud de la canavalia en Luvisol y Leptosol calizos de Yucatán"
+    ]
   },
   "cobertura": {
     "diasMinimosPorMes": 15,
@@ -97,13 +99,13 @@
     "total": 0.02
   },
   "trazabilidad": [
-    { "campo": "umbralDiaSecoMm", "estado": "verificado_fuente", "fuente": "F06", "nota": "Convención del índice CDD (días con < 1 mm). No es umbral de estrés." },
+    { "campo": "umbralDiaSecoMm", "estado": "decision_modelo", "nota": "Convención de día seco (< 1 mm) del pipeline del Rol 2 (data-pipeline/clima.py). No es un umbral de estrés." },
     { "campo": "rachaRelevanteDias, umbralCalorC, episodioCalorRelevanteDias", "estado": "decision_modelo", "nota": "Parámetros del modelo (contrato v0.3 y pipeline del Rol 2), no datos agrícolas. Las fuentes oficiales revisadas no dan un umbral de calor para maíz, canavalia ni soya." },
-    { "campo": "maiz.etapas", "estado": "verificado_fuente", "fuente": "F05, F04, F01", "nota": "Límites del cuadro 11 de FAO-56 (20/35/40 días); la etapa final se extiende hasta la cosecha oficial de milpa (140–150 dds). Sensibilidad según FAO TM3." },
-    { "campo": "soya.etapas", "estado": "verificado_fuente", "fuente": "F01, F05, F04", "nota": "Floración (40) y madurez fisiológica (115) del INIFAP; etapa final de 15 días de FAO-56. Sensibilidad según FAO TM3." },
-    { "campo": "canavalia.etapas", "estado": "decision_modelo", "fuente": "F09, F04", "nota": "Desarrollo hasta el día 60 (85 % de cobertura según la USDA; la FAO cierra el desarrollo al 70 %). Sin etapa alta porque no se cosecha: la sensibilidad alta de la FAO es la de la formación del rendimiento. La última etapa llega a 300 días (USDA) y se recorta al fin del ciclo." },
-    { "campo": "suelos (claves y nombres)", "estado": "verificado_fuente", "fuente": "F02, F01", "nota": "Clases WRB que usan el INEGI y el INIFAP. Los nombres mayas tsek'el y ak'alche no aparecen en las fuentes oficiales revisadas (F01, F18), por eso se retiraron." },
-    { "campo": "suelos.*.aptitud", "estado": "verificado_fuente", "fuente": "F01, F09", "nota": "Maíz: Luvisol mejor que Leptosol (F01, p. 53). Soya: solo en Luvisoles profundos y mecanizados (F01, pp. 75–76). Canavalia: crece en suelos pobres y secos (F09)." },
+    { "campo": "maiz.etapas", "estado": "verificado_fuente", "fuente": "F19, F01, F04", "nota": "Floración de Sac Beh desde el día 80 (F19, p. 11: 80–85) y madurez fisiológica 45–50 días después (F01, p. 57); la etapa alta va del 80 al 129 para no recortar el llenado (80 + 50 = 130). Cosecha a 150 dds, el único valor que está en F01 (140–150) y en F19 (150–160). Sensibilidad según FAO TM3." },
+    { "campo": "soya.etapas", "estado": "verificado_fuente", "fuente": "F01, F19, F04", "nota": "Floración a los 40 días y madurez fisiológica a los 115 (F01, pp. 77–78). El INIFAP señala la floración, la formación de vainas y el llenado de grano como la época crítica (F01, p. 79; F19, p. 33); por eso la etapa alta llega hasta la madurez." },
+    { "campo": "canavalia.etapas", "estado": "decision_modelo", "fuente": "F09, F04", "nota": "Desarrollo hasta el día 60 (85 % de cobertura según la USDA). Sin etapa alta porque se corta al iniciar la floración y no forma rendimiento. La última etapa termina en la fecha de corte (137 días, punto medio de los 4–5 meses de la USDA)." },
+    { "campo": "suelos (claves y nombres)", "estado": "verificado_fuente", "fuente": "F02, F01", "nota": "Clases WRB que usan el INEGI y el INIFAP; k'ankab y yaax-hom corresponden a Luvisoles (F01, p. 75)." },
+    { "campo": "suelos.*.aptitud", "estado": "verificado_fuente", "fuente": "F01, F19", "nota": "Maíz: Luvisol mejor que Leptosol (F01, p. 54; F19, p. 20). Soya: solo en Luvisoles profundos (F01, pp. 75–76). Canavalia: null, porque la USDA no da su aptitud en suelos pedregosos ni calizos." },
     { "campo": "suelos.*.ajusteRachaDias", "estado": "decision_modelo", "nota": "Sin fuente oficial para la magnitud del ajuste; queda en 0." },
     { "campo": "cobertura, niveles, pesosPorPrioridad, toleranciaEmpate", "estado": "decision_modelo", "nota": "Parámetros del modelo (contrato v0.3), no datos agrícolas." }
   ]
