@@ -3,11 +3,45 @@ import { html, pintar } from '../../shared/dom.js';
 import { IMG } from '../../shared/assets.js';
 import { icono } from '../../shared/icons.js';
 import * as catalogo from '../../modules/crops/catalogo.js';
-import { hoy } from '../../shared/format.js';
 import { t } from '../../i18n/index.js';
 import { hayVoz, escuchar, interpretar, decir } from '../voz.js';
 import { ir } from '../../app/router.js';
 import * as repos from '../../storage/repos.js';
+import * as climaMod from '../../modules/climate/clima.js';
+import * as reglasMod from '../../modules/strategies/reglas.js';
+import { estacionDelAnio } from '../../motor/climaDia.js';
+import { MESES, MESES_CORTOS, hoy } from '../../shared/format.js';
+import { marcarEscucha } from '../voz.js';
+
+// Color de cada temporada en la franja del año (con texto siempre: el color no es la única pista)
+const COLOR_TEMPORADA = { nortes: '#3d7ea6', secas: '#d9902a', lluvias: '#218380' };
+
+/**
+ * Temporada actual como lugar en el año: franja de 12 meses, el mes de hoy marcado, cuánto falta
+ * y qué sigue. El dato de clima solo aparece con una parcela con zona (NASA POWER de esa zona).
+ */
+function estacion(temporadas, mes, anio) {
+  const e = estacionDelAnio(temporadas, mes);
+  if (!e) return '';
+  const color = (t) => COLOR_TEMPORADA[t?.id] || '#8f2d56';
+  const faltan = e.mesesRestantes === 0 ? 'Último mes' : `Faltan ${e.mesesRestantes} ${e.mesesRestantes === 1 ? 'mes' : 'meses'}`;
+  return html`<a class="estacion" href="#/inicio?cal=${anio}-${String(mes).padStart(2, '0')}" aria-label="${e.actual.name}, mes ${e.posicion} de ${e.duracion}. ${faltan}. Abrir el calendario.">
+    <span class="estacion__cabeza">
+      <span class="estacion__ico" style="background:${color(e.actual)}">${icono('nube', { color: '#fff', tam: 18, grosor: 2 })}</span>
+      <span class="estacion__titulo"><small>Ahora, ${MESES[mes - 1]}</small><strong>${e.actual.name}</strong></span>
+      <span class="estacion__paso">Mes ${e.posicion} de ${e.duracion}</span>
+    </span>
+    <span class="estacion__anio" aria-hidden="true">
+      ${MESES_CORTOS.map((m, i) => {
+        const t = temporadas.find((x) => x.meses.includes(i + 1));
+        return html`<span class="estacion__mes" data-hoy="${i + 1 === mes ? 'true' : 'false'}" style="--c:${color(t)}"><i></i><b>${m.slice(0, 1).toUpperCase()}</b></span>`;
+      })}
+    </span>
+    <span class="estacion__leyenda" aria-hidden="true">${temporadas.map((t) => html`<span><i style="background:${color(t)}"></i>${((n) => n.charAt(0).toUpperCase() + n.slice(1))(t.name.replace(/^Temporada de /i, ''))}</span>`)}</span>
+    <span class="estacion__pie">${faltan}${e.siguiente && e.siguiente.id !== e.actual.id ? `. Después: ${e.siguiente.name.toLowerCase()} (${e.siguiente.rango}).` : '.'}</span>
+    <span class="estacion__dato" id="estacionDato"></span>
+  </a>`;
+}
 
 const NODOS = [
   { ruta: '#/semillas', img: 'semillas', etiqueta: 'Ixi\'im, maíz ancestral', nombre: () => t('menu.semillas'), color: '#218380', texto: '#1b6e6b' },
@@ -19,15 +53,16 @@ const RAICES = [['#218380', '#d81159'], ['#d81159', '#8f2d56'], ['#8f2d56', '#21
 
 export function montar(pantalla) {
   const mes = hoy().getMonth() + 1;
-  const temporada = (catalogo.listas().temporadasDelAnio || []).find((x) => x.meses.includes(mes));
+  const temporadas = catalogo.listas().temporadasDelAnio || [];
   const n = repos.parcelasActivas().length;
+  const activa = repos.parcelasActivas().find((p) => p.id === repos.kv.get('parcelaActivaId')) || repos.parcelasActivas()[0] || null;
 
   pintar(pantalla, html`
     <div class="pantalla menu">
       <img class="menu__fondo" src="${IMG.fondo}" alt="" aria-hidden="true">
       <div class="menu__lavado" aria-hidden="true"></div>
       <nav class="menu__scroll" aria-label="Menú principal">
-        ${temporada ? html`<span class="menu__temporada">${temporada.name}: ${temporada.rango}</span>` : ''}
+        ${estacion(temporadas, mes, hoy().getFullYear())}
         <h1 style="margin:12px 0 22px;font-size:34px;font-weight:800;letter-spacing:-.03em;line-height:1.05;color:#2c3338">Todo nace aquí.</h1>
         ${NODOS.map((nd, i) => html`
           <a class="nodo" href="${nd.ruta}">
@@ -55,13 +90,32 @@ export function montar(pantalla) {
       <button class="mic-flota" data-act="voz" aria-label="Preguntar hablando">${icono('mic', { tam: 26 })}</button>
     </div>`);
 
+  // Dato de la zona de la parcela (si tiene): cuántos años tuvo racha seca este mes, con NASA POWER.
+  (async () => {
+    const caja = pantalla.querySelector('#estacionDato');
+    if (!caja) return;
+    const zona = climaMod.zonaPorId(activa?.zonaId);
+    if (!zona) {
+      pintar(caja, html`${icono('pin', { color: '#7a2840', tam: 16 })}<span>${activa ? `Completa la ubicación de ${activa.nombre} para ver cómo suele ser ${MESES[mes - 1]} en su zona.` : `Agrega tu parcela para ver cómo suele ser ${MESES[mes - 1]} en tu zona.`}</span>`);
+      return;
+    }
+    try {
+      const [c] = await Promise.all([climaMod.clima(zona.id), reglasMod.reglas()]);
+      const reglas = reglasMod.reglasSync();
+      const f = climaMod.frecuenciaMensual(c, mes, { umbralRacha: reglas.rachaRelevanteDias, minCalor: reglas.episodioCalorRelevanteDias });
+      pintar(caja, html`${icono('lluvia', { color: '#7a2840', tam: 16 })}<span>En ${climaMod.NOMBRE_CORTO_ZONA[zona.id]}, <strong>${f.rachas} de ${f.total} años</strong> tuvieron en ${MESES[mes - 1]} al menos ${reglas.rachaRelevanteDias} días seguidos sin lluvia. <small>NASA POWER, ${c.temporadas.find((t) => t.completa)?.anio}–${climaMod.ultimoAnioCompleto(c)}.</small></span>`);
+    } catch { caja.remove(); }
+  })();
+
   const boton = pantalla.querySelector('[data-act="voz"]');
+  let detener = null;
   const alClick = () => {
     if (!hayVoz) { ir('#/inicio'); return; }
-    boton.style.background = '#7a2840';
-    escuchar({
+    if (detener) { detener(); return; }
+    marcarEscucha(boton, true);
+    detener = escuchar({
       alTexto: (txt) => { const d = interpretar(txt); if (d) { decir('Va.'); ir(d); } else decir('No te entendí.'); },
-      alFin: () => { boton.style.background = ''; },
+      alFin: () => { marcarEscucha(boton, false); detener = null; },
     });
   };
   boton.addEventListener('click', alClick);

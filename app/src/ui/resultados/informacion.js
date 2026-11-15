@@ -14,7 +14,7 @@ import * as api from '../../services/api/endpoints.js';
 import { leer as leerEstado, avisar } from '../../app/estado.js';
 import { analizar, instantanea } from '../../motor/prediccion.js';
 import { MESES, fechaConPrecision, fechaPrecisionADate, numero, hoy, isoFecha, sumarDias, fechaCorta } from '../../shared/format.js';
-import { hayVoz, escuchar } from '../voz.js';
+import { hayVoz, escuchar, marcarEscucha } from '../voz.js';
 import { borrarTodo } from '../../storage/repos.js';
 import { ir } from '../../app/router.js';
 
@@ -260,7 +260,8 @@ export async function montar(pantalla, params) {
             h.repintar();
           } else if (dic) {
             dic.style.background = '#d81159';
-            escuchar({ alTexto: (txt) => { const ta = nodo.querySelector('#obs'); ta.value = `${ta.value} ${txt}`.trim(); }, alFin: () => { dic.style.background = ''; } });
+            marcarEscucha(dic, true);
+            escuchar({ alTexto: (txt) => { const ta = nodo.querySelector('#obs'); ta.value = `${ta.value} ${txt}`.trim(); }, alFin: () => { dic.style.background = ''; marcarEscucha(dic, false); } });
           } else if (g) {
             leer(nodo);
             if (!f.resultado) { f.error = 'Elige cómo te fue.'; h.repintar(); return; }

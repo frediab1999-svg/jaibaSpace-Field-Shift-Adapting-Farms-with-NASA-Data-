@@ -8,7 +8,7 @@ PWA para celular, offline-first, conectada a FastAPI:
 
 - Guía visual: [`docs/look-and-feel.md`](../docs/look-and-feel.md)
 - Contrato con la API: [`docs/contrato-frontend-backend.md`](../docs/contrato-frontend-backend.md)
-- Decisiones: [`0001`](../docs/decisiones/0001-prototipo-pwa-happy-path.md) (prototipo) y [`0002`](../docs/decisiones/0002-primera-version-funcional.md) (primera versión funcional: reglas del cálculo y supuestos)
+- Decisiones: [`0001`](../docs/decisiones/0001-prototipo-pwa-happy-path.md) (prototipo), [`0002`](../docs/decisiones/0002-primera-version-funcional.md) (primera versión funcional: reglas del cálculo y supuestos) y [`0003`](../docs/decisiones/0003-coherencia-datos-y-ux.md) (no recomendar sin zona, clima resumido, varias semillas)
 
 ## Cómo correrla
 
@@ -30,7 +30,7 @@ npm run dev        # http://localhost:5173
 - **URL de la API.** Por defecto es la misma computadora que sirve la página, en el puerto 8000: `http://localhost:8000/api/v1` en la computadora y `http://IP:8000/api/v1` si abres la app por la IP. Para usar otra, abre la app con `?api=https://tu-servidor/api/v1` o define `window.JAIBASPACE_API_BASE` en `index.html`.
 - **Sin el servidor.** La app abre igual y usa la copia de los datos que trae empaquetada (respaldo local). Lo dice al pie de «Opciones para tu parcela».
 - **Para producción:** `npm run build`. Genera `app/dist/`, que se publica como sitio estático con HTTPS para que funcionen el service worker, el GPS y el micrófono. FastAPI también puede servir esa carpeta (ver `server/README.md`).
-- **Pruebas:** `npm test` (34 pruebas con `node:test`: motor, datos publicados y paquete del servidor).
+- **Pruebas:** `npm test` (39 pruebas con `node:test`: motor, clima por día, datos publicados y paquete del servidor).
 
 ### De dónde salen los datos
 

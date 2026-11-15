@@ -39,7 +39,7 @@ function fechaSiembraDe(item) {
   if (item.fecha?.mes) return { mes: item.fecha.mes, dia: item.fecha.dia || 15, supuesta: !item.fecha.dia };
   const sem = item.semillaId ? catalogo.semilla(item.semillaId) : catalogo.semillas().find((s) => s.cultivoId === item.cultivoId);
   // planes.json usa el 15 de junio como fecha de siembra del productor de ejemplo
-  return { mes: 6, dia: 15, supuesta: true, nota: sem ? 'fecha supuesta: 15 de junio (planes.json)' : null };
+  return { mes: 6, dia: 15, supuesta: true, nota: sem ? 'fecha supuesta: 15 de junio, la de los planes de ejemplo' : null };
 }
 
 /** Ventana sensible del cultivo (o la ventana de resumen jun–ago si el cultivo no tiene reglas). */
@@ -98,7 +98,7 @@ function variableSequia(ventanas, clima, parcela, reglas) {
       tituloLista: 'Los años más secos en esa etapa',
       barras: e.detalle.map((d) => ({ anio: d.anio, valor: d.racha ? d.racha.dias : 0, marca: !!d.racha })),
       barrasTitulo: 'Racha más larga en esa etapa, por año (días)',
-      fuente: `${climaMod.fuenteTexto(clima)}. Etapas: reglas.json (${v.etapa ? 'FAO-56, FAO TM3, INIFAP' : 'ventana de resumen del pipeline'}).`,
+      fuente: `${climaMod.fuenteTexto(clima)}. Etapas del cultivo: ${v.etapa ? 'FAO-56, FAO TM3, INIFAP' : 'resumen de junio a agosto'}.`,
       periodo: `${e.desde}–${e.hasta}`,
       n: `${e.total} temporadas completas`,
       porConfirmar: [`Umbral del prototipo: atención desde 1 de cada 3 años, riesgo desde 2 de cada 3 (Rol 3).`, ...(sinEtapas(ventanas).length ? [`Etapas de ${sinEtapas(ventanas).join(', ')}: aún no se miden aparte (Rol 3).`] : [])],
@@ -189,7 +189,7 @@ function variableSuelo(parcela, ventanas, reglas) {
     return {
       id: 'suelo', nombre: 'Tu suelo', icono: 'semilla', nivel: 'sin_dato', tipo: parcela.sueloTexto ? 'actual' : 'sin',
       frase: parcela.sueloTexto ? `Escribiste “${parcela.sueloTexto}”. Aún no sabemos cómo se porta ese suelo con tus cultivos.` : 'No sabemos qué suelo tiene tu parcela. Puedes escribirlo al editarla.',
-      justificacion: { parrafos: ['Si el suelo no se reconoce, se deja como dato faltante. No lo inventamos.'], lista: [], fuente: 'reglas.json (suelos) y catálogo de suelos propuesto', periodo: '', n: '', porConfirmar: s?.porConfirmar || ['Aptitud de más suelos locales (Rol 3).'] },
+      justificacion: { parrafos: ['Si el suelo no se reconoce, se deja como dato faltante. No lo inventamos.'], lista: [], fuente: 'Catálogo de suelos propuesto (INEGI/INIFAP)', periodo: '', n: '', porConfirmar: s?.porConfirmar || ['Aptitud de más suelos locales (Rol 3).'] },
     };
   }
   const aptos = ventanas.map((v) => ({ c: v.cultivo, apt: v.cultivo.reglasId ? reglas.suelos[s.reglasId]?.aptitud?.[v.cultivo.reglasId] : null })).filter((x) => x.apt);
@@ -208,7 +208,7 @@ function variableSuelo(parcela, ventanas, reglas) {
     justificacion: {
       parrafos: [`Escribiste “${parcela.sueloTexto}” y lo reconocimos como ${s.name} (${reglas.suelos[s.reglasId].nombre}).`, reglas.suelos[s.reglasId].nota || ''],
       lista: aptos.map((a) => `${a.c.name}: aptitud ${a.apt}`),
-      fuente: `${s.source}. reglas.json v${reglas.version}.`, periodo: '', n: '', porConfirmar: reglas.suelos.porConfirmar || [],
+      fuente: s.source, periodo: '', n: '', porConfirmar: reglas.suelos.porConfirmar || [],
     },
   };
 }

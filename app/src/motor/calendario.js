@@ -1,16 +1,16 @@
 // Calendario de la milpa (Inicio). Cada color dice de dónde sale el dato:
 //  temporada (guinda punteado): calendario agrícola + frecuencia histórica NASA del mes
-//  clima (pitaya): rachas secas y calor que de verdad pasaron el año más reciente con datos
+//  clima (pitaya): solo en el detalle del día, resumido de NASA POWER (motor/climaDia.js)
 //  previsión (jade): fechas calculadas con tu siembra + etapas de reglas.json
 //  siembra (dorado): lo que tú registraste y las ventanas de siembra del catálogo
 import * as repos from '../storage/repos.js';
 import * as catalogo from '../modules/crops/catalogo.js';
 import * as climaMod from '../modules/climate/clima.js';
 import * as reglasMod from '../modules/strategies/reglas.js';
-import { sumarDias, MESES, fechaPrecisionADate } from '../shared/format.js';
+import { sumarDias, MESES, fechaPrecisionADate, fuenteLegible } from '../shared/format.js';
 
 export const TIPOS = {
-  clima: { nombre: 'Clima', color: '#d81159', icono: 'lluvia', leyenda: 'Clima (dato NASA)' },
+  clima: { nombre: 'Clima', color: '#d81159', icono: 'lluvia', leyenda: null }, // solo en el detalle del día
   prevision: { nombre: 'Previsión', color: '#218380', icono: 'grafica', leyenda: 'Previsión de tu siembra' },
   siembra: { nombre: 'Siembra y cosecha', color: '#e0a020', icono: 'brote', leyenda: 'Siembra y cosecha' },
   temporada: { nombre: 'Temporada', color: '#8f2d56', icono: 'calendario', leyenda: 'Temporada' },
@@ -32,8 +32,9 @@ export async function mes(anio, mesN, { parcelaId = null } = {}) {
   const reglas = reglasMod.reglasSync();
   const parcelas = repos.parcelasActivas();
   const activa = parcelas.find((p) => p.id === parcelaId) || parcelas[0] || null;
-  const zona = climaMod.zonaPorId(activa?.zonaId) || climaMod.zonaPorDefecto();
-  const clima = await climaMod.clima(zona.id);
+  // Sin parcela con zona no se asume ninguna: no hay clima que mostrar todavía.
+  const zona = climaMod.zonaPorId(activa?.zonaId) || null;
+  const clima = zona ? await climaMod.clima(zona.id) : null;
   const eventos = new Map();
   const ini = new Date(anio, mesN - 1, 1);
   const fin = new Date(anio, mesN, 0);
@@ -42,35 +43,12 @@ export async function mes(anio, mesN, { parcelaId = null } = {}) {
 
   // --- Temporada del año ---
   const t = (catalogo.listas().temporadasDelAnio || []).find((x) => x.meses.includes(mesN)) || null;
-  const frec = climaMod.frecuenciaMensual(clima, mesN, { umbralRacha: reglas.rachaRelevanteDias, minCalor: reglas.episodioCalorRelevanteDias });
-  const evidencia = `En ${MESES[mesN - 1]}, ${frec.rachas} de ${frec.total} años tuvieron al menos ${reglas.rachaRelevanteDias} días seguidos sin lluvia${frec.calor ? ` y ${frec.calor} tuvieron calor de ${reglas.umbralCalorC} °C o más varios días` : ''}.`;
+  const frec = clima ? climaMod.frecuenciaMensual(clima, mesN, { umbralRacha: reglas.rachaRelevanteDias, minCalor: reglas.episodioCalorRelevanteDias }) : null;
+  const evidencia = frec ? `En ${MESES[mesN - 1]}, ${frec.rachas} de ${frec.total} años tuvieron al menos ${reglas.rachaRelevanteDias} días seguidos sin lluvia${frec.calor ? ` y ${frec.calor} tuvieron calor de ${reglas.umbralCalorC} °C o más varios días` : ''}.` : null;
 
-  // --- Clima: lo que pasó el año más reciente con datos ---
-  const ultimo = climaMod.ultimoAnioCompleto(clima);
-  const ev = climaMod.eventosDelMes(clima, ultimo, mesN, { umbralRacha: reglas.rachaRelevanteDias, minCalor: reglas.episodioCalorRelevanteDias });
-  ev.rachas.forEach((r) => {
-    for (let d = dia(r.inicio); d <= dia(r.fin); d = sumarDias(d, 1)) {
-      if (d.getMonth() + 1 !== mesN) continue;
-      agregar(eventos, new Date(anio, mesN - 1, d.getDate()), {
-        tipo: 'clima',
-        texto: `Sin lluvia en ${ultimo}: racha de ${r.dias} días`,
-        detalle: `Del ${dia(r.inicio).getDate()} de ${MESES[dia(r.inicio).getMonth()]} al ${dia(r.fin).getDate()} de ${MESES[dia(r.fin).getMonth()]} de ${ultimo} llovió menos de 1 mm al día.`,
-        dato: 'historico',
-      });
-    }
-  });
-  ev.calor.forEach((e) => {
-    for (let d = dia(e.inicio); d <= dia(e.fin); d = sumarDias(d, 1)) {
-      if (d.getMonth() + 1 !== mesN) continue;
-      agregar(eventos, new Date(anio, mesN - 1, d.getDate()), {
-        tipo: 'clima',
-        texto: `Calor en ${ultimo}: ${e.dias} días de ${reglas.umbralCalorC} °C o más`,
-        detalle: `Del ${dia(e.inicio).getDate()} de ${MESES[dia(e.inicio).getMonth()]} al ${dia(e.fin).getDate()} de ${MESES[dia(e.fin).getMonth()]} de ${ultimo}.`,
-        dato: 'historico',
-      });
-    }
-  });
-  if (ev.rachas.length || ev.calor.length) fuentes.add(climaMod.fuenteTexto(clima));
+  // El clima ya no se pinta como eventos del año pasado sobre las fechas de este año (confundía):
+  // la pantalla lo resume por día con motor/climaDia.js, solo cuando la parcela tiene zona.
+  const ultimo = clima ? climaMod.ultimoAnioCompleto(clima) : null;
 
   // --- Siembras registradas, cosechas y previsiones por etapa ---
   for (const p of parcelas) {
@@ -93,7 +71,6 @@ export async function mes(anio, mesN, { parcelaId = null } = {}) {
             const b = sumarDias(fs, etapa.hastaDia);
             if (dentro(a)) agregar(eventos, a, { tipo: 'prevision', texto: `Empieza ${etapa.nombre.toLowerCase()} de ${nombre} (${p.nombre})`, detalle: `Día ${etapa.desdeDia} desde la siembra. Es la etapa que más sufre si falta agua.`, dato: 'actual' });
             if (dentro(b)) agregar(eventos, b, { tipo: 'prevision', texto: `Termina la etapa delicada de ${nombre}`, detalle: `Día ${etapa.hastaDia} desde la siembra.`, dato: 'actual' });
-            fuentes.add(`Etapas: reglas.json v${reglas.version}`);
           }
           if (ciclo) {
             const fc = sumarDias(fs, ciclo);
@@ -130,7 +107,7 @@ export async function mes(anio, mesN, { parcelaId = null } = {}) {
     if (vistos.has(clave)) return;
     vistos.add(clave);
     const [m, d] = s.ventanaSiembra.desde.split('-').map(Number);
-    if (m === mesN) agregar(eventos, new Date(anio, m - 1, d), { tipo: 'siembra', texto: `Abre la siembra de ${catalogo.cultivo(s.cultivoId).name.toLowerCase()}`, detalle: `Ventana de temporal ${catalogo.rangoVentana(s)}. ${s.source ? `Fuente: ${s.source}.` : 'Por confirmar.'}`, dato: 'catalogo' });
+    if (m === mesN) agregar(eventos, new Date(anio, m - 1, d), { tipo: 'siembra', texto: `Abre la siembra de ${catalogo.cultivo(s.cultivoId).name.toLowerCase()}`, detalle: `Ventana de temporal ${catalogo.rangoVentana(s)}. ${s.source ? `Fuente: ${fuenteLegible(s.source)}.` : 'Fecha por confirmar: aún sin fuente.'}`, dato: 'catalogo' });
     const [m2, d2] = s.ventanaSiembra.hasta.split('-').map(Number);
     if (m2 === mesN) agregar(eventos, new Date(anio, m2 - 1, d2), { tipo: 'siembra', texto: `Último día recomendado para sembrar ${catalogo.cultivo(s.cultivoId).name.toLowerCase()}`, detalle: `Ventana de temporal ${catalogo.rangoVentana(s)}.`, dato: 'catalogo' });
   });
@@ -139,7 +116,10 @@ export async function mes(anio, mesN, { parcelaId = null } = {}) {
     eventos,
     temporada: t ? { ...t, evidencia } : null,
     zona,
-    zonaAsumida: !activa?.zonaId,
+    clima,
+    reglas,
+    parcela: activa,
+    frecuencia: frec,
     ultimoAnio: ultimo,
     fuentes: [...fuentes],
   };

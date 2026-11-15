@@ -105,3 +105,25 @@ export function inicial(nombre) {
   const limpio = String(nombre || '').replace(/^(don|doña|dona)\s+/i, '').trim();
   return (limpio.charAt(0) || 'M').toUpperCase();
 }
+
+/**
+ * Fuente legible para el productor: quita nombres de archivos internos (reglas.json, planes.json…)
+ * y los códigos F01/F19 del registro de fuentes, y deja solo instituciones, documentos y notas.
+ * El texto original se conserva en los datos; esto solo cambia cómo se muestra.
+ */
+export function fuenteLegible(texto) {
+  if (!texto) return '';
+  let t = String(texto)
+    .replace(/(?:app\/)?(?:data\/)?[\w/-]+\.json(?:\s+v[\d.]+)?\s*:?\s*/gi, '') // archivo y versión
+    .replace(/\bF\d{2}\s+/g, '') // código interno de la fuente
+    .replace(/\(\s*(plan [^)]*|[^)]*\.json[^)]*)\)/gi, '') // paréntesis que solo hablan del archivo
+    .replace(/\(\s*\)/g, '')
+    .replace(/\s*;\s*;/g, ';')
+    .replace(/;\s*\(/g, ' (')
+    .replace(/^\s*[;,]\s*|\s*[;,]\s*$/g, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+  // "(FAO-56, INIFAP)" que quedó solo, sin nada antes: se quitan los paréntesis
+  t = t.replace(/^\((.*)\)$/, '$1');
+  return t;
+}

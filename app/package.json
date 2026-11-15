@@ -8,7 +8,7 @@
     "dev": "vite --port 5173 --host",
     "build": "vite build",
     "preview": "vite preview --port 5173",
-    "test": "node --test tests/motor.test.js tests/estrategias.test.js"
+    "test": "node --test tests/motor.test.js tests/estrategias.test.js tests/climaDia.test.js"
   },
   "devDependencies": {
     "vite": "^5.4.0"

@@ -7,7 +7,7 @@ import * as cola from './services/sync/cola.js';
 import * as api from './services/api/endpoints.js';
 import * as contenido from './services/contenido.js';
 import { origenDatos } from './shared/datos.js';
-import { poner } from './app/estado.js';
+import { poner, avisar } from './app/estado.js';
 import { ruta, iniciar } from './app/router.js';
 import { precargar } from './app/precarga.js';
 
@@ -58,7 +58,13 @@ async function arrancar() {
   await Promise.all([catalogo.cargar(), climaMod.zonas(), reglasMod.reglas()]);
   iniciar();
   cola.iniciar();
-  addEventListener('online', revisarServidor);
+  addEventListener('online', async () => {
+    revisarServidor();
+    // Al volver la red se buscan datos nuevos. No cambian a media sesión: se ofrecen para recargar.
+    const r = await contenido.buscarActualizacion();
+    poner({ datos: contenido.estadoContenido() });
+    if (r.version) avisar('Hay datos nuevos. Se usarán al volver a abrir la app.');
+  });
   if ('serviceWorker' in navigator && location.protocol !== 'file:') {
     navigator.serviceWorker.register('./sw.js').catch(() => { /* sin SW: la app funciona igual mientras haya red */ });
   }

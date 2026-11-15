@@ -191,7 +191,7 @@ function detalle(pantalla, params) {
           ${dato('Zona de clima', zona ? html`${climaMod.NOMBRE_CORTO_ZONA[zona.id]}${p.zonaDistanciaKm != null ? html`, a ${numero(p.zonaDistanciaKm, 1)} km del punto de clima (${zona.nombre.match(/\(([^)]+)\)/)?.[1] || ''})` : ', por tu municipio'}` : 'Cobertura pendiente: tu municipio todavía no tiene zona de clima')}
           ${dato('Ya se sembró antes', p.usadaAntes === true ? `Sí${p.aniosSeguidos ? `, ${catalogo.listas().aniosSeguidos.find((x) => x.id === p.aniosSeguidos)?.name.toLowerCase()}` : ''}` : p.usadaAntes === false ? `No, era ${catalogo.listas().usoPrevio.find((x) => x.id === p.usoPrevio)?.name.toLowerCase() || 'nueva'}` : 'Sin respuesta')}
           ${dato('Lo que más te importa', prioridad?.name || 'Sin elegir')}
-          <span class="fuente" style="margin-top:8px">La zona se asigna con el punto de clima más cercano (zonas.json). Es una referencia regional, no una medición en tu parcela.</span>
+          <span class="fuente" style="margin-top:8px">La zona se asigna con el punto de clima más cercano. Es una referencia regional, no una medición en tu parcela.</span>
         </section>
 
         <a class="tarjeta tarjeta--boton fila entra d4 tarjeta--opciones" href="#/opciones/${p.id}" style="text-decoration:none;gap:12px">
@@ -228,13 +228,13 @@ function detalle(pantalla, params) {
     } catch (e) { console.warn(e); }
   }
 
-  async function agregar(semillaId = null) {
+  async function agregar(semillaIds = []) {
     const p = repos.parcelas.porId(id);
-    const s = await hojaSiembra(pantalla, { parcela: p, semillaId });
-    if (s) {
-      avisar(`Sembraste ${catalogo.semilla(s.semillaId)?.name || 'la semilla'}`);
+    const lista = await hojaSiembra(pantalla, { parcela: p, semillaIds });
+    if (lista?.length) {
+      avisar(lista.length === 1 ? `Sembraste ${catalogo.semilla(lista[0].semillaId)?.name || 'la semilla'}` : `Sembraste ${lista.length} semillas`);
       pintarTodo();
-      guardarInstantanea(s.temporadaId);
+      guardarInstantanea(lista[0].temporadaId);
     }
   }
 
@@ -275,7 +275,9 @@ function detalle(pantalla, params) {
   });
 
   pintarTodo();
-  if (sembrarId && catalogo.semilla(sembrarId)) setTimeout(() => agregar(sembrarId), 350);
+  // ?sembrar=id o ?sembrar=id1,id2 (varias semillas a la vez, desde Semillas o el sabucán)
+  const sembrarIds = (sembrarId || '').split(',').filter((x) => catalogo.semilla(x));
+  if (sembrarIds.length) setTimeout(() => agregar(sembrarIds), 350);
   return () => { quitar(); };
 }
 

@@ -136,3 +136,22 @@ export async function iniciar({ limiteMs = 7000 } = {}) {
   }
   return estadoContenido();
 }
+
+/**
+ * Busca un paquete nuevo en el servidor sin cambiar los datos de esta sesión.
+ * Si llega uno completo y válido, queda guardado y se usa al recargar o al volver a abrir la app
+ * (estado.pendienteAlReabrir). Se llama al recuperar la conexión y desde el calendario.
+ * @returns {Promise<{resultado:string, version:string|null}>}
+ */
+let buscando = null;
+export function buscarActualizacion() {
+  if (buscando) return buscando;
+  buscando = (async () => {
+    let guardado = null;
+    try { guardado = (await db.todos('contenido')).find((r) => r.id === ID) || null; } catch { guardado = null; }
+    const nuevo = await actualizar(guardado);
+    if (nuevo) estado.pendienteAlReabrir = nuevo.version;
+    return { resultado: estado.resultado, version: nuevo?.version || null };
+  })().finally(() => { buscando = null; });
+  return buscando;
+}

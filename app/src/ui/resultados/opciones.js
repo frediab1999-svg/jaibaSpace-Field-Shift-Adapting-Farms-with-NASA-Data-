@@ -19,7 +19,7 @@ import { registrarEvento } from '../../modules/harvests/temporadas.js';
 import { franja24 } from '../componentes/franja24.js';
 import { opcionesPara } from './opciones-datos.js';
 import { decir, callar, hayHabla } from '../voz.js';
-import { superficie, numero, MESES, MESES_CORTOS } from '../../shared/format.js';
+import { superficie, numero, MESES, MESES_CORTOS, fuenteLegible } from '../../shared/format.js';
 import { avisar } from '../../app/estado.js';
 import { ir } from '../../app/router.js';
 
@@ -225,7 +225,7 @@ function opciones(pantalla, id) {
       ${e.beneficios.length ? html`<span class="fuente"><strong>El beneficio</strong></span><ul>${e.beneficios.map((x) => html`<li>${x}</li>`)}</ul>` : ''}
       ${e.riesgos.length ? html`<span class="fuente"><strong>La contrapartida</strong></span><ul>${e.riesgos.map((x) => html`<li>${x}</li>`)}</ul>` : ''}
       ${e.supuestos.length ? html`<span class="fuente"><strong>De dónde salen los supuestos</strong></span>
-        <ul>${e.supuestos.map((s) => html`<li><strong>${ESTADO_TXT[s.estado] || s.estado}</strong> (${s.campo}${s.fuente ? `; ${s.fuente}` : ''}): ${s.nota}</li>`)}</ul>` : ''}
+        <ul>${e.supuestos.map((s) => html`<li><strong>${ESTADO_TXT[s.estado] || s.estado}</strong> (${s.campo}${s.fuente ? `; ${fuenteLegible(s.fuente)}` : ''}): ${s.nota}</li>`)}</ul>` : ''}
       ${e.faltantes.map((x) => html`<span class="porconfirmar">Falta confirmar: ${x}</span>`)}
       <span class="fuente"><strong>Fuentes:</strong></span>
       <ul class="fuentes-lista">

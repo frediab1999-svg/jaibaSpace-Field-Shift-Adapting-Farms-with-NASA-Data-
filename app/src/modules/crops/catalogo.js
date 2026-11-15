@@ -96,7 +96,7 @@ export function mesesParaVentana(s, mes) {
 }
 
 /**
- * @returns {{estado:'si'|'esp'|'no', razones:string[], fuentes:string[]}}
+ * @returns {{estado:'si'|'esp'|'no', razones:string[], fuentes:string[], fechaSinFuente:boolean}}
  */
 export function viabilidad(s, { mes, dia = 15, zona = null, reglas = null }) {
   const razones = [];
@@ -113,6 +113,9 @@ export function viabilidad(s, { mes, dia = 15, zona = null, reglas = null }) {
       : `Fuera de temporada: se siembra ${rangoVentana(s)}.`);
   }
   if (s.source) fuentes.push(s.source);
+  // Una ventana sin fuente no se presenta como recomendación firme: se dice que está por confirmar.
+  const fechaSinFuente = !s.source;
+  if (fechaSinFuente) razones.push('Estas fechas de siembra aún no tienen una fuente revisada: tómalas como referencia.');
 
   // Aptitud del suelo predominante de la zona (zonas.json + reglas.json)
   const c = cultivo(s.cultivoId);
@@ -125,7 +128,7 @@ export function viabilidad(s, { mes, dia = 15, zona = null, reglas = null }) {
     if (aptitudes.length) {
       const mejor = aptitudes.sort((a, b) => rangoApt(b.apt) - rangoApt(a.apt))[0];
       razones.push(`En ${zona.nombre.split(' (')[0]} predomina ${mejor.suelo.name}: aptitud ${mejor.apt} para ${c.name.toLowerCase()}.`);
-      fuentes.push('reglas.json (suelos, INEGI/INIFAP)');
+      fuentes.push('Suelos: INEGI/INIFAP');
       if (mejor.apt === 'baja' && est === 'si') est = 'esp';
     } else {
       razones.push('El suelo de esta zona aún no tiene aptitud documentada para este cultivo.');
@@ -133,7 +136,7 @@ export function viabilidad(s, { mes, dia = 15, zona = null, reglas = null }) {
   } else if (!c.reglasId) {
     razones.push('Las etapas de este cultivo están por confirmar.');
   }
-  return { estado: est, razones, fuentes };
+  return { estado: est, razones, fuentes, fechaSinFuente };
 }
 const rangoApt = (a) => ({ alta: 3, media: 2, baja: 1 }[a] || 0);
 
@@ -148,3 +151,13 @@ export function rangoVentana(s) {
 export const ESTADO_TXT = { si: 'Sí conviene', esp: 'Espera', no: 'No por ahora' };
 export const ESTADO_COLOR = { si: '#5d9e4b', esp: '#efc24d', no: '#a8392a' };
 export const ESTADO_LETRERO = { si: 'bien', esp: 'atencion', no: 'riesgo' };
+
+const MESES_C = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+/** Época de siembra en corto: "jun–jul". */
+export function epocaCorta(s) {
+  const v = s?.ventanaSiembra;
+  if (!v) return 'sin fecha';
+  const a = MESES_C[mesDe(v.desde) - 1];
+  const b = MESES_C[mesDe(v.hasta) - 1];
+  return a === b ? a : `${a}–${b}`;
+}

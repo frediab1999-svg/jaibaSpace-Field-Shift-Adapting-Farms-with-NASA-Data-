@@ -308,3 +308,31 @@ textarea.campo { height: auto; min-height: 84px; padding: 12px 16px; resize: ver
 .pestanas button[aria-selected="true"] { background: var(--crema); color: var(--guinda); }
 .contador { min-width: 22px; height: 22px; padding: 0 6px; border-radius: 11px; background: var(--pitaya); color: #fff; font-size: 12px; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; }
 .chip { text-align: left; line-height: 1.25; padding-top: 6px; padding-bottom: 6px; }
+
+/* Lista de lo que se necesita para recomendar (bienvenida) */
+.lista-requisitos { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 12px; }
+.lista-requisitos li { display: flex; gap: 12px; align-items: flex-start; color: var(--dorado, #f2cf7a); }
+.lista-requisitos span { display: flex; flex-direction: column; gap: 2px; color: inherit; }
+.lista-requisitos strong { font-size: 15.5px; color: var(--txt, #fff); }
+.lista-requisitos em { font-style: normal; font-size: 14px; line-height: 1.4; color: var(--txt-2, rgba(255,255,255,.8)); }
+
+/* Siembra de varias semillas */
+.semilla-tile { position: relative; }
+.semilla-tile__check { position: absolute; top: 8px; left: 8px; width: 22px; height: 22px; border-radius: 50%; background: var(--dorado, #f2cf7a); color: #3a2a20; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(0,0,0,.3); }
+.siembra-varias { gap: 10px; padding: 8px 10px; border-radius: 14px; background: rgba(255, 255, 255, .07); }
+.siembra-varias__foto { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
+
+/* Ondas de eco del micrófono: solo mientras escucha (data-escuchando="true") */
+.eco { position: absolute; inset: 0; border-radius: 50%; pointer-events: none; z-index: -1; }
+.eco i { position: absolute; inset: 0; border-radius: 50%; background: var(--eco, rgba(242, 207, 122, .55)); border: 3px solid var(--eco-borde, rgba(255, 255, 255, .85)); opacity: 0; }
+[data-escuchando="true"] > .eco i { animation: eco 1.8s cubic-bezier(.1, .6, .35, 1) infinite; }
+[data-escuchando="true"] > .eco i:nth-child(2) { animation-delay: .6s; }
+[data-escuchando="true"] > .eco i:nth-child(3) { animation-delay: 1.2s; }
+@keyframes eco { 0% { transform: scale(1); opacity: .95; } 55% { opacity: .5; } 100% { transform: scale(2.4); opacity: 0; } }
+[data-escuchando="true"] { animation: respirar 1.2s ease-in-out infinite; }
+@keyframes respirar { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.06); } }
+@media (prefers-reduced-motion: reduce) {
+  [data-escuchando="true"] > .eco i { animation: none; opacity: .35; transform: scale(1.35); }
+  [data-escuchando="true"] > .eco i:nth-child(n+2) { display: none; }
+  [data-escuchando="true"] { animation: none; }
+}

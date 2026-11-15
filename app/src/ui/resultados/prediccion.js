@@ -9,7 +9,7 @@ import * as climaMod from '../../modules/climate/clima.js';
 import * as parcelasMod from '../../modules/parcel/parcelas.js';
 import { analizar, TIPO_TXT, FRASE_NIVEL } from '../../motor/prediccion.js';
 import { terreno } from '../componentes/terreno.js';
-import { superficie, numero } from '../../shared/format.js';
+import { superficie, numero, fuenteLegible } from '../../shared/format.js';
 import { t } from '../../i18n/index.js';
 
 const NIVEL_TXT = { bien: 'Bien', atencion: 'Atención', riesgo: 'Riesgo', sin_dato: 'Sin dato' };
@@ -131,7 +131,7 @@ function detalle(pantalla, id, parcelas) {
         ${j.parrafos.map((x) => html`<p style="color:var(--txt-2)">${x}</p>`)}
         ${j.lista?.length ? html`${j.tituloLista ? html`<span class="fuente"><strong>${j.tituloLista}</strong></span>` : ''}<ul>${j.lista.map((x) => html`<li>${x}</li>`)}</ul>` : ''}
         ${barras(j)}
-        <span class="fuente"><strong>Fuente:</strong> ${j.fuente}${j.periodo ? html`<br><strong>Periodo:</strong> ${j.periodo}` : ''}${j.n ? html`<br><strong>Con:</strong> ${j.n}` : ''}</span>
+        <span class="fuente"><strong>Fuente:</strong> ${fuenteLegible(j.fuente)}${j.periodo ? html`<br><strong>Periodo:</strong> ${j.periodo}` : ''}${j.n ? html`<br><strong>Con:</strong> ${j.n}` : ''}</span>
         ${(j.porConfirmar || []).map((x) => html`<span class="porconfirmar">Por confirmar: ${x}</span>`)}
       </div>` : ''}
     </div>`;
@@ -169,7 +169,7 @@ function detalle(pantalla, id, parcelas) {
             <span class="hero__etiqueta" style="letter-spacing:.12em">Referencia del municipio</span>
             <span>En ${a.referencia.lugar}, el maíz de temporal dio <b>${numero(a.referencia.a1.t, 2)} t/ha</b> en ${a.referencia.a1.anio} y <b>${numero(a.referencia.a2.t, 2)} t/ha</b> en ${a.referencia.a2.anio}.</span>
             <span class="tarjeta__sub">Es el promedio de todo el municipio, no un pronóstico de tu parcela.</span>
-            <span class="fuente"><strong>Fuente:</strong> ${a.referencia.fuente}</span>
+            <span class="fuente"><strong>Fuente:</strong> ${fuenteLegible(a.referencia.fuente)}</span>
           </section>` : ''}
           ${a.resumen.peor && a.resumen.peor.nivel !== 'bien' ? html`<div class="nota-papel">
             <span class="mano">Para platicar con tu técnico</span>

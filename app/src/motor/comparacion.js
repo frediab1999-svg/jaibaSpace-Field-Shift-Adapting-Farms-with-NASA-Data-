@@ -120,7 +120,7 @@ export function planDePractica({ declaradas = [], temporadaAnio = null, reglas, 
     riesgos: soloMaiz ? plantilla.riesgos : [],
     fuentes: soloMaiz ? plantilla.fuentes : [],
     porConfirmar: soloMaiz ? plantilla.porConfirmar : [],
-    trazabilidad: [{ campo: 'ciclos', estado: 'registrado_productor', nota: `Cultivos y fechas de siembra que registraste${temporadaAnio ? ` en ${temporadaAnio}` : ''}. Se supone que repites lo mismo en los dos ciclos. El fin de cada cultivo se estima con los días de ciclo de reglas.json.` }],
+    trazabilidad: [{ campo: 'ciclos', estado: 'registrado_productor', nota: `Cultivos y fechas de siembra que registraste${temporadaAnio ? ` en ${temporadaAnio}` : ''}. Se supone que repites lo mismo en los dos ciclos. El fin de cada cultivo se estima con los días de ciclo documentados para ese cultivo.` }],
   };
 }
 

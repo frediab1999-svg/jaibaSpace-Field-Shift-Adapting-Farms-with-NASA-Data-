@@ -100,3 +100,22 @@ export function escuchar({ alTexto, alParcial, alFin, alError }) {
   try { r.start(); } catch { alFin?.(); }
   return () => { try { r.stop(); } catch { /* ya detenido */ } };
 }
+
+/**
+ * Marca un botón de micrófono como «escuchando» y le pone las ondas de eco (estilo de los
+ * asistentes de voz: anillos que salen del botón mientras oye). Sirve para cualquier botón.
+ */
+export function marcarEscucha(boton, escuchando) {
+  if (!boton) return;
+  if (!boton.querySelector(':scope > .eco')) {
+    const eco = document.createElement('span');
+    eco.className = 'eco';
+    eco.setAttribute('aria-hidden', 'true');
+    eco.innerHTML = '<i></i><i></i><i></i>';
+    boton.prepend(eco);
+    boton.style.isolation = 'isolate'; // las ondas quedan detrás del ícono y dentro del botón
+    if (getComputedStyle(boton).position === 'static') boton.style.position = 'relative';
+  }
+  boton.dataset.escuchando = escuchando ? 'true' : 'false';
+  boton.setAttribute('aria-pressed', escuchando ? 'true' : 'false');
+}

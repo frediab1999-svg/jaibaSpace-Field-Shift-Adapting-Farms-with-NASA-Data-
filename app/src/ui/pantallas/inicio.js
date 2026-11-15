@@ -7,13 +7,18 @@ import * as repos from '../../storage/repos.js';
 import { superficie, MESES, fechaCorta, diaSemana, hoy, mismaFecha, inicial } from '../../shared/format.js';
 import * as cal from '../../motor/calendario.js';
 import { NOMBRE_CORTO_ZONA } from '../../modules/climate/clima.js';
-import { hayVoz, escuchar, interpretar, decir } from '../voz.js';
+import { historiaDia, diaMedido, fraseProporcion } from '../../motor/climaDia.js';
+import { origenDatos } from '../../shared/datos.js';
+import { estadoContenido, buscarActualizacion } from '../../services/contenido.js';
+import { hayVoz, escuchar, interpretar, decir, marcarEscucha } from '../voz.js';
 import { ir } from '../../app/router.js';
 import { avisar } from '../../app/estado.js';
 import { t } from '../../i18n/index.js';
 
+const deIsoCorta = (iso) => { const [, m, d] = iso.split('-').map(Number); return `${d} de ${MESES[m - 1]}`; };
+
 export function montar(pantalla, params = {}) {
-  const estado = { escuchando: false, parcial: '', calAbierto: false, mesVista: null, sel: hoy(), escribir: false };
+  const estado = { escuchando: false, parcial: '', calAbierto: false, mesVista: null, sel: hoy(), escribir: false, datosCal: null, buscando: false };
   // #/inicio?cal=2027-06 abre el calendario en ese mes (lo usa «Quiero probar esta»)
   const calPedido = /^(\d{4})-(\d{2})$/.exec(params.query?.get('cal') || '');
   if (calPedido) {
@@ -100,6 +105,9 @@ export function montar(pantalla, params = {}) {
   }
 
   // ---------------- Calendario ----------------
+  // Arriba: los días con lo TUYO (siembras, previsiones, plan y ventanas de lo que te interesa).
+  // Abajo: el detalle del día elegido, ya procesado: lo que registraste y, si la parcela tiene
+  // zona, cómo suele estar ese día según NASA POWER (o lo que se midió, si ese año ya tiene datos).
   async function pintarCalendario() {
     const capa = pantalla.querySelector('#capaCal');
     if (!capa) return;
@@ -108,33 +116,31 @@ export function montar(pantalla, params = {}) {
     const p = parcelaActiva();
     const datos = await cal.mes(vista.anio, vista.mes, { parcelaId: p?.id });
     if (!estado.calAbierto) return;
+    estado.datosCal = datos;
     const primerDia = new Date(vista.anio, vista.mes - 1, 1).getDay();
     const diasMes = new Date(vista.anio, vista.mes, 0).getDate();
     const f = hoy();
     const celdas = [];
     for (let i = 0; i < primerDia; i++) celdas.push(html`<span aria-hidden="true"></span>`);
+    const tiposMes = new Set();
     for (let n = 1; n <= diasMes; n++) {
       const d = new Date(vista.anio, vista.mes - 1, n);
       const evs = datos.eventos.get(n) || [];
       const tipos = [...new Set(evs.map((e) => e.tipo))];
-      celdas.push(html`<button class="cal__dia" data-act="dia" data-n="${n}" data-hoy="${mismaFecha(d, f) ? 'true' : 'false'}" data-temporada="${datos.temporada ? 'true' : 'false'}" aria-pressed="${mismaFecha(d, estado.sel) ? 'true' : 'false'}" aria-label="${n} de ${MESES[vista.mes - 1]}${evs.length ? `: ${evs.map((e) => e.texto).join('; ')}` : ''}">
+      tipos.forEach((tp) => tiposMes.add(tp));
+      celdas.push(html`<button class="cal__dia" data-act="dia" data-n="${n}" data-hoy="${mismaFecha(d, f) ? 'true' : 'false'}" aria-pressed="${mismaFecha(d, estado.sel) ? 'true' : 'false'}" aria-label="${n} de ${MESES[vista.mes - 1]}${evs.length ? `: ${evs.map((e) => e.texto).join('; ')}` : ''}">
         <span>${n}</span><span class="cal__marcas">${tipos.map((tp) => html`<span style="background:${cal.TIPOS[tp].color}"></span>`)}</span>
       </button>`);
     }
-    const sel = estado.sel.getMonth() + 1 === vista.mes && estado.sel.getFullYear() === vista.anio ? estado.sel : null;
-    const evSel = sel ? (datos.eventos.get(sel.getDate()) || []) : [];
-    const tituloSel = sel ? (mismaFecha(sel, f) ? `Hoy, ${diaSemana(sel).toLowerCase()} ${sel.getDate()} de ${MESES[sel.getMonth()]}` : `${diaSemana(sel)} ${sel.getDate()} de ${MESES[sel.getMonth()]}`) : 'Toca un día para ver qué pasa';
-    // Agrupa eventos de clima repetidos en el día (una sola línea)
-    const listaSel = [];
-    const vistos = new Set();
-    evSel.forEach((e) => { const k = e.tipo + e.texto; if (!vistos.has(k)) { vistos.add(k); listaSel.push(e); } });
-    if (sel && datos.temporada) listaSel.push({ tipo: 'temporada', texto: `${datos.temporada.name} (${datos.temporada.rango})`, detalle: datos.temporada.evidencia, dato: 'historico' });
+    const zonaTxt = datos.zona ? (NOMBRE_CORTO_ZONA[datos.zona.id] || datos.zona.nombre) : null;
+    const frec = datos.frecuencia;
+    const leyenda = [...tiposMes].filter((k) => cal.TIPOS[k]?.leyenda);
 
     pintar(capa, html`
       <button class="velo" data-act="cerrarCal" aria-label="Cerrar calendario" tabindex="-1"></button>
       <div class="calendario" role="dialog" aria-modal="true" aria-label="Calendario de la milpa">
         <div class="fila fila--entre">
-          <div class="columna" style="gap:0"><span style="font-size:12px;font-weight:700;color:#6b5d4a">Calendario de la milpa, zona ${NOMBRE_CORTO_ZONA[datos.zona.id] || datos.zona.nombre}${datos.zonaAsumida ? ' (de referencia)' : ''}</span>
+          <div class="columna" style="gap:0"><span style="font-size:12px;font-weight:700;color:#6b5d4a">${zonaTxt ? `Calendario de la milpa, ${zonaTxt}` : 'Calendario de la milpa'}</span>
           <span class="cal__mes">${MESES[vista.mes - 1]} ${vista.anio}</span></div>
           <button class="cal__nav" data-act="cerrarCal" aria-label="Cerrar calendario">${icono('cerrar', { tam: 18, grosor: 2.4 })}</button>
         </div>
@@ -143,21 +149,119 @@ export function montar(pantalla, params = {}) {
           <div class="crece">${greca({ color: '#b8572a', opacidad: 0.55, id: 'grecaCal', clase: 'greca' })}</div>
           <button class="cal__nav" data-act="mesSig" aria-label="Mes siguiente">${icono('der', { tam: 18 })}</button>
         </div>
-        ${datos.temporada ? html`<div class="cal__temporada">${icono('nube', { color: '#8f2d56', tam: 16 })}${datos.temporada.name}, ${datos.temporada.rango}</div>` : ''}
+        ${datos.temporada ? html`<div class="cal__temporada">${icono('nube', { color: '#8f2d56', tam: 16 })}<span>${datos.temporada.name}, ${datos.temporada.rango}${frec ? html`<small>En ${zonaTxt}, ${frec.rachas} de ${frec.total} años tuvieron en ${MESES[vista.mes - 1]} al menos ${datos.reglas.rachaRelevanteDias} días seguidos sin lluvia.</small>` : ''}</span></div>` : ''}
         <div class="cal__semana" aria-hidden="true"><span>D</span><span>L</span><span>M</span><span>M</span><span>J</span><span>V</span><span>S</span></div>
         <div class="cal__dias">${celdas}</div>
-        <div class="cal__detalle" aria-live="polite">
-          <span style="font-size:13px;font-weight:700;color:#6b5d4a">${tituloSel}</span>
-          ${listaSel.length ? listaSel.map((e) => html`<div class="cal__evento">
-            <span class="cal__evento-ico" style="background:${cal.TIPOS[e.tipo].color}${e.tipo === 'temporada' ? '33' : ''}">${icono(cal.TIPOS[e.tipo].icono, { color: e.tipo === 'temporada' ? '#8f2d56' : '#ffffff', tam: 16 })}</span>
-            <span class="cal__evento-txt"><small>${cal.TIPOS[e.tipo].nombre}${e.dato === 'historico' ? ', dato histórico' : e.dato === 'actual' ? ', tu siembra' : e.dato === 'catalogo' ? ', catálogo de semillas' : e.dato === 'plan' ? ', opción que elegiste' : ''}</small><span>${e.texto}</span>${e.detalle ? html`<em>${e.detalle}</em>` : ''}</span>
-          </div>`) : html`<span style="font-size:15px;color:#4d4234">Sin pendientes en la milpa.</span>`}
-        </div>
-        <div class="cal__leyenda">
-          ${Object.entries(cal.TIPOS).map(([k, v]) => html`<span><i style="background:${k === 'temporada' ? 'rgba(143,45,86,.16)' : v.color};${k === 'temporada' ? 'border:1.5px dashed rgba(143,45,86,.5);height:12px' : ''}"></i>${v.leyenda}</span>`)}
-        </div>
-        <span style="font-size:11.5px;color:#6b5d4a;line-height:1.4">Clima: NASA POWER hasta ${datos.ultimoAnio}, no es pronóstico. Previsión: tus fechas de siembra y las etapas del cultivo (reglas.json). Siembra: lo que registraste y el catálogo de semillas.</span>
+        <div class="cal__detalle" id="calDetalle" aria-live="polite" aria-busy="false">${detalleDia(datos)}</div>
+        ${leyenda.length ? html`<div class="cal__leyenda">${leyenda.map((k) => html`<span><i style="background:${cal.TIPOS[k].color}"></i>${cal.TIPOS[k].leyenda}</span>`)}</div>` : ''}
+        ${pieDatos(datos)}
       </div>`);
+  }
+
+  /** Detalle del día elegido: lo registrado y el clima ya resumido. */
+  function detalleDia(datos) {
+    const vista = estado.mesVista;
+    const f = hoy();
+    const sel = estado.sel.getMonth() + 1 === vista.mes && estado.sel.getFullYear() === vista.anio ? estado.sel : null;
+    if (!sel) return html`<span class="cal__titulo-dia">Toca un día para ver qué pasa</span>`;
+    const titulo = mismaFecha(sel, f) ? `Hoy, ${diaSemana(sel).toLowerCase()} ${sel.getDate()} de ${MESES[sel.getMonth()]}` : `${diaSemana(sel)} ${sel.getDate()} de ${MESES[sel.getMonth()]} de ${sel.getFullYear()}`;
+    const vistos = new Set();
+    const propios = (datos.eventos.get(sel.getDate()) || []).filter((e) => { const k = e.tipo + e.texto; if (vistos.has(k)) return false; vistos.add(k); return true; });
+    const origenTxt = { actual: 'tu siembra', catalogo: 'época de siembra', plan: 'plan que elegiste' };
+    return html`
+      <span class="cal__titulo-dia">${titulo}</span>
+      ${propios.length ? propios.map((e) => html`<div class="cal__evento">
+        <span class="cal__evento-ico" style="background:${cal.TIPOS[e.tipo].color}">${icono(cal.TIPOS[e.tipo].icono, { color: '#ffffff', tam: 16 })}</span>
+        <span class="cal__evento-txt"><small>${cal.TIPOS[e.tipo].nombre}${origenTxt[e.dato] ? `, ${origenTxt[e.dato]}` : ''}</small><span>${e.texto}</span>${e.detalle ? html`<em>${e.detalle}</em>` : ''}</span>
+      </div>`) : html`<span class="cal__vacio">Nada registrado en tu milpa para este día.</span>`}
+      ${climaDelDia(datos, sel)}`;
+  }
+
+  function climaDelDia(datos, sel) {
+    if (!datos.zona || !datos.clima) {
+      const p = datos.parcela;
+      return html`<div class="cal__clima cal__clima--falta">
+        ${icono('pin', { color: '#7a2840', tam: 18 })}
+        <span><strong>${p ? `${p.nombre} todavía no tiene zona` : 'Sin parcela no hay clima que mostrarte'}</strong>
+        <em>${p ? 'Marca la ubicación o el municipio de la parcela para ver el clima histórico de su zona.' : 'Registra dónde está tu milpa y aquí verás cómo suele estar cada día en tu zona, con datos de la NASA.'}</em>
+        <a class="btn btn--chico btn--primario" href="${p ? `#/parcelas/${p.id}/editar` : '#/parcelas/nueva'}">${p ? 'Completar ubicación' : 'Agregar mi parcela'}</a></span>
+      </div>`;
+    }
+    const zonaTxt = NOMBRE_CORTO_ZONA[datos.zona.id] || datos.zona.nombre;
+    const umbral = datos.reglas.rachaRelevanteDias;
+    const medido = sel.getFullYear() <= (datos.ultimoAnio || 0) ? diaMedido(datos.clima, sel.getFullYear(), sel.getMonth() + 1, sel.getDate()) : null;
+    if (medido) {
+      const r = medido.racha;
+      const rango = r ? `del ${deIsoCorta(r.inicio)} al ${deIsoCorta(r.fin)}` : '';
+      return html`<div class="cal__clima">
+        <span class="cal__clima-cabeza">${icono('lluvia', { color: '#d81159', tam: 16 })}Lo que midió la NASA ese día en ${zonaTxt}</span>
+        <ul class="cal__clima-lista">
+          <li data-tono="${r ? (r.dias >= umbral ? 'alerta' : 'medio') : 'bien'}">${r ? `Sin lluvia: era parte de una racha de ${r.dias} días seguidos (${rango}).` : `No estaba dentro de una racha de ${medido.rachaMinima} días o más sin lluvia.`}</li>
+          <li data-tono="${medido.calor ? 'alerta' : 'bien'}">${medido.calor ? `Calor fuerte: llegó a ${datos.clima.definiciones?.umbralCalorC ?? 35} °C o más.` : `No llegó a ${datos.clima.definiciones?.umbralCalorC ?? 35} °C.`}</li>
+        </ul>
+      </div>`;
+    }
+    const h = historiaDia(datos.clima, sel.getMonth() + 1, sel.getDate(), { umbralRacha: umbral });
+    if (!h.total) return '';
+    const barra = (n) => html`<span class="cal__barra" aria-hidden="true"><i style="width:${Math.round((n / h.total) * 100)}%"></i></span>`;
+    return html`<div class="cal__clima">
+      <span class="cal__clima-cabeza">${icono('grafica', { color: '#d81159', tam: 16 })}Cómo suele estar este día en ${zonaTxt}</span>
+      <div class="cal__dato">
+        <span><strong>${h.aniosRacha} de ${h.total} años</strong> cayó en una racha seca de ${umbral} días o más</span>${barra(h.aniosRacha)}
+        <em>${fraseProporcion(h.aniosRacha, h.total)}</em>
+      </div>
+      <div class="cal__dato">
+        <span><strong>${h.aniosCalor} de ${h.total} años</strong> hizo ${h.umbralCalorC} °C o más</span>${barra(h.aniosCalor)}
+        <em>${fraseProporcion(h.aniosCalor, h.total)}</em>
+      </div>
+      <span class="cal__nota">Es lo que pasó de ${h.desde} a ${h.hasta}, no un pronóstico.</span>
+    </div>`;
+  }
+
+  /** Qué datos se usan y si hay nuevos; sin nombres de archivos. */
+  function pieDatos(datos) {
+    const o = origenDatos();
+    const c = estadoContenido();
+    const fecha = o.descargadoEn ? fechaCorta(new Date(o.descargadoEn)) : null;
+    const quien = o.origen === 'servidor' ? `actualizados el ${fecha}` : 'copia incluida en la app';
+    const enLinea = navigator.onLine !== false;
+    return html`<div class="cal__pie">
+      <span>${datos.ultimoAnio ? `Clima: NASA POWER, 1998 a ${datos.ultimoAnio} (${quien}).` : `Datos: ${quien}.`}</span>
+      ${c.pendienteAlReabrir ? html`<button class="btn btn--chico btn--dorado" data-act="usarNuevos">${icono('check', { tam: 16 })}Usar datos nuevos</button>`
+        : enLinea ? html`<button class="btn btn--texto btn--chico" data-act="buscarNuevos" ${estado.buscando ? html`disabled aria-busy="true"` : ''}>${estado.buscando ? 'Buscando…' : 'Buscar datos nuevos'}</button>`
+          : html`<em>Sin internet: usamos lo guardado en el teléfono.</em>`}
+    </div>`;
+  }
+
+  /** Cambia el día elegido sin redibujar todo el calendario y con una animación corta de refresco. */
+  let tRefresco = null;
+  function refrescarDetalle() {
+    const caja = pantalla.querySelector('#calDetalle');
+    if (!caja || !estado.datosCal) { pintarCalendario(); return; }
+    pantalla.querySelectorAll('.cal__dia').forEach((b) => {
+      const d = new Date(estado.mesVista.anio, estado.mesVista.mes - 1, Number(b.dataset.n));
+      b.setAttribute('aria-pressed', mismaFecha(d, estado.sel) ? 'true' : 'false');
+    });
+    clearTimeout(tRefresco);
+    caja.classList.remove('cal__detalle--entra');
+    caja.classList.add('cal__detalle--cargando');
+    caja.setAttribute('aria-busy', 'true');
+    const reducido = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    tRefresco = setTimeout(() => {
+      pintar(caja, detalleDia(estado.datosCal));
+      caja.classList.remove('cal__detalle--cargando');
+      void caja.offsetWidth; // reinicia la animación de entrada
+      caja.classList.add('cal__detalle--entra');
+      caja.setAttribute('aria-busy', 'false');
+    }, reducido ? 0 : 260);
+  }
+
+  async function buscarNuevos() {
+    estado.buscando = true; pintarCalendario();
+    const r = await buscarActualizacion();
+    estado.buscando = false;
+    avisar(r.version ? 'Hay datos nuevos: toca «Usar datos nuevos».' : r.resultado === 'al_dia' ? 'Ya tienes los datos más recientes.' : 'No pudimos conectar con el servidor. Seguimos con lo guardado.');
+    pintarCalendario();
   }
 
   // ---------------- Voz ----------------
@@ -178,7 +282,7 @@ export function montar(pantalla, params = {}) {
     if (z) {
       z.dataset.escuchando = estado.escuchando ? 'true' : 'false';
       const b = z.querySelector('.mic');
-      b.setAttribute('aria-pressed', presionado(estado.escuchando));
+      marcarEscucha(b, estado.escuchando);
       b.setAttribute('aria-label', estado.escuchando ? 'Dejar de escuchar' : 'Hablar con el asistente');
     }
     if (!estado.escribir) pintar(pantalla.querySelector('#vozEtiqueta'), vozEtiqueta());
@@ -211,7 +315,29 @@ export function montar(pantalla, params = {}) {
           repos.kv.set('usuario', { nombreVisible: v || 'productor' });
           hoja.cerrar();
           pintarTodo();
+          if (primeraVez && !repos.parcelasActivas().length) setTimeout(hojaBienvenida, 380);
         });
+      },
+    });
+  }
+
+  // Primera vez: antes de decir qué conviene sembrar, pedimos lo que hace falta para decirlo.
+  function hojaBienvenida() {
+    abrirHoja(pantalla, {
+      titulo: 'Para recomendarte, primero tu parcela',
+      cuerpo: html`<div class="columna" style="gap:14px">
+        <p class="texto-intro">Sin saber dónde está tu milpa no podemos decirte si conviene sembrar. Con estos datos lo calculamos:</p>
+        <ul class="lista-requisitos">
+          <li>${icono('pin', { tam: 20 })}<span><strong>Dónde está</strong><em>Con tu ubicación o tu municipio sabemos tu zona y su clima (NASA, 1998 a 2025).</em></span></li>
+          <li>${icono('brote', { tam: 20 })}<span><strong>Qué siembras y cuándo</strong><em>Para ubicar las etapas delicadas del cultivo en el calendario.</em></span></li>
+          <li>${icono('info', { tam: 20 })}<span><strong>Tu tipo de suelo, si lo sabes</strong><em>Si no lo sabes, lo dejamos pendiente; no lo inventamos.</em></span></li>
+        </ul>
+        <a class="btn btn--primario btn--bloque" href="#/parcelas/nueva" data-r="cerrar">${icono('mas')}Registrar mi parcela</a>
+        <a class="btn btn--vidrio btn--bloque" href="#/parcelas" data-r="cerrar">Primero ver un ejemplo</a>
+        <button class="btn btn--texto" data-r="cerrar">Ahora no</button>
+      </div>`,
+      alMontar: (nodo, hoja) => {
+        nodo.addEventListener('click', (e) => { if (e.target.closest('[data-r="cerrar"]')) { repos.kv.set('bienvenidaVista', true); hoja.cerrar(); } });
       },
     });
   }
@@ -245,7 +371,9 @@ export function montar(pantalla, params = {}) {
     cerrarCal: () => { estado.calAbierto = false; pintarTodo(); },
     mesAnt: () => { const v = estado.mesVista; estado.mesVista = v.mes === 1 ? { anio: v.anio - 1, mes: 12 } : { anio: v.anio, mes: v.mes - 1 }; pintarCalendario(); },
     mesSig: () => { const v = estado.mesVista; estado.mesVista = v.mes === 12 ? { anio: v.anio + 1, mes: 1 } : { anio: v.anio, mes: v.mes + 1 }; pintarCalendario(); },
-    dia: (el) => { estado.sel = new Date(estado.mesVista.anio, estado.mesVista.mes - 1, Number(el.dataset.n)); pintarCalendario(); },
+    dia: (el) => { estado.sel = new Date(estado.mesVista.anio, estado.mesVista.mes - 1, Number(el.dataset.n)); refrescarDetalle(); },
+    buscarNuevos,
+    usarNuevos: () => location.reload(),
     mic: alternarMic,
     cambiarNombre: () => hojaNombre(false),
     elegirParcela: hojaParcelas,
@@ -263,6 +391,7 @@ export function montar(pantalla, params = {}) {
 
   pintarTodo();
   if (!usuario()) setTimeout(() => hojaNombre(true), 450);
+  else if (!repos.parcelasActivas().length && !repos.kv.get('bienvenidaVista')) setTimeout(hojaBienvenida, 450);
 
   return () => { quitar(); detener?.(); pantalla.removeEventListener('submit', alEnviar); document.removeEventListener('keydown', tecla); };
 }
