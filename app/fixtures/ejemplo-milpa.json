@@ -1,7 +1,8 @@
 {
-  "version": "0.1-prototipo",
+  "version": "0.2-demo",
   "esEjemplo": true,
-  "nota": "Datos de ejemplo claramente marcados (RF: etiquetar datos de ejemplo). Se cargan desde Tus parcelas con 'Ver con parcelas de ejemplo' y nunca se envían al servidor.",
+  "nota": "Perfil y parcelas FICTICIOS de demostración, sin credenciales. El servidor los carga en su base (python -m app.seed) y los publica en GET /api/v1/demo; la PWA los pide ahí y, sin conexión, usa esta misma copia. Llevan esEjemplo/esDemo y nunca se envían como contribución. La primera parcela está en el punto de la zona yuc-sur (San Felipe Segundo, Tekax) y su municipio es declarado, no deducido.",
+  "perfil": { "id": "demo-productor", "nombreVisible": "don Celestino", "esDemo": true, "requiereCredenciales": false },
   "usuario": { "nombreVisible": "don Celestino" },
   "parcelas": [
     {
@@ -10,13 +11,15 @@
       "superficieM2": 23700,
       "unidadCaptura": "ha",
       "dimensiones": null,
-      "sueloTexto": "Tsek'el, con mucha piedra",
+      "sueloTexto": "K'ankab, tierra roja",
       "usadaAntes": true,
       "aniosSeguidos": "2-3",
       "usoPrevio": null,
       "prioridad": "agua",
       "plan": null,
-      "ubicacion": { "lat": 20.862, "lon": -89.772, "precisionM": null, "origen": "mapa" },
+      "ubicacion": { "lat": 19.8122, "lon": -89.4702, "precisionM": null, "origen": "demo" },
+      "municipioId": "tekax",
+      "origenMunicipio": "declarado",
       "creadoEn": "2026-05-20T15:10:00.000Z"
     },
     {
@@ -77,7 +80,7 @@
     "ej-t-xbalam-2025": { "ej-s11": { "valor": 40, "unidad": "kg", "esEstimacion": false } }
   },
   "historial": [
-    { "id": "ej-h1", "parcelaId": "ej-cenote", "tipo": "parcela_creada", "titulo": "Registraste la parcela", "detalle": "2.37 hectáreas, cerca de Umán.", "fecha": "2026-05-20T15:10:00.000Z" },
+    { "id": "ej-h1", "parcelaId": "ej-cenote", "tipo": "parcela_creada", "titulo": "Registraste la parcela", "detalle": "2.37 hectáreas, en Tekax.", "fecha": "2026-05-20T15:10:00.000Z" },
     { "id": "ej-h2", "parcelaId": "ej-cenote", "tipo": "semilla_agregada", "titulo": "Sembraste Maíz criollo (xnuk nal)", "detalle": "1.5 hectáreas.", "fecha": "2026-06-15T13:00:00.000Z" },
     { "id": "ej-h3", "parcelaId": "ej-cenote", "tipo": "semilla_agregada", "titulo": "Sembraste Chile xcat ik", "detalle": "3 mecates.", "fecha": "2026-07-02T13:00:00.000Z" },
     { "id": "ej-h4", "parcelaId": "ej-cenote", "tipo": "semilla_eliminada", "titulo": "Quitaste Chile xcat ik", "detalle": "Plaga o enfermedad", "motivoId": "plaga", "motivoTexto": "Plaga o enfermedad", "nota": "Mosca blanca en las hojas", "fecha": "2026-07-30T15:00:00.000Z" },

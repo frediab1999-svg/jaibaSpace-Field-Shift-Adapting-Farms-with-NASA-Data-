@@ -28,8 +28,25 @@ export const enviarContribucion = (c) =>
   pedir('/contributions', { metodo: 'POST', cuerpo: c, cabeceras: { 'Idempotency-Key': c.submission_id } });
 
 /**
- * GET /api/v1/catalogs/{crops|varieties|stages|seeds} → {catalog, items, count}
- * Hoy el repositorio devuelve [] (TODO en server); la PWA usa fixtures marcados como ejemplo.
+ * GET /api/v1/bundle → manifiesto del paquete de datos publicado
+ * { bundle_version, generated_at, documents: [{ doc_id, kind, format_version, sha256, bytes, url }] }
+ * Cada `url` (relativa a /api/v1) devuelve el documento tal como se cargó en la base:
+ *   zonas.json → /climate/zones · clima/<zona>.json → /climate/datasets/{id}/content
+ *   planes.json → /strategies/plans · reglas.json → /strategies/rules · catalogos/<n>.json → /catalogs/{n}
+ * Lo consume services/contenido.js, que valida tamaño y SHA-256 y guarda el paquete completo.
+ */
+export const paquete = () => pedir('/bundle', { limiteMs: 4000 });
+
+/**
+ * GET /api/v1/demo → perfil y parcelas FICTICIOS de demostración (sin credenciales)
+ * { version, esEjemplo, perfil: { id, nombreVisible, esDemo }, usuario, parcelas[], temporadas[], siembras[], cosechas{}, historial[] }
+ * 404 demo_not_loaded si la base no tiene la carga de demo.
+ */
+export const demo = () => pedir('/demo', { limiteMs: 4000 });
+
+/**
+ * GET /api/v1/catalogs/{crops|seeds|soils|municipios|listas|varieties|stages} → {catalog, items, count, …}
+ * La PWA no los pide uno por uno: llegan dentro del paquete (GET /bundle).
  */
 export const catalogo = (nombre) => pedir(`/catalogs/${encodeURIComponent(nombre)}`);
 

@@ -1,14 +1,22 @@
-from fastapi import APIRouter
-from fastapi import HTTPException
+from fastapi import APIRouter, Depends, Response
+from fastapi.responses import JSONResponse
 
-from app.modules.catalogs.service import CatalogService
+from app.modules.published.deps import published_service
+from app.modules.published.service import PublishedService, document_response
 
 router = APIRouter()
 
+
 @router.get("/{catalog_name}", summary="Consulta un catálogo publicado")
-def list_catalog(catalog_name: str) -> dict[str, object]:
-    try:
-        items = CatalogService().list_catalog(catalog_name)
-    except ValueError as exc:
-        raise HTTPException(status_code=404, detail="unknown_catalog") from exc
-    return {"catalog": catalog_name, "items": items, "count": len(items)}
+def get_catalog(
+    catalog_name: str, service: PublishedService = Depends(published_service)
+) -> Response:
+    """`{catalog, items, count, …}`.
+
+    crops, seeds, soils, municipios y listas son los archivos de `app/data/catalogos` cargados
+    en la base (siguen marcados `esEjemplo`). varieties y stages se derivan de seeds y reglas.
+    """
+    catalog = service.catalog(catalog_name)
+    if isinstance(catalog, dict):
+        return JSONResponse(catalog)
+    return document_response(catalog)

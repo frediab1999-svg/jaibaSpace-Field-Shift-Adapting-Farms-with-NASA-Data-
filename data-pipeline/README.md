@@ -1,6 +1,6 @@
 # Pipeline de datos
 
-> **Alcance actual:** este pipeline implementa la preparación climática histórica del MVP v0.2 centrado en maíz. La arquitectura nueva se describe en `../docs/arquitectura-y-estructura.md`; antes de integrar escenarios climáticos o catálogos de semillas, se ampliará el pipeline con fuentes verificadas y salidas versionadas.
+> **Alcance actual:** este pipeline prepara el clima histórico (lluvia y temperatura máxima) de las zonas publicadas. Los escenarios climáticos y otros catálogos siguen pendientes; la arquitectura destino se describe en `../docs/arquitectura-y-estructura.md`.
 
 Esta carpeta contiene el pipeline Python de datos climáticos de jaibaSpace. El script actual procesa el conjunto histórico del MVP inicial. La arquitectura destino y los requisitos de salidas nuevas están descritos en `../docs/arquitectura-y-estructura.md` y `../docs/requisitos-del-sistema.md`.
 
@@ -15,12 +15,23 @@ python clima.py ../app/data
 - Guarda la respuesta original en `raw/<zona>.json` y escribe `../app/data/clima/<zona>.json`.
 - Solo usa la biblioteca estándar de Python y no necesita clave de API.
 
-La ejecución histórica se verificó el 2026‑11‑14 con las 7 zonas. Antes de usar estos archivos en la API nueva, se deben validar y publicar con el contrato de datos versionado correspondiente.
+Hoy `zonas.json` tiene 3 zonas (`yuc-sur`, `camp-chenes` y `qroo-centro`). Los tres archivos se compararon el 2026‑11‑15 con una descarga fresca de NASA POWER y son idénticos (solo cambia la fecha de descarga).
+
+## Auditoría de los datos publicados
+
+```
+python auditar_datos.py ../app/data            # sin internet
+python auditar_datos.py ../app/data --nasa     # vuelve a descargar NASA POWER y compara
+```
+
+Comprueba que cada zona resuelva su archivo de clima con el mismo id y el mismo punto que consulta a NASA, la procedencia (parámetro, unidad, resolución, estándar temporal y corte), los años y días esperados, que los faltantes sean `null`, la coherencia de los eventos, las medianas del resumen y las claves cruzadas con `planes.json`, `reglas.json` y los catálogos. No modifica archivos y sale con código 1 si algo falla. El detalle está en `../docs/entrega-datos-mvp.md`.
+
+Después de regenerar el clima hay que volver a publicar el paquete en el servidor: `python -m app.seed` (ver `../server/README.md`).
 
 ## Límite de responsabilidad
 
 - `clima.py` descarga, normaliza faltantes (`-999` → `null`), calcula rachas secas y episodios de calor y escribe el JSON.
 - No compara estrategias: esa lógica pertenece al motor JavaScript del Rol 4.
-- Este script solo procesa clima histórico. La nueva API FastAPI y la base PostgreSQL/PostGIS son componentes separados; el pipeline se ampliará para publicar conjuntos climáticos y catálogos trazables.
+- Este script solo procesa clima histórico. El servidor carga sus salidas en PostgreSQL con `python -m app.seed` y las publica en `/api/v1/climate/…`; no descarga nada por petición.
 - Los umbrales (`UMBRAL_SECO_MM`, `UMBRAL_CALOR_C`) están al inicio del script. Si el Rol 3 los cambia, se actualizan ahí y se regeneran los archivos.
 - Los formatos de salida nuevos se definirán en el contrato de API/dominio versionado antes de integrar fuentes de escenarios o catálogos.

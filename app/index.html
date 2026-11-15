@@ -16,8 +16,10 @@
   <link rel="stylesheet" href="./src/ui/styles/components.css">
   <link rel="stylesheet" href="./src/ui/styles/pantallas.css">
   <script>
-    // URL de la API. También se puede cambiar con ?api=https://tu-servidor/api/v1
-    window.JAIBASPACE_API_BASE = window.JAIBASPACE_API_BASE || 'http://localhost:8000/api/v1';
+    // URL de la API. Si se deja vacía, la app usa la misma computadora que sirve la página
+    // (puerto 8000), tanto en localhost como en el celular. Para fijar otra, escribe aquí
+    // window.JAIBASPACE_API_BASE = 'https://tu-servidor/api/v1' o abre la app con ?api=…
+    window.JAIBASPACE_API_BASE = window.JAIBASPACE_API_BASE || '';
   </script>
 </head>
 <body>

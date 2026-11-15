@@ -13,14 +13,23 @@ export async function zonas() {
 }
 export const zonaPorId = (id) => (zonasCache || []).find((z) => z.id === id) || null;
 
-export const COLOR_ZONA = { 'yuc-noroeste': '#218380', 'qroo-centro': '#ffbc42', 'camp-chenes': '#8f2d56' };
-export const NOMBRE_CORTO_ZONA = { 'yuc-noroeste': 'Noroeste', 'qroo-centro': 'Zona maya', 'camp-chenes': 'Los Chenes' };
+/** Zona de referencia cuando la parcela no tiene zona: la primera de zonas.json. Siempre se avisa en pantalla. */
+export const zonaPorDefecto = () => (zonasCache || [])[0] || null;
+
+export const COLOR_ZONA = { 'yuc-sur': '#218380', 'qroo-centro': '#ffbc42', 'camp-chenes': '#8f2d56' };
+export const NOMBRE_CORTO_ZONA = { 'yuc-sur': 'Sur de Yucatán', 'qroo-centro': 'Zona maya', 'camp-chenes': 'Los Chenes' };
 
 export async function clima(zonaId) {
   if (climaCache.has(zonaId)) return climaCache.get(zonaId);
   const z = (await zonas()).find((x) => x.id === zonaId);
   if (!z) return null;
-  const p = json(z.archivoClima);
+  // El archivo debe ser el de esa zona y el de ese punto: no se usa una serie solo porque comparte nombre
+  const p = json(z.archivoClima).then((c) => {
+    if (c?.zona?.id !== zonaId) throw new Error(`El archivo ${z.archivoClima} no es de la zona ${zonaId}`);
+    if (c.ubicacion?.lat !== z.punto.lat || c.ubicacion?.lon !== z.punto.lon) throw new Error(`El clima de ${zonaId} no corresponde al punto de la zona`);
+    return c;
+  });
+  p.catch(() => climaCache.delete(zonaId));
   climaCache.set(zonaId, p);
   return p;
 }

@@ -155,7 +155,7 @@ function detalle(pantalla, id, parcelas) {
               <span class="tarjeta__sub">Analizamos ${a.cultivosOrigen}:</span>
               <div class="cultivos-pred" style="justify-content:center">${[...new Map(a.ventanas.map((v) => [v.cultivo.id, v])).values()].map((v) => html`<span class="semilla-chip"><i style="background:${v.cultivo.color}"></i>${v.cultivo.name}</span>`)}</div>
             </div>
-            ${!a.zonaAsignada ? html`<span class="porconfirmar">Tu parcela no tiene ubicación: usamos el Noroeste de referencia.</span>` : ''}
+            ${!a.zonaAsignada ? html`<span class="porconfirmar">Tu parcela no tiene una zona de clima asignada: usamos ${a.zona.nombre.split(' (')[0]} como referencia.</span>` : ''}
             ${a.zonaAsignada && p.zonaDistanciaKm > 50 ? html`<span class="porconfirmar">El punto de clima más cercano está a ${numero(p.zonaDistanciaKm, 0)} km. Toma el clima como referencia regional.</span>` : ''}
           </section>
           <div class="seccion"><span class="seccion__titulo">Lo que puede pasar</span><span class="seccion__nota">Toca para ver por qué</span></div>

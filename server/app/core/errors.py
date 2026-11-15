@@ -1,5 +1,6 @@
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
+from sqlalchemy.exc import DBAPIError
 
 
 class AppError(Exception):
@@ -17,5 +18,19 @@ async def app_error_handler(_: Request, exc: AppError) -> JSONResponse:
     )
 
 
+async def database_error_handler(_: Request, exc: DBAPIError) -> JSONResponse:
+    """La base no responde o falta aplicar las migraciones: 503 con el mismo formato de error."""
+    return JSONResponse(
+        status_code=503,
+        content={
+            "error": {
+                "code": "database_not_ready",
+                "message": "La base de datos no está disponible o falta `alembic upgrade head`.",
+            }
+        },
+    )
+
+
 def register_exception_handlers(app: FastAPI) -> None:
     app.add_exception_handler(AppError, app_error_handler)
+    app.add_exception_handler(DBAPIError, database_error_handler)
