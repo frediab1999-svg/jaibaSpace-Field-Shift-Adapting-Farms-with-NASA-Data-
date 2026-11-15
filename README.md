@@ -54,7 +54,7 @@ npm install
 npm run dev                     # http://localhost:5173
 ```
 
-Recorrido: **Tus parcelas → Ver con parcelas de ejemplo → Milpa del cenote → ¿Qué siembro el próximo ciclo?**. La PWA descarga de FastAPI las zonas, el clima, los planes, las reglas y los catálogos, los guarda en el teléfono y calcula ahí la comparación de tres opciones. Después de la primera carga funciona sin conexión. Sin el servidor, la app abre con la copia local de los datos.
+Recorrido: **Inicio → Mira un ejemplo (Pablo o Juan) → Diagnóstico de tu tierra → Tu plan de 2 años → ¿Cuándo me conviene sembrar?**, o registra tu parcela con el cuestionario de 4 pasos ([decisión 0004](docs/decisiones/0004-mvp-tierra-y-tiempo.md)). El clima se pide para el punto exacto de la parcela (`GET /api/v1/climate/point`, NASA POWER). La PWA descarga de FastAPI las zonas, el clima, los planes, las reglas y los catálogos, los guarda en el teléfono y calcula ahí la comparación de tres opciones. Después de la primera carga funciona sin conexión. Sin el servidor, la app abre con la copia local de los datos.
 
 Pruebas: `npm test` en `app/` y `python -m pytest` en `server/`. Auditoría de datos: `python data-pipeline/auditar_datos.py app/data`.
 

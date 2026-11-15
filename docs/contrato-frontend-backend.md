@@ -32,7 +32,8 @@ Base: la misma computadora que sirve la página, en el puerto 8000 (`http://loca
 | `POST /consent` | `{consent_id, purpose:"collective_statistics", granted, notice_version:"2026-11-prototipo", decided_at}`. Retirarlo crea un registro nuevo con `granted=false` | Información → «Comparte con tu zona» | Se queda en la cola. Un 409 cuenta como ya enviado |
 | `POST /contributions` | Una por cada siembra de una temporada cerrada. Cabecera `Idempotency-Key = submission_id` | Información (al terminar una siembra o al registrar una pasada) y alta de parcela con «Sí, ya se usó» | Cola: pendiente → enviada \| error, con «Reintentar» |
 | `GET /catalogs/{crops\|seeds\|soils\|municipios\|listas}` | Catálogos de cultivos, semillas, suelos, municipios y listas de captura: `{catalog, items, count, …}`. Llegan dentro del paquete | Semillas, Parcelas, Opciones | Respaldo local. Siguen marcados `esEjemplo`: su contenido es del prototipo |
-| `GET /climate/datasets?zone_id&kind` | Índice de conjuntos climáticos con fuente, parámetros, periodo, resolución, corte y versión. Con `kind=projection` alimenta la variable «Clima que viene» | Predicción | Hoy solo hay conjuntos `historical`; para proyecciones responde `[]` y se muestra «Sin dato todavía» |
+| `GET /climate/datasets?zone_id&kind` | Índice de conjuntos climáticos con fuente, parámetros, periodo, resolución, corte y versión | (ninguna pantalla desde la decisión 0004) | Hoy solo hay conjuntos `historical`; para proyecciones responde `[]` |
+| `GET /climate/point?lat&lon` | Clima de 1998 a 2025 del punto exacto de la parcela: NASA POWER (IMERG_PRECTOT y T2M_MAX), procesado igual que `data-pipeline/clima.py`, con la forma de `clima/<zona>.json` y `zona.id = "punto"`. Caché en memoria por celda de 2 decimales | Diagnóstico, Plan de 2 años, Predicción, Calendario, Información | 422 `point_out_of_coverage` fuera de la península; 502 `nasa_power_unavailable`. La PWA intenta entonces directo a NASA POWER y, si tampoco, usa el clima de la zona y reintenta al volver la red |
 | `GET /statistics?zone_id&crop_id&season_year` | Variable «Productores de tu zona» y tarjeta «Lo que reportan en…» | Predicción, Información | `insufficient_sample` (menos de 10 registros) o sin conexión: se explica y no se muestran números |
 
 **Configuración del servidor.** CORS solo permite `GET`, `POST`, `OPTIONS` y las cabeceras `Content-Type` e `Idempotency-Key`. Con `APP_ENV=development` acepta `localhost` y las IP privadas en cualquier puerto, para abrir la PWA desde el celular. Para desplegar hay que definir `CORS_ORIGINS` o `CORS_ORIGIN_REGEX` con el dominio real. Elegir un plan en «Opciones para tu parcela» no llama a ninguna ruta: se guarda solo en el dispositivo.
@@ -79,7 +80,6 @@ Base: la misma computadora que sirve la página, en el puerto 8000 (`http://loca
 | CONJUNTO_CLIMATICO | `app/data/clima/*.json` | `GET /climate/datasets` | Histórico local; proyección vacía |
 | EstadisticaAgregada | — | `GET /statistics` | Solo conteos por resultado |
 | (nuevo) Evento de historial de parcela | `historial` | — | Ver F4 |
-| (nuevo) Sabucán | `kv.sabucan` | — | Ver F6 |
 
 ## 4. Lo que el backend o los datos tienen y el frontend aún no muestra
 
@@ -103,7 +103,7 @@ Base: la misma computadora que sirve la página, en el puerto 8000 (`http://loca
 | F3 | **Cosecha por cultivo y resultado por temporada** | La PWA pide un resultado por temporada y una cantidad por cultivo | Aclarar el modelo: el E-R pone el resultado en TEMPORADA; el diagrama de clases, en RegistroTemporada por cultivo |
 | F4 | **Motivos de eliminación** de semillas y parcelas, e **historial de parcela** | Solo local; alimentan el historial y la señal de plagas | `POST /api/v1/removal-reasons` seudónimo y con consentimiento: `{submission_id, consent_id, zone_id, crop_id?, kind: "seed"\|"parcel", reason_id, month, year}`. Los agregados irían en `/statistics`. **PENDIENTE DE APROBACIÓN** |
 | F5 | **Lo que decían las señales al iniciar la temporada** | Se guarda en `temporada.prediccion` y se compara con el resultado real en Información | Agregar `signals_level` (`bien\|atencion\|riesgo`) a la contribución para calibrar el motor con datos reales |
-| F6 | **Sabucán** (semillas apartadas) | Solo local, marcado «Pendiente en el servidor» | Definir si es una lista de interés, disponibilidad de semilla por zona (`Semilla.disponibilidad`) o un intercambio. Sin cuentas no puede sincronizarse entre teléfonos |
+| F6 | ~~Sabucán~~ | Retirado en la decisión 0004 | — |
 | F7 | **Catálogos de captura**: suelos, municipios, causas, unidades, temporadas del año | Fixtures en `app/data/catalogos` | Sumar `soils`, `municipalities`, `causes`, `units` y `seasons` a `CatalogService.allowed_catalogs` |
 | F8 | **Estadística por causa percibida** | `/statistics` solo cuenta resultados | Agregar métricas `cause_{id}_count` con el mismo umbral mínimo |
 | F9 | **Foto de parcela y notas dictadas** | Solo local | Se quedan así por privacidad |

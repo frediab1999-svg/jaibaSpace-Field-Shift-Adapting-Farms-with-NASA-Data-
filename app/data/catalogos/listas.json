@@ -40,6 +40,7 @@
   ],
   "usoPrevio": [
     { "id": "monte", "name": "Monte o selva" },
+    { "id": "acahual", "name": "Acahual (monte que vuelve a crecer)" },
     { "id": "potrero", "name": "Potrero o pasto" },
     { "id": "solar", "name": "Solar o huerto" },
     { "id": "no_se", "name": "No sé" }

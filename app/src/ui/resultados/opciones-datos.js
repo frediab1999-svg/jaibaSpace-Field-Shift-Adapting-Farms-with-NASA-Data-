@@ -6,9 +6,12 @@
 import * as repos from '../../storage/repos.js';
 import * as catalogo from '../../modules/crops/catalogo.js';
 import * as climaMod from '../../modules/climate/clima.js';
+import { climaDeParcela } from '../../modules/climate/climaPunto.js';
 import * as reglasMod from '../../modules/strategies/reglas.js';
 import { armarComparacion } from '../../motor/comparacion.js';
 import { origenDatos } from '../../shared/datos.js';
+import { sueloDeParcela, diagnosticoDe } from '../../modules/parcel/tierra.js';
+import { porQueEstrategia } from '../../motor/diagnostico.js';
 import { hoy } from '../../shared/format.js';
 
 /**
@@ -30,6 +33,17 @@ export function practicaDeclarada(parcela) {
       }),
     };
   }
+  // Lo que dijo en el cuestionario que siembra hoy (si todavía no hay temporadas registradas)
+  if (parcela.practica?.cultivos?.length) {
+    return {
+      temporadaAnio: null,
+      origen: 'cuestionario',
+      declaradas: parcela.practica.cultivos.map((id) => {
+        const c = catalogo.cultivo(id);
+        return { nombre: c.name, reglasId: c.reglasId || null, fecha: parcela.practica.mes ? { mes: parcela.practica.mes, dia: null, precision: 'mes' } : null };
+      }),
+    };
+  }
   if (parcela.plan?.cultivos?.length) {
     return {
       temporadaAnio: null,
@@ -43,18 +57,7 @@ export function practicaDeclarada(parcela) {
   return { temporadaAnio: null, origen: null, declaradas: [] };
 }
 
-/** Suelo de la parcela: lo que escribió, el nombre local reconocido y la clase WRB si está verificada. */
-export function sueloDeParcela(parcela) {
-  const s = catalogo.suelos().find((x) => x.id === parcela?.tipoSueloId) || null;
-  const verificado = !!s && s.estadoEquivalencia === 'verificado_fuente' && !!s.reglasId;
-  return {
-    texto: parcela?.sueloTexto || '',
-    local: s ? { id: s.id, nombre: s.name, descripcion: s.descripcion } : null,
-    wrb: verificado ? s.equivalenteWRB : null,
-    wrbPropuesta: s && !verificado ? s.equivalenteWRB || null : null,
-    reglasId: verificado ? s.reglasId : null,
-  };
-}
+export { sueloDeParcela };
 
 /**
  * Comparación completa para la parcela.
@@ -64,9 +67,11 @@ export function sueloDeParcela(parcela) {
 export async function opcionesPara(parcela, { siembra = null } = {}) {
   const [planesDoc, reglas] = await Promise.all([reglasMod.planes(), reglasMod.reglas()]);
   await climaMod.zonas();
-  const zona = climaMod.zonaPorId(parcela.zonaId);
-  const clima = zona ? await climaMod.clima(zona.id) : null;
-  const practica = practicaDeclarada(parcela);
+  const { clima, origen: origenClima, zona } = await climaDeParcela(parcela);
+  const diagnostico = diagnosticoDe(parcela);
+  // Tierra nueva (caso Juan): no hay una práctica propia todavía. La referencia es lo que se hace
+  // normalmente al abrir monte: maíz cada año (plantilla «actual» de planes.json).
+  const practica = diagnostico.estado.id === 'nueva' ? { temporadaAnio: null, origen: 'lo_normal', declaradas: [] } : practicaDeclarada(parcela);
   const suelo = sueloDeParcela(parcela);
   const maiz = catalogo.semillas().find((s) => s.cultivoId === 'maiz' && s.ventanaSiembra);
   const f = hoy();
@@ -82,5 +87,10 @@ export async function opcionesPara(parcela, { siembra = null } = {}) {
     hoy: { anio: f.getFullYear(), mes: f.getMonth() + 1 },
     siembraEscenario: siembra,
   });
-  return { ...r, practica, suelo, datos: origenDatos(), advertenciaIngreso: planesDoc.advertenciaIngreso };
+  // Orden y sello «Sugerida» según el diagnóstico. Las tres principales se muestran siempre.
+  const { sugerencia, estado } = diagnostico;
+  const conPorQue = (e) => ({ ...e, sugerida: e.id === sugerencia.sugerida, porQue: porQueEstrategia(e.id, { estado, sugerencia, esPlantilla: e.esPlantilla }) });
+  const principales = sugerencia.orden.map((id) => r.principales.find((e) => e.id === id)).filter(Boolean).map(conPorQue);
+  const secundarias = sugerencia.mostrarSoya ? r.secundarias.map(conPorQue) : [];
+  return { ...r, principales, secundarias, diagnostico, practica, suelo, origenClima, datos: origenDatos(), advertenciaIngreso: planesDoc.advertenciaIngreso };
 }

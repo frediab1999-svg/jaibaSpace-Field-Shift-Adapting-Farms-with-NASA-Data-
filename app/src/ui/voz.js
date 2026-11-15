@@ -12,7 +12,7 @@ const COMANDOS = [
   { ruta: '#/opciones', palabras: ['que siembro', 'que sembrar', 'que siembra', 'que puedo sembrar', 'que le siembro', 'proximo ciclo', 'siguiente ciclo', 'descanso', 'canavalia', 'tierra cansada', 'opciones para'] },
   { ruta: '#/parcelas/nueva', palabras: ['agregar parcela', 'nueva parcela', 'registrar parcela', 'anadir parcela'] },
   { ruta: '#/informacion?registrar=1', palabras: ['registrar cosecha', 'termine', 'ya coseche', 'coseche'] },
-  { ruta: '#/semillas', palabras: ['semilla', 'sembrar', 'temporada', 'ixi im', 'ixiim', 'sabucan'] },
+  { ruta: '#/semillas', palabras: ['semilla', 'sembrar', 'temporada', 'ixi im', 'ixiim'] },
   { ruta: '#/parcelas', palabras: ['parcela', 'terreno', 'milpa', 'lu um', 'luum', 'tierra'] },
   { ruta: '#/prediccion', palabras: ['prediccion', 'futuro', 'como le ira', 'como me ira', 'sequia', 'clima', 'lluvia', 'plaga'] },
   { ruta: '#/informacion', palabras: ['informacion', 'historial', 'cosecha', 'resultado', 'na at'] },

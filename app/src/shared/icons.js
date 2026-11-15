@@ -39,6 +39,8 @@ const P = {
   bocina: 'M11 5 6 9H3v6h3l5 4V5ZM15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13',
   alto: 'M7 7h10v10H7z',
   hoja: 'M5 19c0-8 5-13 14-14 0 9-5 14-13 14ZM5 19l7-7',
+  estrella: 'm12 3.5 2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9L12 3.5Z',
+  libro: 'M4 5.5C4 4.7 4.7 4 5.5 4H11v16H5.5A1.5 1.5 0 0 1 4 18.5v-13ZM20 5.5c0-.8-.7-1.5-1.5-1.5H13v16h5.5c.8 0 1.5-.7 1.5-1.5v-13Z',
 };
 
 export function icono(nombre, { tam = 20, grosor = 2.2, color = 'currentColor', clase = '' } = {}) {
