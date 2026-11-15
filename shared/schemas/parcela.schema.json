@@ -1,0 +1,233 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://jaibaspace.local/schemas/parcela",
+  "title": "Parcela (solo local, RNF-03)",
+  "description": "Parcela guardada en IndexedDB. No se envía al servidor; solo su zona viaja dentro de la contribución.",
+  "type": "object",
+  "required": [
+    "id",
+    "nombre",
+    "superficieM2",
+    "creadoEn"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "nombre": {
+      "type": "string",
+      "maxLength": 60
+    },
+    "superficieM2": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "unidadCaptura": {
+      "enum": [
+        "m2",
+        "mecate",
+        "ha"
+      ]
+    },
+    "dimensiones": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "properties": {
+        "largoM": {
+          "type": "number"
+        },
+        "anchoM": {
+          "type": "number"
+        }
+      }
+    },
+    "sueloTexto": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Lo que escribió el productor"
+    },
+    "tipoSueloId": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Id del catálogo soils si se reconoció"
+    },
+    "origenTipoSuelo": {
+      "enum": [
+        "texto_reconocido",
+        "texto_productor",
+        "desconocido"
+      ]
+    },
+    "usadaAntes": {
+      "type": [
+        "boolean",
+        "null"
+      ]
+    },
+    "aniosSeguidos": {
+      "enum": [
+        "1",
+        "2-3",
+        "4+",
+        "no_se",
+        null
+      ]
+    },
+    "usoPrevio": {
+      "enum": [
+        "monte",
+        "potrero",
+        "solar",
+        "no_se",
+        null
+      ]
+    },
+    "plan": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "properties": {
+        "cultivos": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "mes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 12
+        }
+      }
+    },
+    "prioridad": {
+      "enum": [
+        "agua",
+        "suelo",
+        "nitrogeno",
+        "ingreso",
+        null
+      ]
+    },
+    "ubicacion": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "required": [
+        "lat",
+        "lon",
+        "origen"
+      ],
+      "properties": {
+        "lat": {
+          "type": "number"
+        },
+        "lon": {
+          "type": "number"
+        },
+        "precisionM": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "origen": {
+          "enum": [
+            "gps",
+            "mapa",
+            "municipio"
+          ]
+        }
+      }
+    },
+    "municipioId": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "municipioNombre": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "estado": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "zonaId": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "zonaDistanciaKm": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "origenAsignacionZona": {
+      "enum": [
+        "punto_mas_cercano",
+        null
+      ]
+    },
+    "foto": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "dataURL JPEG reducida; nunca se envía"
+    },
+    "esEjemplo": {
+      "type": "boolean"
+    },
+    "creadoEn": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "actualizadoEn": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "eliminadaEn": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    },
+    "motivoEliminacion": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "properties": {
+        "motivoId": {
+          "type": "string"
+        },
+        "motivoTexto": {
+          "type": "string"
+        },
+        "nota": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    }
+  }
+}

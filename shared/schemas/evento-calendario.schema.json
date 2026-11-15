@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://jaibaspace.local/schemas/evento-calendario",
+  "title": "Evento del calendario de Inicio (calculado en app/src/motor/calendario.js; base del GET /calendar PROPUESTO)",
+  "type": "object",
+  "required": [
+    "fecha",
+    "tipo",
+    "texto",
+    "dato"
+  ],
+  "properties": {
+    "fecha": {
+      "type": "string",
+      "format": "date"
+    },
+    "tipo": {
+      "enum": [
+        "clima",
+        "prevision",
+        "siembra",
+        "temporada"
+      ],
+      "description": "clima #d81159, prevision #218380, siembra #e0a020, temporada #8f2d56"
+    },
+    "texto": {
+      "type": "string"
+    },
+    "detalle": {
+      "type": "string"
+    },
+    "dato": {
+      "enum": [
+        "historico",
+        "actual",
+        "catalogo"
+      ]
+    },
+    "fuente": {
+      "type": "string"
+    }
+  }
+}

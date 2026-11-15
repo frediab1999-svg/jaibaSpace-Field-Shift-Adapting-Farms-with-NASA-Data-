@@ -15,6 +15,9 @@ El sistema presenta evidencia e incertidumbre; no predice rendimientos ni garant
 | [Requisitos del sistema](docs/requisitos-del-sistema.md) | Requisitos funcionales, de calidad y decisiones pendientes. |
 | [Reto oficial](docs/reto-oficial.md) | Texto del reto NASA Space Apps Challenge. |
 | [Diagramas](docs/diagramas/) | Casos de uso y modelo de dominio de la arquitectura multicultivo. |
+| [Look & feel](docs/look-and-feel.md) | Guía visual, tono, componentes y accesibilidad de la PWA. |
+| [Contrato frontend ↔ backend](docs/contrato-frontend-backend.md) | Endpoints que usa la PWA, entidades y brechas en ambos sentidos. |
+| [Decisiones](docs/decisiones/) | Decisiones de arquitectura versionadas. |
 
 ## Evolución de la documentación
 
@@ -31,6 +34,16 @@ docs/            Contexto, requisitos, arquitectura y diagramas
 ```
 
 La estructura detallada está en [arquitectura-y-estructura.md](docs/arquitectura-y-estructura.md). El árbol se irá materializando por fases; las fuentes de proyecciones y semillas y otras decisiones pendientes se documentan en [requisitos-del-sistema.md](docs/requisitos-del-sistema.md).
+
+## PWA (prototipo del happy path)
+
+```bash
+cd app
+npm install
+npm run dev   # http://localhost:5173
+```
+
+Funciona sin el servidor (modo local). Si la API corre en `http://localhost:8000`, la usa para consentimiento, contribuciones, catálogos y estadísticas. Detalles y guion de demostración en [app/README.md](app/README.md).
 
 ## Pipeline climático existente
 
