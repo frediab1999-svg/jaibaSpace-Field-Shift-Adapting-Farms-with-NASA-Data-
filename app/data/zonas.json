@@ -1,21 +1,22 @@
 {
   "version": "0.2",
-  "nota": "Cobertura inicial del MVP: una zona por estado. Los puntos son referencias regionales. Los tipos de suelo sugeridos quedan por confirmar.",
+  "nota": "Cobertura inicial del MVP: una zona por estado. Los puntos son referencias regionales. Los suelos predominantes son los dos grupos WRB de mayor superficie en el compendio municipal del INEGI.",
   "zonas": [
     {
-      "id": "yuc-noroeste",
-      "nombre": "Noroeste de Yucatán (Umán)",
+      "id": "yuc-sur",
+      "nombre": "Sur de Yucatán (Tekax)",
       "estado": "Yucatán",
       "punto": {
-        "lat": 20.834,
-        "lon": -89.787
+        "lat": 19.8122,
+        "lon": -89.4702
       },
-      "archivoClima": "clima/yuc-noroeste.json",
+      "archivoClima": "clima/yuc-sur.json",
       "suelosPredominantes": [
-        "tsekel"
+        "luvisol",
+        "leptosol"
       ],
       "porConfirmar": [
-        "suelos predominantes (INEGI 1:250 000)"
+        "Phaeozem (17.42 %), Vertisol (9.65 %) y Nitisol (6.70 %) de Tekax no se modelan"
       ]
     },
     {
@@ -28,11 +29,11 @@
       },
       "archivoClima": "clima/camp-chenes.json",
       "suelosPredominantes": [
-        "kankab",
-        "akalche"
+        "leptosol",
+        "luvisol"
       ],
       "porConfirmar": [
-        "suelos predominantes (INEGI 1:250 000)"
+        "INEGI, compendio de Hopelchén: Leptosol 45.54 %, Luvisol 16.59 %, Vertisol 12.91 %; el Vertisol no se modela"
       ]
     },
     {
@@ -45,11 +46,11 @@
       },
       "archivoClima": "clima/qroo-centro.json",
       "suelosPredominantes": [
-        "tsekel",
-        "kankab"
+        "leptosol",
+        "luvisol"
       ],
       "porConfirmar": [
-        "suelos predominantes (INEGI 1:250 000)"
+        "INEGI, compendio de Felipe Carrillo Puerto: Leptosol 61.51 %, Luvisol 10.87 %"
       ]
     }
   ]
