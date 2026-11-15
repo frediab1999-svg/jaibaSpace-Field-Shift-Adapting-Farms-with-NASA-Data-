@@ -1,0 +1,167 @@
+@startuml
+title jaibaSpace - Modelo de dominio multicultivo
+hide methods
+skinparam classAttributeIconSize 0
+
+class Parcela {
+  id: UUID
+  alias: String
+  ubicacion: Point
+  municipioId: String
+  sueloId: String
+  sincronizada: Boolean
+}
+
+class Consentimiento {
+  id: UUID
+  finalidad: String
+  otorgadoEn: DateTime
+  revocadoEn: DateTime
+  usarParaEstadistica: Boolean
+}
+
+class Cultivo {
+  id: String
+  nombreEs: String
+  nombreMaya: String
+  descripcion: String
+  fuentes: List
+}
+
+class Variedad {
+  id: String
+  cultivoId: String
+  nombre: String
+  cicloDias: Integer
+  atributosDisponibles: Map
+  fuente: String
+}
+
+class EtapaCultivo {
+  id: String
+  nombre: String
+  desdeDia: Integer
+  hastaDia: Integer
+  sensibilidadAgua: String
+  sensibilidadCalor: String
+}
+
+class EstrategiaManejo {
+  id: UUID
+  cultivoPrincipalId: String
+  objetivo: String
+  secuencia: List
+  criterios: List
+  beneficios: List
+  riesgos: List
+  porConfirmar: List
+}
+
+class RegistroTemporada {
+  id: UUID
+  parcelaId: UUID
+  ciclo: Integer
+  fechaSiembra: Date
+  fechaCosecha: Date
+  resultadoCualitativo: String
+  causaPercibida: String
+  esEjemplo: Boolean
+  creadoEn: DateTime
+}
+
+class CantidadCosechada {
+  valor: Decimal
+  unidadLocal: String
+  conversionKg: Decimal
+  esEstimacion: Boolean
+}
+
+class Semilla {
+  id: String
+  cultivoId: String
+  variedadId: String
+  disponibilidad: String
+  zonaId: String
+  fuente: String
+  fechaActualizacion: Date
+}
+
+class ZonaAgroclimatica {
+  id: String
+  nombre: String
+  geometria: Polygon
+  puntoRepresentativo: Point
+}
+
+class ConjuntoClimatico {
+  id: UUID
+  zonaId: String
+  tipo: String
+  fuente: String
+  escenario: String
+  periodoInicio: Integer
+  periodoFin: Integer
+  resolucion: String
+  version: String
+  fechaActualizacion: Date
+}
+
+class EstadisticaAgregada {
+  id: UUID
+  zonaId: String
+  cultivoId: String
+  periodo: String
+  nRegistros: Integer
+  metrica: String
+  valor: Decimal
+  metodo: String
+  calculadaEn: DateTime
+}
+
+class Usuario {
+  id: UUID
+  idiomaPreferido: String
+  creadoEn: DateTime
+}
+
+class CambioPendiente {
+  id: UUID
+  tipoEntidad: String
+  entidadId: UUID
+  accion: String
+  creadoEn: DateTime
+  estado: String
+}
+
+Usuario "1" o-- "0..*" Parcela : administra
+Parcela "1" *-- "0..*" RegistroTemporada : historial
+Parcela "1" *-- "0..*" Consentimiento : permisos
+RegistroTemporada "1" *-- "0..1" CantidadCosechada : cantidad opcional
+RegistroTemporada "*" --> "1" Cultivo : corresponde a
+RegistroTemporada "*" --> "0..1" Variedad : usa
+Cultivo "1" *-- "1..*" EtapaCultivo : define etapas
+Cultivo "1" *-- "0..*" Variedad : tiene variedades
+Cultivo "1" <-- "0..*" EstrategiaManejo : aplica a
+Cultivo "1" <-- "0..*" Semilla : catalogo
+Parcela "*" --> "1" ZonaAgroclimatica : se asigna a
+ZonaAgroclimatica "1" *-- "0..*" ConjuntoClimatico : contiene
+ZonaAgroclimatica "1" *-- "0..*" EstadisticaAgregada : publica agregados
+Cultivo "1" <-- "0..*" EstadisticaAgregada : agrupa por cultivo
+Usuario "1" o-- "0..*" CambioPendiente : cola local
+
+note right of Parcela
+  La ubicacion precisa se mantiene bajo controles
+  de acceso y consentimiento. Para estadisticas se
+  usa una unidad geografica agregada.
+end note
+
+note right of ConjuntoClimatico
+  Historico y proyeccion son tipos distintos.
+  Guardar fuente, escenario, periodo y version.
+end note
+
+note bottom of EstadisticaAgregada
+  Publicar solo agregados que superen un umbral
+  minimo de registros, pendiente de definicion.
+end note
+@enduml

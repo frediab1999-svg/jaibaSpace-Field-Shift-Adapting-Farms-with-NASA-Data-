@@ -1,0 +1,144 @@
+erDiagram
+    USUARIO_DEMO ||--o{ PARCELA : registra
+    USUARIO_DEMO ||--o{ CONSENTIMIENTO : configura
+    MUNICIPIO ||--o{ PARCELA : ubica
+    ZONA_AGROCLIMATICA o|--o{ PARCELA : referencia
+    TIPO_SUELO o|--o{ PARCELA : clasifica
+    ZONA_AGROCLIMATICA ||--o{ CONJUNTO_CLIMATICO : dispone
+    PARCELA ||--o{ TEMPORADA_AGRICOLA : registra
+    TEMPORADA_AGRICOLA ||--o{ SIEMBRA : incluye
+    CULTIVO ||--o{ SIEMBRA : identifica
+    CULTIVO ||--o{ VARIEDAD : tiene
+    VARIEDAD o|--o{ SIEMBRA : especifica
+    PARCELA ||--o{ ESTRATEGIA : tiene
+    USUARIO_DEMO ||--o{ ESTRATEGIA : define
+    ESTRATEGIA ||--|{ CICLO_ESTRATEGIA : contiene
+    CICLO_ESTRATEGIA ||--|{ CULTIVO_DEL_CICLO : incluye
+    CULTIVO ||--o{ CULTIVO_DEL_CICLO : identifica
+    VARIEDAD o|--o{ CULTIVO_DEL_CICLO : especifica
+    ESTRATEGIA o|--o{ TEMPORADA_AGRICOLA : orienta
+
+    USUARIO_DEMO {
+        uuid id PK
+        string nombre_visible
+        datetime creado_en
+    }
+    MUNICIPIO {
+        string clave_inegi PK
+        string nombre
+        string clave_estado
+        string nombre_estado
+    }
+    ZONA_AGROCLIMATICA {
+        string id PK
+        string nombre
+        string estado
+        decimal latitud_referencia
+        decimal longitud_referencia
+    }
+    TIPO_SUELO {
+        string id PK
+        string nombre_local
+        string descripcion
+        string fuente
+    }
+    PARCELA {
+        uuid id PK
+        uuid usuario_demo_id FK
+        string municipio_clave FK
+        string zona_id FK "Opcional"
+        string tipo_suelo_id FK "Opcional: desconocido"
+        string nombre
+        decimal superficie_ha "Opcional"
+        decimal latitud "Opcional"
+        decimal longitud "Opcional"
+        string origen_ubicacion
+        string origen_asignacion_zona
+        string origen_tipo_suelo
+        datetime creado_en
+        datetime actualizado_en
+    }
+    CONJUNTO_CLIMATICO {
+        uuid id PK
+        string zona_id FK
+        string proveedor
+        string producto
+        string version
+        date fecha_inicio
+        date fecha_fin
+        string resolucion_temporal
+        string resolucion_espacial
+        decimal latitud_consulta
+        decimal longitud_consulta
+        string ruta_datos
+        string url_fuente
+        string checksum
+        datetime obtenido_en
+    }
+    CONSENTIMIENTO {
+        uuid id PK
+        uuid usuario_demo_id FK
+        string finalidad "Sincronizacion o uso estadistico"
+        boolean otorgado
+        string version_aviso
+        datetime registrado_en
+    }
+    TEMPORADA_AGRICOLA {
+        uuid id PK
+        uuid parcela_id FK
+        uuid estrategia_id FK "Opcional"
+        string nombre
+        int anio
+        string estado "Planeada, en curso o finalizada"
+        string resultado_general "Pendiente, bueno, regular o malo"
+        string causa_resultado "Opcional"
+        string observaciones "Opcional"
+        datetime creado_en
+        datetime actualizado_en
+    }
+    SIEMBRA {
+        uuid id PK
+        uuid temporada_id FK
+        string cultivo_id FK
+        string variedad_id FK "Opcional"
+        int anio_siembra
+        int mes_siembra "Opcional"
+        int dia_siembra "Opcional"
+        string precision_fecha "Anio, mes o dia"
+        string observaciones "Opcional"
+    }
+    CULTIVO {
+        string id PK
+        string nombre_comun
+        string nombre_local "Opcional"
+        string nombre_cientifico "Opcional"
+    }
+    VARIEDAD {
+        string id PK
+        string cultivo_id FK
+        string nombre
+        string fuente "Opcional"
+    }
+    ESTRATEGIA {
+        uuid id PK
+        uuid parcela_id FK
+        uuid usuario_demo_id FK
+        string nombre
+        string descripcion "Definida por el productor"
+        datetime creado_en
+        datetime actualizado_en
+    }
+    CICLO_ESTRATEGIA {
+        uuid id PK
+        uuid estrategia_id FK
+        int orden
+        string nombre
+        string observaciones "Opcional"
+    }
+    CULTIVO_DEL_CICLO {
+        uuid id PK
+        uuid ciclo_estrategia_id FK
+        string cultivo_id FK
+        string variedad_id FK "Opcional"
+        string observaciones "Opcional"
+    }

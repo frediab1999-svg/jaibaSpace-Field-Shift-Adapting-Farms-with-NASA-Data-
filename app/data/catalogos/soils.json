@@ -1,0 +1,64 @@
+{
+  "catalog": "soils",
+  "version": "0.1-prototipo",
+  "esEjemplo": true,
+  "nota": "Catálogo PROPUESTO. Relaciona los nombres que escribe el productor (id: tsekel, kankab…) con las claves WRB de reglas.json (reglasId: leptosol, luvisol). Son tres cosas distintas: el texto del productor se conserva tal cual, el id es el nombre local reconocido y reglasId es la clase WRB con reglas. estadoEquivalencia dice si la correspondencia está en una fuente oficial (verificado_fuente) o es una propuesta (pendiente_validacion): solo la verificada se usa para aplicar reglas de suelo en «Opciones para tu parcela». Si no hay coincidencia, el suelo queda como dato faltante (null). zonas.json usa las claves WRB (reglasId), no estos id.",
+  "items": [
+    {
+      "id": "tsekel",
+      "name": "Tsek'el",
+      "descripcion": "Pedregoso y poco profundo",
+      "reglasId": "leptosol",
+      "equivalenteWRB": "Leptosol",
+      "estadoEquivalencia": "pendiente_validacion",
+      "palabras": ["tsekel", "tsek el", "tzekel", "pedregos", "piedra", "laja", "pedregal", "rendzina", "leptosol", "poco profund"],
+      "source": "F01 INIFAP (2026) p. 54: en milpa predominan Leptosoles y Rendzinas, pedregosos y poco profundos. La equivalencia tsek'el = Leptosol es una propuesta del prototipo: las fuentes oficiales revisadas no definen tsek'el",
+      "porConfirmar": ["Equivalencia entre tsek'el y Leptosol (Rol 3)"],
+      "updated_at": "2026-11-14"
+    },
+    {
+      "id": "kankab",
+      "name": "K'ankab",
+      "descripcion": "Rojo y profundo",
+      "reglasId": "luvisol",
+      "equivalenteWRB": "Luvisol",
+      "estadoEquivalencia": "verificado_fuente",
+      "palabras": ["kankab", "kan kab", "rojo", "roja", "colorad", "luvisol", "profund"],
+      "source": "F01 INIFAP (2026) p. 26 y 75-76",
+      "updated_at": "2026-11-14"
+    },
+    {
+      "id": "yaaxhom",
+      "name": "Yaax hom",
+      "descripcion": "Profundo, en hondonadas",
+      "reglasId": "luvisol",
+      "equivalenteWRB": "Luvisol",
+      "estadoEquivalencia": "verificado_fuente",
+      "palabras": ["yaaxhom", "yaax hom", "yax hom", "yaxhom"],
+      "source": "F01 INIFAP (2026) p. 26",
+      "updated_at": "2026-11-14"
+    },
+    {
+      "id": "akalche",
+      "name": "Ak'alche'",
+      "descripcion": "Bajo que se encharca",
+      "reglasId": null,
+      "equivalenteWRB": null,
+      "palabras": ["akalche", "ak alche", "bajo", "encharc", "inund", "lodo", "barro", "arcill"],
+      "source": null,
+      "porConfirmar": ["Equivalencia WRB y aptitud por cultivo (Rol 3)"],
+      "updated_at": "2026-11-14"
+    },
+    {
+      "id": "boxluum",
+      "name": "Box lu'um",
+      "descripcion": "Tierra negra",
+      "reglasId": null,
+      "equivalenteWRB": null,
+      "palabras": ["boxluum", "box luum", "box lu um", "negra", "negro", "phaeozem"],
+      "source": null,
+      "porConfirmar": ["El Phaeozem no se modela todavía en reglas.json"],
+      "updated_at": "2026-11-14"
+    }
+  ]
+}

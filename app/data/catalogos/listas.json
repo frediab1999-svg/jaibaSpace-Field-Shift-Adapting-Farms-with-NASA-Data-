@@ -1,0 +1,59 @@
+{
+  "version": "0.1-prototipo",
+  "esEjemplo": true,
+  "nota": "Listas cortas que usa la captura. causasPercibidas y unidadesCosecha alimentan ContributionCreate (perceived_cause, quantity_unit). Las demás son PROPUESTAS al contrato y hoy viven solo en el teléfono.",
+  "causasPercibidas": [
+    { "id": "sequia", "name": "Sequía", "icono": "sol" },
+    { "id": "exceso_lluvia", "name": "Exceso de lluvia", "icono": "nube" },
+    { "id": "plaga", "name": "Plaga o enfermedad", "icono": "plaga" },
+    { "id": "viento", "name": "Viento o huracán", "icono": "viento" },
+    { "id": "otra", "name": "Otra causa", "icono": "otra" }
+  ],
+  "motivosEliminacionSemilla": [
+    { "id": "sequia", "name": "Se secó por falta de lluvia" },
+    { "id": "exceso_lluvia", "name": "Se ahogó o se pudrió por tanta lluvia" },
+    { "id": "plaga", "name": "Plaga o enfermedad" },
+    { "id": "animales", "name": "Se la comieron los animales" },
+    { "id": "no_nacio", "name": "No nació" },
+    { "id": "cambio", "name": "Cambié de semilla" },
+    { "id": "error", "name": "La registré por error" },
+    { "id": "otra", "name": "Otro motivo" }
+  ],
+  "motivosEliminacionParcela": [
+    { "id": "descanso", "name": "La dejo descansar (que crezca el monte)" },
+    { "id": "ya_no", "name": "Ya no la trabajo" },
+    { "id": "prestada", "name": "La presté, rente o vendí" },
+    { "id": "perdida", "name": "Se perdió todo lo sembrado" },
+    { "id": "error", "name": "La registré por error" },
+    { "id": "otra", "name": "Otro motivo" }
+  ],
+  "unidadesSuperficie": [
+    { "id": "m2", "name": "m²", "nombreLargo": "metros cuadrados", "m2": 1 },
+    { "id": "mecate", "name": "mecates", "nombreLargo": "mecates (20 × 20 m)", "m2": 400 },
+    { "id": "ha", "name": "hectáreas", "nombreLargo": "hectáreas", "m2": 10000 }
+  ],
+  "unidadesCosecha": [
+    { "id": "kg", "name": "kilos", "conversionKg": 1 },
+    { "id": "costal", "name": "costales", "conversionKg": null, "porConfirmar": "Peso de un costal en cada comunidad" },
+    { "id": "carga", "name": "cargas", "conversionKg": null, "porConfirmar": "Equivalencia local de la carga" },
+    { "id": "tonelada", "name": "toneladas", "conversionKg": 1000 }
+  ],
+  "usoPrevio": [
+    { "id": "monte", "name": "Monte o selva" },
+    { "id": "acahual", "name": "Acahual (monte que vuelve a crecer)" },
+    { "id": "potrero", "name": "Potrero o pasto" },
+    { "id": "solar", "name": "Solar o huerto" },
+    { "id": "no_se", "name": "No sé" }
+  ],
+  "aniosSeguidos": [
+    { "id": "1", "name": "Solo un año" },
+    { "id": "2-3", "name": "Dos o tres años" },
+    { "id": "4+", "name": "Cuatro o más" },
+    { "id": "no_se", "name": "No sé" }
+  ],
+  "temporadasDelAnio": [
+    { "id": "nortes", "name": "Temporada de Nortes", "meses": [11, 12, 1, 2], "rango": "de noviembre a febrero", "source": "Calendario agrícola local; evidencia climática calculada con NASA POWER en la PWA", "porConfirmar": ["Validar nombres y límites con Rol 3"] },
+    { "id": "secas", "name": "Temporada de secas", "meses": [3, 4, 5], "rango": "de marzo a mayo", "source": "Calendario agrícola local; evidencia climática calculada con NASA POWER en la PWA", "porConfirmar": ["Validar nombres y límites con Rol 3"] },
+    { "id": "lluvias", "name": "Temporada de lluvias", "meses": [6, 7, 8, 9, 10], "rango": "de junio a octubre", "source": "Calendario agrícola local; evidencia climática calculada con NASA POWER en la PWA", "porConfirmar": ["Validar nombres y límites con Rol 3"] }
+  ]
+}
