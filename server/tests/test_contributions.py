@@ -10,7 +10,7 @@ def test_contribution_accepts_optional_harvest_details():
     contribution = ContributionCreate(
         submission_id=uuid4(),
         consent_id=uuid4(),
-        zone_id="yuc-noroeste",
+        zone_id="yuc-sur",
         crop_id="maiz",
         season_year=2025,
     )
@@ -24,7 +24,7 @@ def test_contribution_rejects_negative_quantity():
         ContributionCreate(
             submission_id=uuid4(),
             consent_id=uuid4(),
-            zone_id="yuc-noroeste",
+            zone_id="yuc-sur",
             crop_id="maiz",
             season_year=2025,
             quantity=-1,

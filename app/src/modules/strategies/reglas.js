@@ -1,7 +1,7 @@
-// Reglas agronómicas (app/data/reglas.json, Rol 3) y planes de ejemplo (planes.json).
-// La comparación de estrategias la muestra la pantalla «Opciones para tu parcela»
-// (ui/resultados/opciones.js). Mientras el Rol 4 termina motor/estrategias.js, usa una salida
-// de ejemplo con los números del Rol 3 (ui/resultados/opciones-ejemplo.js).
+// Reglas agronómicas (reglas.json, Rol 3) y planes de dos ciclos (planes.json).
+// Llegan en el paquete del servidor o del respaldo local (shared/datos.js). La comparación
+// la calcula el motor (motor/estrategias.js y motor/comparacion.js) y la muestra la pantalla
+// «Opciones para tu parcela» (ui/resultados/opciones.js).
 import { json } from '../../shared/datos.js';
 
 let reglasCache = null;

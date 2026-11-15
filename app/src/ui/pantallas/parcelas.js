@@ -121,7 +121,7 @@ function lista(pantalla, params) {
   const quitar = delegar(pantalla, 'click', {
     tab: (el) => { estado.tab = el.dataset.id; pintarTodo(); },
     filtro: (el) => { estado.filtro = el.dataset.id; pintarTodo(); },
-    ejemplo: async () => { estado.cargando = true; pintarTodo(); await cargarEjemplo(); estado.cargando = false; avisar('Listo: tres parcelas de ejemplo'); pintarTodo(); },
+    ejemplo: async () => { estado.cargando = true; pintarTodo(); await cargarEjemplo(); estado.cargando = false; avisar('Listo: parcelas de demostración'); pintarTodo(); },
     quitarEjemplo: async () => {
       if (await confirmar(pantalla, { titulo: '¿Quitar el ejemplo?', texto: 'Se borran las parcelas, temporadas e historial de ejemplo. Lo tuyo no se toca.', si: 'Quitar', peligro: true })) { quitarEjemplo(); pintarTodo(); }
     },
@@ -187,8 +187,8 @@ function detalle(pantalla, params) {
           ${dato('Superficie', `${superficie(p.superficieM2, 'ha')} (${numero(p.superficieM2 / 400, 1)} mecates)`)}
           ${p.dimensiones ? dato('Medidas', `${numero(p.dimensiones.largoM, 0)} × ${numero(p.dimensiones.anchoM, 0)} m`) : ''}
           ${dato('Suelo', suelo ? (normalizar(p.sueloTexto).includes(normalizar(suelo.name)) ? `${suelo.name}${suelo.equivalenteWRB ? ` (${suelo.equivalenteWRB})` : ''}, ${suelo.descripcion.toLowerCase()}` : `${p.sueloTexto} (${suelo.name}${suelo.equivalenteWRB ? `, ${suelo.equivalenteWRB}` : ''})`) : p.sueloTexto ? `${p.sueloTexto} (sin reconocer)` : 'No lo sabemos')}
-          ${dato('Lugar', p.municipioNombre ? `Cerca de ${p.municipioNombre}, ${p.estado}` : 'Sin ubicación')}
-          ${dato('Zona de clima', zona ? html`${climaMod.NOMBRE_CORTO_ZONA[zona.id]}, a ${numero(p.zonaDistanciaKm, 1)} km de ${zona.nombre.match(/\(([^)]+)\)/)?.[1] || ''}` : 'Sin zona')}
+          ${dato('Lugar', p.municipioNombre ? `${p.origenMunicipio === 'declarado' ? 'En' : 'Cerca de'} ${p.municipioNombre}, ${p.estado}` : 'Sin ubicación')}
+          ${dato('Zona de clima', zona ? html`${climaMod.NOMBRE_CORTO_ZONA[zona.id]}${p.zonaDistanciaKm != null ? html`, a ${numero(p.zonaDistanciaKm, 1)} km del punto de clima (${zona.nombre.match(/\(([^)]+)\)/)?.[1] || ''})` : ', por tu municipio'}` : 'Cobertura pendiente: tu municipio todavía no tiene zona de clima')}
           ${dato('Ya se sembró antes', p.usadaAntes === true ? `Sí${p.aniosSeguidos ? `, ${catalogo.listas().aniosSeguidos.find((x) => x.id === p.aniosSeguidos)?.name.toLowerCase()}` : ''}` : p.usadaAntes === false ? `No, era ${catalogo.listas().usoPrevio.find((x) => x.id === p.usoPrevio)?.name.toLowerCase() || 'nueva'}` : 'Sin respuesta')}
           ${dato('Lo que más te importa', prioridad?.name || 'Sin elegir')}
           <span class="fuente" style="margin-top:8px">La zona se asigna con el punto de clima más cercano (zonas.json). Es una referencia regional, no una medición en tu parcela.</span>

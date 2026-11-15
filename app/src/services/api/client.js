@@ -1,7 +1,19 @@
 // Cliente HTTP de la API FastAPI (server/app/main.py, prefijo /api/v1).
 // Sin secretos ni credenciales (RNF-12): la API del prototipo no tiene login.
 
-const BASE_POR_DEFECTO = 'http://localhost:8000/api/v1';
+/**
+ * URL de la API cuando nadie la configuró:
+ *  - Página servida por Vite (puerto 5173, desarrollo o `npm run preview`): mismo equipo, puerto 8000.
+ *    Así sirve igual en la computadora (localhost) y en el celular (la IP de la computadora).
+ *  - Página servida por FastAPI (PWA_DIST_DIR): mismo origen.
+ */
+function basePorDefecto() {
+  try {
+    if (location.port === '5173') return `${location.protocol}//${location.hostname}:8000/api/v1`;
+    if (location.origin && location.origin !== 'null') return `${location.origin}/api/v1`;
+  } catch { /* sin location (pruebas) */ }
+  return 'http://localhost:8000/api/v1';
+}
 const CLAVE_BASE = 'jaibaspace.apiBase';
 
 /**
@@ -9,7 +21,7 @@ const CLAVE_BASE = 'jaibaspace.apiBase';
  * 1. ?api=https://... en la URL (útil para la demo), se recuerda en localStorage.
  * 2. localStorage jaibaspace.apiBase
  * 3. window.JAIBASPACE_API_BASE (config inyectada en index.html al desplegar)
- * 4. http://localhost:8000/api/v1 (docker compose del server)
+ * 4. La misma computadora que sirve la página, puerto 8000 (ver basePorDefecto)
  */
 export function apiBase() {
   try {
@@ -18,7 +30,7 @@ export function apiBase() {
     const guardada = localStorage.getItem(CLAVE_BASE);
     if (guardada) return guardada.replace(/\/$/, '');
   } catch { /* sin localStorage */ }
-  return (globalThis.JAIBASPACE_API_BASE || BASE_POR_DEFECTO).replace(/\/$/, '');
+  return (globalThis.JAIBASPACE_API_BASE || basePorDefecto()).replace(/\/$/, '');
 }
 
 export class ErrorApi extends Error {

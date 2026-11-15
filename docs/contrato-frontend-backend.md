@@ -1,4 +1,4 @@
-# Contrato frontend ↔ backend del prototipo (v0.1)
+# Contrato frontend ↔ backend (v0.2)
 
 Este documento cuenta cómo la PWA (`app/`) usa la API que hoy existe en `server/`, qué entidades guarda y dónde están las brechas en cada sentido.
 
@@ -18,19 +18,24 @@ Los esquemas JSON de lo que maneja la PWA están en `shared/schemas/`.
 
 ## 2. Endpoints que ya existen y cómo los usa la PWA
 
-Base: `http://localhost:8000/api/v1`. Se configura con `window.JAIBASPACE_API_BASE` en `index.html` o con `?api=` en la URL. Archivo: `app/src/services/api/endpoints.js`.
+Base: la misma computadora que sirve la página, en el puerto 8000 (`http://localhost:8000/api/v1`), o el mismo origen si FastAPI sirve la PWA. Se cambia con `window.JAIBASPACE_API_BASE` en `index.html` o con `?api=` en la URL. Archivos: `app/src/services/api/endpoints.js` y `app/src/services/contenido.js`.
+
+> **Estado al 2026-11-15.** Las rutas de contenido ya responden con datos reales desde PostgreSQL (`python -m app.seed`). La comparación de estrategias se calcula en la PWA. Ver `docs/decisiones/0002-primera-version-funcional.md` y `server/README.md`.
 
 | Endpoint | Uso en la PWA | Pantalla | Si falla o viene vacío |
 |---|---|---|---|
 | `GET /health` | Al arrancar y al volver la red: estado «Conectado» o «Sin conexión» | Información | Modo local |
-| `GET /ready` | Cliente listo; no se muestra en la interfaz | — | — |
+| `GET /ready` | Base lista, esquema migrado y contenido cargado (`503` con el motivo si no) | — | — |
+| `GET /bundle` | Manifiesto del paquete: `bundle_version` y, por documento, `doc_id`, `kind`, `format_version`, `sha256`, `bytes` y `url`. La PWA descarga todo, valida y guarda el paquete completo en IndexedDB | Arranque (todas las pantallas usan esos datos) | Sin red, lista vacía o paquete incoherente: se conserva el último paquete completo o se usa el respaldo local de `app/data` |
+| `GET /climate/zones` · `GET /climate/datasets/{id}/content` · `GET /strategies/plans` · `GET /strategies/rules` | Documentos del paquete: `zonas.json`, el clima de cada zona, `planes.json` y `reglas.json`, con el cuerpo exacto cuya huella anuncia `/bundle` | Opciones, Predicción, Inicio (calendario), Semillas | Igual que `/bundle` |
+| `GET /demo` | Perfil y parcelas ficticios de demostración (`esDemo`, sin credenciales) | Tus parcelas → «Ver con parcelas de ejemplo» | Última respuesta guardada o `app/fixtures/ejemplo-milpa.json` |
 | `POST /consent` | `{consent_id, purpose:"collective_statistics", granted, notice_version:"2026-11-prototipo", decided_at}`. Retirarlo crea un registro nuevo con `granted=false` | Información → «Comparte con tu zona» | Se queda en la cola. Un 409 cuenta como ya enviado |
 | `POST /contributions` | Una por cada siembra de una temporada cerrada. Cabecera `Idempotency-Key = submission_id` | Información (al terminar una siembra o al registrar una pasada) y alta de parcela con «Sí, ya se usó» | Cola: pendiente → enviada \| error, con «Reintentar» |
-| `GET /catalogs/{crops\|seeds}` | Catálogo de cultivos y semillas | Semillas, Parcelas | Hoy responde `[]`, así que se usa `app/data/catalogos/*.json` (marcado como ejemplo) y la pantalla lo dice |
-| `GET /climate/datasets?zone_id&kind=projection` | Variable «Clima que viene» | Predicción | Hoy responde `[]` y se muestra «Sin dato todavía» |
+| `GET /catalogs/{crops\|seeds\|soils\|municipios\|listas}` | Catálogos de cultivos, semillas, suelos, municipios y listas de captura: `{catalog, items, count, …}`. Llegan dentro del paquete | Semillas, Parcelas, Opciones | Respaldo local. Siguen marcados `esEjemplo`: su contenido es del prototipo |
+| `GET /climate/datasets?zone_id&kind` | Índice de conjuntos climáticos con fuente, parámetros, periodo, resolución, corte y versión. Con `kind=projection` alimenta la variable «Clima que viene» | Predicción | Hoy solo hay conjuntos `historical`; para proyecciones responde `[]` y se muestra «Sin dato todavía» |
 | `GET /statistics?zone_id&crop_id&season_year` | Variable «Productores de tu zona» y tarjeta «Lo que reportan en…» | Predicción, Información | `insufficient_sample` (menos de 10 registros) o sin conexión: se explica y no se muestran números |
 
-**Configuración del servidor.** CORS solo permite `GET`, `POST`, `OPTIONS` y las cabeceras `Content-Type` e `Idempotency-Key`. El origen por defecto es `http://localhost:5173`, el puerto de `npm run dev` de la PWA. Para desplegar hay que poner el dominio real en `CORS_ORIGINS`.
+**Configuración del servidor.** CORS solo permite `GET`, `POST`, `OPTIONS` y las cabeceras `Content-Type` e `Idempotency-Key`. Con `APP_ENV=development` acepta `localhost` y las IP privadas en cualquier puerto, para abrir la PWA desde el celular. Para desplegar hay que definir `CORS_ORIGINS` o `CORS_ORIGIN_REGEX` con el dominio real. Elegir un plan en «Opciones para tu parcela» no llama a ninguna ruta: se guarda solo en el dispositivo.
 
 ### Ejemplo de contribución que envía la PWA
 
@@ -80,13 +85,13 @@ Base: `http://localhost:8000/api/v1`. Se configura con `window.JAIBASPACE_API_BA
 
 | # | Qué hay | Estado en el front | Propuesta |
 |---|---|---|---|
-| B1 | **Comparación de estrategias** (`planes.json`, `pesosPorPrioridad`, criterios de cobertura de suelo, nitrógeno e ingreso) | No se muestra. Se guarda la prioridad del productor en la parcela para usarla después | Sección «Opciones de manejo» dentro de Predicción, con el diseño de tarjetas y letreros actual. **PENDIENTE DE APROBACIÓN** |
-| B2 | Entidades ESTRATEGIA, CICLO_ESTRATEGIA y CULTIVO_DEL_CICLO | No existen en el front. «¿Cuántos años seguidos la has sembrado?» y el plan de la parcela nueva son la semilla de esto | Definir con Rol 3 si el productor arma su estrategia o la elige de `planes.json` |
-| B3 | `GET /catalogs/varieties` y `/stages` | La variedad viaja dentro de la semilla y las etapas salen de `reglas.json` | Publicar los catálogos y cambiar la fuente en `modules/crops/catalogo.js` |
+| B1 | **Comparación de estrategias** | **Implementada en la PWA.** «Opciones para tu parcela» compara la práctica actual, la canavalia intercalada y el ciclo de cobertura por meses con cultivo en pie y exposición histórica (`motor/estrategias.js`, `motor/comparacion.js`). No usa `pesosPorPrioridad` ni los niveles de nitrógeno e ingreso, que no están respaldados | Validar en campo las fechas de la canavalia intercalada (Rol 3) |
+| B2 | Entidades ESTRATEGIA, CICLO_ESTRATEGIA y CULTIVO_DEL_CICLO | Existen como datos: `planes.json` v0.4 tiene ciclos con uno o varios cultivos, y la práctica del productor se arma con sus siembras registradas. La elección se guarda en la parcela (`estrategiaElegida`), solo en el dispositivo | Definir con Rol 3 si el productor podrá armar su propia estrategia |
+| B3 | `GET /catalogs/varieties` y `/stages` | El servidor ya los publica, derivados de las semillas y de `reglas.json`. La PWA sigue leyendo la variedad de la semilla y las etapas de `reglas.json` | Decidir si la PWA debe consumirlos |
 | B4 | Idioma maya (RNF) | Solo acentos bilingües (`i18n/myn.js`, por validar) | Modo completo en maya cuando haya traducción validada |
-| B5 | MUNICIPIO con `clave_inegi` | Catálogo aproximado de 30 cabeceras, con `claveInegi = null` | Cargar el catálogo oficial de INEGI en el pipeline |
-| B6 | 7 zonas agroclimáticas previstas | Solo hay 3 con clima. La PWA asigna la más cercana y avisa si está a más de 50 km | Rol 2: completar zonas |
-| B7 | `GET /ready` | No se usa en la interfaz | Mostrar «servidor sin base de datos» si hace falta |
+| B5 | MUNICIPIO con `clave_inegi` | Catálogo aproximado de 30 cabeceras. Solo Tekax, Hopelchén y Felipe Carrillo Puerto tienen clave INEGI y `zonaId` | Cargar el catálogo oficial de INEGI y la correspondencia municipio–zona |
+| B6 | 7 zonas agroclimáticas previstas | Hay 3 con clima (`yuc-sur`, `camp-chenes`, `qroo-centro`). Con punto, la PWA asigna la más cercana y avisa si está a más de 50 km; solo con municipio, usa `zonaId` o muestra «cobertura pendiente». La comparación agrícola está revisada solo para `yuc-sur` | Rol 2: completar zonas. Rol 3: reglas para las demás |
+| B7 | `GET /ready` | No se usa en la interfaz. La PWA distingue servidor sin datos (`/bundle` vacío) de servidor apagado | Mostrarlo en Información si hace falta |
 | B8 | Revocación con fecha (`Consentimiento.revocadoEn` en el diagrama de clases) | Se registra un consentimiento nuevo con `granted=false` | Endpoint `PATCH`/`POST /consent/{id}/revoke` si se requiere trazabilidad |
 
 ## 5. Lo que el frontend captura y el backend aún no recibe
@@ -114,7 +119,7 @@ Todo esto queda **comentado y sin construir** hasta que el equipo decida.
 5. **Umbrales de nivel.** El prototipo usa atención desde 1 de cada 3 años y riesgo desde 2 de cada 3 (`motor/prediccion.js → UMBRALES`). Rol 3 debe validarlos.
 6. **Etapas de frijol, calabaza y chile.** Sin ellas, esos cultivos no se miden por etapa y su nivel tiene tope en «atención».
 7. **Señales calculadas en el servidor.** Hoy el motor corre en la PWA con los JSON del pipeline. Para unificar, se propone `GET /api/v1/signals?zone_id&crop_id&sowing=MM-DD&soil_id`, que devuelva la misma estructura que `motor/prediccion.js` (id, nivel, tipo histórico/actual/ambos, frase, justificación, fuente, periodo, n, porConfirmar). **PENDIENTE DE APROBACIÓN**
-8. **Comparación de estrategias** (B1).
+8. **Comparación de estrategias** (B1): implementada. Falta la validación de campo de sus supuestos.
 
 ## 7. Calendario de Inicio
 

@@ -13,7 +13,7 @@ import { avisar } from '../../app/estado.js';
 import { hayVoz, escuchar } from '../voz.js';
 
 // Posición de cada zona sobre la maqueta (porcentaje del ancho y alto de la imagen)
-const POS = { 'yuc-noroeste': { x: 27, y: 33 }, 'camp-chenes': { x: 40, y: 66 }, 'qroo-centro': { x: 79, y: 40 } };
+const POS = { 'yuc-sur': { x: 50, y: 58 }, 'camp-chenes': { x: 36, y: 68 }, 'qroo-centro': { x: 79, y: 40 } };
 
 export async function montar(pantalla) {
   await Promise.all([climaMod.zonas(), reglasMod.reglas()]);

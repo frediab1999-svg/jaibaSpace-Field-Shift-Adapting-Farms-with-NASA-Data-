@@ -300,12 +300,15 @@ async function variableZona(zona, ventanas) {
 
 /** Referencia oficial (no pronóstico) cuando existe en planes.json. */
 async function referenciaMunicipal(zona, ventanas) {
-  if (!ventanas.some((v) => v.cultivo.id === 'maiz') || zona.id !== 'yuc-noroeste') return null;
+  if (!ventanas.some((v) => v.cultivo.id === 'maiz')) return null;
   const planes = await reglasMod.planes();
   const texto = planes.planes.flatMap((p) => p.riesgos).find((t) => /t\/ha/.test(t));
-  const m = texto && texto.match(/([\d.]+) t\/ha en (\d{4}) y ([\d.]+) t\/ha en (\d{4})/);
+  const m = texto && texto.match(/En (\S+) el maíz de temporal rindió ([\d.]+) t\/ha en (\d{4}) y ([\d.]+) t\/ha en (\d{4})/);
   if (!m) return null;
-  return { lugar: 'Umán', a1: { t: Number(m[1]), anio: m[2] }, a2: { t: Number(m[3]), anio: m[4] }, fuente: 'F16 SADER/DGSIAP, Cierre de la Producción Agrícola 2024 y 2025 (maíz grano, temporal).' };
+  // La cifra es de un municipio: solo se muestra en la zona cuyo punto de clima está en ese municipio
+  const municipio = catalogo.municipios().find((x) => x.zonaId === zona.id);
+  if (!municipio || municipio.name !== m[1]) return null;
+  return { lugar: m[1], a1: { t: Number(m[2]), anio: m[3] }, a2: { t: Number(m[4]), anio: m[5] }, fuente: 'F16 SADER/DGSIAP, Cierre de la Producción Agrícola 2024 y 2025 (maíz grano, temporal). Es el promedio del municipio, no de una parcela.' };
 }
 
 const ORDEN = { riesgo: 0, atencion: 1, bien: 2, sin_dato: 3 };
@@ -313,7 +316,7 @@ const ORDEN = { riesgo: 0, atencion: 1, bien: 2, sin_dato: 3 };
 export async function analizar(parcela) {
   await Promise.all([climaMod.zonas(), reglasMod.reglas()]);
   const reglas = reglasMod.reglasSync();
-  const zona = climaMod.zonaPorId(parcela.zonaId) || climaMod.zonaPorId('yuc-noroeste');
+  const zona = climaMod.zonaPorId(parcela.zonaId) || climaMod.zonaPorDefecto();
   const clima = await climaMod.clima(zona.id);
   const cultivos = cultivosParaAnalizar(parcela);
   const ventanas = cultivos.lista.map((c) => ventanaSensible(c, clima));

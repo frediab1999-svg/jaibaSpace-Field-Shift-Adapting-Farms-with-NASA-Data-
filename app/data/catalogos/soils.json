@@ -2,7 +2,7 @@
   "catalog": "soils",
   "version": "0.1-prototipo",
   "esEjemplo": true,
-  "nota": "Catálogo PROPUESTO (el servidor solo acepta crops, varieties, stages y seeds). Relaciona los nombres que escribe el productor con los suelos que el motor ya entiende en reglas.json. Si no hay coincidencia, el suelo queda como dato faltante (null) y el texto original se conserva.",
+  "nota": "Catálogo PROPUESTO. Relaciona los nombres que escribe el productor (id: tsekel, kankab…) con las claves WRB de reglas.json (reglasId: leptosol, luvisol). Son tres cosas distintas: el texto del productor se conserva tal cual, el id es el nombre local reconocido y reglasId es la clase WRB con reglas. estadoEquivalencia dice si la correspondencia está en una fuente oficial (verificado_fuente) o es una propuesta (pendiente_validacion): solo la verificada se usa para aplicar reglas de suelo en «Opciones para tu parcela». Si no hay coincidencia, el suelo queda como dato faltante (null). zonas.json usa las claves WRB (reglasId), no estos id.",
   "items": [
     {
       "id": "tsekel",
@@ -10,8 +10,10 @@
       "descripcion": "Pedregoso y poco profundo",
       "reglasId": "leptosol",
       "equivalenteWRB": "Leptosol",
+      "estadoEquivalencia": "pendiente_validacion",
       "palabras": ["tsekel", "tsek el", "tzekel", "pedregos", "piedra", "laja", "pedregal", "rendzina", "leptosol", "poco profund"],
-      "source": "F02 INEGI (compendio de Umán); F01 INIFAP (2026) p. 53",
+      "source": "F01 INIFAP (2026) p. 54: en milpa predominan Leptosoles y Rendzinas, pedregosos y poco profundos. La equivalencia tsek'el = Leptosol es una propuesta del prototipo: las fuentes oficiales revisadas no definen tsek'el",
+      "porConfirmar": ["Equivalencia entre tsek'el y Leptosol (Rol 3)"],
       "updated_at": "2026-11-14"
     },
     {
@@ -20,6 +22,7 @@
       "descripcion": "Rojo y profundo",
       "reglasId": "luvisol",
       "equivalenteWRB": "Luvisol",
+      "estadoEquivalencia": "verificado_fuente",
       "palabras": ["kankab", "kan kab", "rojo", "roja", "colorad", "luvisol", "profund"],
       "source": "F01 INIFAP (2026) p. 26 y 75-76",
       "updated_at": "2026-11-14"
@@ -30,6 +33,7 @@
       "descripcion": "Profundo, en hondonadas",
       "reglasId": "luvisol",
       "equivalenteWRB": "Luvisol",
+      "estadoEquivalencia": "verificado_fuente",
       "palabras": ["yaaxhom", "yaax hom", "yax hom", "yaxhom"],
       "source": "F01 INIFAP (2026) p. 26",
       "updated_at": "2026-11-14"

@@ -17,11 +17,14 @@ El sistema presenta evidencia e incertidumbre; no predice rendimientos ni garant
 | [Diagramas](docs/diagramas/) | Casos de uso y modelo de dominio de la arquitectura multicultivo. |
 | [Look & feel](docs/look-and-feel.md) | Guía visual, tono, componentes y accesibilidad de la PWA. |
 | [Contrato frontend ↔ backend](docs/contrato-frontend-backend.md) | Endpoints que usa la PWA, entidades y brechas en ambos sentidos. |
+| [Datos publicados del MVP](docs/entrega-datos-mvp.md) | Zonas, puntos, archivos de clima, qué se puede calcular y cómo auditarlos. |
+| [Reglas agrícolas y fuentes](docs/rol-3-fuentes-y-rotaciones.md) | Planes, reglas, suelos y fuentes para Tekax. |
+| [Declaración de uso de IA](docs/declaracion-uso-ia.md) | Qué partes de la entrega se hicieron con IA. |
 | [Decisiones](docs/decisiones/) | Decisiones de arquitectura versionadas. |
 
 ## Evolución de la documentación
 
-Se retiraron los documentos de implementación v0.2 centrados en maíz para evitar confundirlos con la nueva arquitectura multicultivo. El modelo de dominio y los contratos de la API deben definirse y versionarse antes de conectar cliente, servidor o base de datos.
+Se retiraron los documentos de implementación v0.2 centrados en maíz para evitar confundirlos con la nueva arquitectura multicultivo. Los contratos que ya están implementados se describen en el contrato frontend ↔ backend y en la decisión 0002; los esquemas de `shared/schemas/` siguen siendo propuestas del prototipo.
 
 ## Estructura principal
 
@@ -35,16 +38,28 @@ docs/            Contexto, requisitos, arquitectura y diagramas
 
 La estructura detallada está en [arquitectura-y-estructura.md](docs/arquitectura-y-estructura.md). El árbol se irá materializando por fases; las fuentes de proyecciones y semillas y otras decisiones pendientes se documentan en [requisitos-del-sistema.md](docs/requisitos-del-sistema.md).
 
-## PWA (prototipo del happy path)
+## Arranque rápido (primera versión funcional)
 
 ```bash
-cd app
+# Servidor: PostgreSQL/PostGIS + FastAPI (ver server/README.md)
+cd server
+cp .env.example .env            # cambia POSTGRES_PASSWORD
+docker compose up --build -d
+docker compose exec api alembic upgrade head
+docker compose exec api python -m app.seed
+
+# PWA (ver app/README.md)
+cd ../app
 npm install
-npm run dev   # http://localhost:5173
+npm run dev                     # http://localhost:5173
 ```
 
-Funciona sin el servidor (modo local). Si la API corre en `http://localhost:8000`, la usa para consentimiento, contribuciones, catálogos y estadísticas. Detalles y guion de demostración en [app/README.md](app/README.md).
+Recorrido: **Tus parcelas → Ver con parcelas de ejemplo → Milpa del cenote → ¿Qué siembro el próximo ciclo?**. La PWA descarga de FastAPI las zonas, el clima, los planes, las reglas y los catálogos, los guarda en el teléfono y calcula ahí la comparación de tres opciones. Después de la primera carga funciona sin conexión. Sin el servidor, la app abre con la copia local de los datos.
 
-## Pipeline climático existente
+Pruebas: `npm test` en `app/` y `python -m pytest` en `server/`. Auditoría de datos: `python data-pipeline/auditar_datos.py app/data`.
 
-`data-pipeline/clima.py` prepara los datos históricos NASA POWER del MVP v0.2. Su formato actual alimenta los ejemplos de maíz y deberá adaptarse al nuevo contrato versionado antes de conectarse a la API nueva. Consulta [data-pipeline/README.md](data-pipeline/README.md).
+El piloto agrícola es **Tekax, Sur de Yucatán** (`yuc-sur`). El clima regional también está publicado para Los Chenes (Campeche) y la Zona maya (Quintana Roo).
+
+## Pipeline climático
+
+`data-pipeline/clima.py` descarga y prepara el clima histórico de NASA POWER por zona, y `data-pipeline/auditar_datos.py` comprueba los archivos publicados. Consulta [data-pipeline/README.md](data-pipeline/README.md) y [docs/entrega-datos-mvp.md](docs/entrega-datos-mvp.md).

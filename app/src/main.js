@@ -5,6 +5,8 @@ import * as climaMod from './modules/climate/clima.js';
 import * as reglasMod from './modules/strategies/reglas.js';
 import * as cola from './services/sync/cola.js';
 import * as api from './services/api/endpoints.js';
+import * as contenido from './services/contenido.js';
+import { origenDatos } from './shared/datos.js';
 import { poner } from './app/estado.js';
 import { ruta, iniciar } from './app/router.js';
 import { precargar } from './app/precarga.js';
@@ -46,7 +48,14 @@ async function revisarServidor() {
 
 async function arrancar() {
   await repos.cargar();
-  await Promise.all([catalogo.cargar(), climaMod.zonas(), reglasMod.reglas(), revisarServidor()]);
+  // Primero se decide de dónde salen los datos (paquete del servidor o respaldo local);
+  // después se cargan catálogos, zonas y reglas, todos de la misma fuente.
+  const [, datos] = await Promise.all([revisarServidor(), contenido.iniciar()]);
+  poner({ datos });
+  // Para comprobar en la consola qué datos consumió la app: __jaibaspace.datos()
+  globalThis.__jaibaspace = { datos: origenDatos, descarga: contenido.estadoContenido };
+  console.info('[jaibaSpace] datos:', origenDatos().origen, origenDatos().version || '(respaldo local)', '· descarga:', datos.resultado);
+  await Promise.all([catalogo.cargar(), climaMod.zonas(), reglasMod.reglas()]);
   iniciar();
   cola.iniciar();
   addEventListener('online', revisarServidor);

@@ -9,7 +9,8 @@
 // - Estrategia: primero la red y, si no hay, lo guardado. Así en desarrollo siempre ves el
 //   código nuevo y en modo avión todo sale de la copia. Los archivos con huella del build
 //   (/assets/…) no cambian nunca: se sirven directo de la copia.
-// - No guarda respuestas de la API ni teselas de mapas (otros dominios).
+// - No guarda respuestas de la API ni teselas de mapas. El paquete de datos del servidor
+//   se guarda aparte, en IndexedDB, y por eso la comparación funciona sin conexión.
 const VERSION = 'milpa-dev';
 const PRECARGA = /*PRECARGA*/[]/*FIN*/;
 const BASICOS = ['./', './index.html', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png'];
@@ -70,6 +71,9 @@ self.addEventListener('fetch', (e) => {
   if (request.method !== 'GET') return;
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return; // API, mapas y otros dominios: directo a la red
+  // Si FastAPI sirve también la PWA (mismo origen), la API no se guarda aquí: los datos del
+  // servidor se guardan completos y validados en IndexedDB (src/services/contenido.js).
+  if (url.pathname.startsWith('/api/')) return;
   // El «ping» de Vite en desarrollo: si lo respondiera la copia, Vite recargaría la página sin fin en modo avión
   if ((request.headers.get('accept') || '').includes('text/x-vite-ping')) return;
 

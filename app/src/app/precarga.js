@@ -1,5 +1,7 @@
 // Precarga para usar la app SIN INTERNET.
-// Al abrir la app (con red), carga en segundo plano todas las pantallas, los datos de las
+// Los datos del motor (zonas, clima, reglas, planes y catálogos) llegan del servidor como un
+// paquete que se guarda en IndexedDB (services/contenido.js). Esto de aquí guarda lo demás:
+// al abrir la app (con red), carga en segundo plano todas las pantallas, el respaldo local de las
 // tres zonas, las parcelas de ejemplo y todas las imágenes. Pasan por el service worker,
 // que las guarda; así, en modo avión, se puede entrar a cualquier pantalla aunque no se
 // haya visitado antes. En el build, el service worker además guarda todo al instalarse.
@@ -9,6 +11,7 @@ import * as climaMod from '../modules/climate/clima.js';
 import * as catalogo from '../modules/crops/catalogo.js';
 import * as repos from '../storage/repos.js';
 import { avisar } from './estado.js';
+import { precargarDemo } from '../modules/parcel/ejemplo.js';
 
 const URL_EJEMPLO = new URL('../../fixtures/ejemplo-milpa.json', import.meta.url).href;
 const MARCA = 'precargaSinInternet';
@@ -56,6 +59,7 @@ async function recursos() {
 export function precargar(cargadores) {
   enReposo(async () => {
     await pantallas(cargadores);
+    precargarDemo(); // perfil y parcelas de demostración del servidor, para abrirlos sin conexión
     const sw = navigator.serviceWorker;
     if (!sw) return;
     const conSW = async () => {

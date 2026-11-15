@@ -4,7 +4,7 @@
 // zona dentro de la contribución seudónima.
 import * as repos from '../../storage/repos.js';
 import { uuid } from '../../shared/uuid.js';
-import { zonaMasCercana, distanciaKm } from '../climate/clima.js';
+import { zonaMasCercana, zonaPorId, distanciaKm } from '../climate/clima.js';
 import * as catalogo from '../crops/catalogo.js';
 import { temporadaEnCursoOCrear, registrarEvento, registrarTemporadaPasada } from '../harvests/temporadas.js';
 import { superficie } from '../../shared/format.js';
@@ -19,18 +19,39 @@ export function municipioCercano(punto) {
     .sort((a, b) => a.km - b.km)[0] || null;
 }
 
-/** Completa los campos derivados: zona, distancia, municipio y suelo. */
+/**
+ * Completa los campos derivados: zona, distancia, municipio y suelo.
+ * El punto de la parcela, el municipio y el punto de clima de la zona son tres datos distintos:
+ *  - Con punto (mapa o GPS): la zona es la del punto de clima más cercano y se guarda la distancia.
+ *  - Solo con municipio (elegido de la lista): la zona es la del catálogo municipal si existe
+ *    (municipios.json, zonaId); si no, queda sin zona y la cobertura se muestra como pendiente.
+ *  - El municipio declarado (origenMunicipio = 'declarado') no se recalcula con la cabecera más cercana.
+ */
 export function derivar(datos) {
   const out = { ...datos };
-  if (datos.ubicacion) {
-    const z = zonaMasCercana(datos.ubicacion);
+  const u = datos.ubicacion;
+  const declarado = datos.origenMunicipio === 'declarado' && datos.municipioId
+    ? catalogo.municipios().find((m) => m.id === datos.municipioId) : null;
+  if (u && u.origen === 'municipio') {
+    const m = catalogo.municipios().find((x) => x.id === u.municipioId) || municipioCercano(u)?.m || null;
+    const zona = m?.zonaId ? zonaPorId(m.zonaId) : null;
+    out.zonaId = zona?.id || null;
+    out.zonaDistanciaKm = null;
+    out.origenAsignacionZona = zona ? 'municipio' : null;
+    out.municipioId = m?.id || null;
+    out.municipioNombre = m?.name || null;
+    out.estado = m?.estado || null;
+    out.origenMunicipio = 'declarado';
+  } else if (u) {
+    const z = zonaMasCercana(u);
     out.zonaId = z?.zona.id || null;
     out.zonaDistanciaKm = z ? Math.round(z.km * 10) / 10 : null;
     out.origenAsignacionZona = z ? 'punto_mas_cercano' : null;
-    const mun = municipioCercano(datos.ubicacion);
+    const mun = declarado ? { m: declarado } : municipioCercano(u);
     out.municipioId = mun?.m.id || null;
     out.municipioNombre = mun?.m.name || null;
     out.estado = mun?.m.estado || null;
+    out.origenMunicipio = declarado ? 'declarado' : 'cabecera_mas_cercana';
   }
   const s = catalogo.reconocerSuelo(datos.sueloTexto);
   out.tipoSueloId = s.suelo?.id || null;

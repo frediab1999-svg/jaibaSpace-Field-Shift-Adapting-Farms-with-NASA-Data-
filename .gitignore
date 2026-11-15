@@ -25,3 +25,12 @@ replay_pid*
 
 node_modules/
 dist/
+
+# Python y entorno local del servidor
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+server/.env
