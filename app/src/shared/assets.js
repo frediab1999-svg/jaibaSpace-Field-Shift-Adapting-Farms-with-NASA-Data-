@@ -16,7 +16,6 @@ export const IMG = {
   fotos: {
     manos: img('foto-manos.jpg'),
     plantula: img('foto-plantula.jpg'),
-    sabucan: img('foto-sabucan.jpg'),
     campesino: img('foto-campesino.jpg'),
   },
   iconos: {

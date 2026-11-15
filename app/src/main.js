@@ -2,6 +2,7 @@
 import * as repos from './storage/repos.js';
 import * as catalogo from './modules/crops/catalogo.js';
 import * as climaMod from './modules/climate/clima.js';
+import * as climaPunto from './modules/climate/climaPunto.js';
 import * as reglasMod from './modules/strategies/reglas.js';
 import * as cola from './services/sync/cola.js';
 import * as api from './services/api/endpoints.js';
@@ -21,6 +22,7 @@ const PANTALLAS = {
   prediccion: () => import('./ui/resultados/prediccion.js'),
   informacion: () => import('./ui/resultados/informacion.js'),
   opciones: () => import('./ui/resultados/opciones.js'),
+  diagnostico: () => import('./ui/resultados/diagnostico.js'),
 };
 
 // Rutas (la primera es la de respaldo)
@@ -36,6 +38,7 @@ ruta('/prediccion/:id', PANTALLAS.prediccion);
 ruta('/informacion', PANTALLAS.informacion);
 ruta('/opciones', PANTALLAS.opciones);
 ruta('/opciones/:id', PANTALLAS.opciones);
+ruta('/diagnostico/:id', PANTALLAS.diagnostico);
 
 async function revisarServidor() {
   try {
@@ -58,8 +61,11 @@ async function arrancar() {
   await Promise.all([catalogo.cargar(), climaMod.zonas(), reglasMod.reglas()]);
   iniciar();
   cola.iniciar();
+  // Clima del punto exacto de cada parcela: se completa en segundo plano si falta (ver climaPunto.js)
+  climaPunto.asegurarTodas();
   addEventListener('online', async () => {
     revisarServidor();
+    climaPunto.asegurarTodas();
     // Al volver la red se buscan datos nuevos. No cambian a media sesión: se ofrecen para recargar.
     const r = await contenido.buscarActualizacion();
     poner({ datos: contenido.estadoContenido() });

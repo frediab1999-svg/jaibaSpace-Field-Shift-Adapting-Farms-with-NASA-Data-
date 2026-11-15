@@ -8,7 +8,7 @@ PWA para celular, offline-first, conectada a FastAPI:
 
 - Guía visual: [`docs/look-and-feel.md`](../docs/look-and-feel.md)
 - Contrato con la API: [`docs/contrato-frontend-backend.md`](../docs/contrato-frontend-backend.md)
-- Decisiones: [`0001`](../docs/decisiones/0001-prototipo-pwa-happy-path.md) (prototipo), [`0002`](../docs/decisiones/0002-primera-version-funcional.md) (primera versión funcional: reglas del cálculo y supuestos) y [`0003`](../docs/decisiones/0003-coherencia-datos-y-ux.md) (no recomendar sin zona, clima resumido, varias semillas)
+- Decisiones: [`0001`](../docs/decisiones/0001-prototipo-pwa-happy-path.md) (prototipo), [`0002`](../docs/decisiones/0002-primera-version-funcional.md) (primera versión funcional: reglas del cálculo y supuestos) [`0003`](../docs/decisiones/0003-coherencia-datos-y-ux.md) (no recomendar sin zona, clima resumido, varias semillas) y [`0004`](../docs/decisiones/0004-mvp-tierra-y-tiempo.md) (MVP del Hackathon: diagnóstico de la tierra, plan de 2 años y clima por punto)
 
 ## Cómo correrla
 
@@ -30,7 +30,7 @@ npm run dev        # http://localhost:5173
 - **URL de la API.** Por defecto es la misma computadora que sirve la página, en el puerto 8000: `http://localhost:8000/api/v1` en la computadora y `http://IP:8000/api/v1` si abres la app por la IP. Para usar otra, abre la app con `?api=https://tu-servidor/api/v1` o define `window.JAIBASPACE_API_BASE` en `index.html`.
 - **Sin el servidor.** La app abre igual y usa la copia de los datos que trae empaquetada (respaldo local). Lo dice al pie de «Opciones para tu parcela».
 - **Para producción:** `npm run build`. Genera `app/dist/`, que se publica como sitio estático con HTTPS para que funcionen el service worker, el GPS y el micrófono. FastAPI también puede servir esa carpeta (ver `server/README.md`).
-- **Pruebas:** `npm test` (39 pruebas con `node:test`: motor, clima por día, datos publicados y paquete del servidor).
+- **Pruebas:** `npm test` (56 pruebas con `node:test`: motor, clima por día, diagnóstico de la tierra, clima por punto, datos publicados y paquete del servidor).
 
 ### De dónde salen los datos
 
@@ -61,11 +61,11 @@ Lo que **no** funciona sin internet: las teselas del mapa (queda el GPS y el mun
 
 1. Servidor encendido y cargado (`/api/v1/ready` responde `ready`). PWA con `npm run build && npm run preview -- --host`.
 2. Abre `http://localhost:5173`, ve a **Tus parcelas** y toca **Ver con parcelas de ejemplo**.
-3. Abre **Opciones para tu parcela** en «Milpa del cenote». Al pie debe decir que los datos vienen del servidor.
+3. Abre **Tu plan de 2 años** en «Milpa del cenote». Al pie debe decir que los datos vienen del servidor.
 4. Espera el aviso «Lista para usar sin internet».
 5. Corta la conexión: modo avión en el teléfono o, en la computadora, detén la PWA y la API (`docker compose stop api`). En las herramientas del navegador también sirve «Sin conexión».
-6. Recarga. Vuelve a abrir «Opciones para tu parcela»: deben aparecer las tres opciones con los mismos números.
-7. Toca **Quiero explorar este plan** en una opción. Debe decir «Plan guardado en este dispositivo».
+6. Recarga. Vuelve a abrir «Tu plan de 2 años»: deben aparecer las tres opciones con los mismos números.
+7. Toca **Quiero este plan** en una opción. Debe decir «Plan guardado en este teléfono».
 8. Recarga otra vez, todavía sin conexión: la opción sigue marcada como «Plan guardado» y el detalle de la parcela dice «Elegiste: …».
 
 **En un teléfono Android** (pendiente de repetir por el equipo; pasos exactos):
@@ -77,44 +77,22 @@ Lo que **no** funciona sin internet: las teselas del mapa (queda el GPS y el mun
 
 Por la red Wi-Fi (`http://IP-de-la-computadora:8000/`) la app carga y consume la API, pero el navegador no instala el service worker en `http://` con una IP, así que no sirve para probar el modo avión.
 
-## Guion para la demostración (happy path)
+## Guion para la demostración (Hackathon)
 
-1. **Inicio.**
-   - Escribe tu nombre: se guarda solo en el teléfono.
-   - Toca la fecha: el calendario colorea el clima (NASA), las previsiones de tu siembra, las siembras y la temporada. Cambia de mes con las flechas.
-   - Toca el micrófono y di «parcelas» (Chrome o Edge en Android o escritorio). Si el navegador no entiende voz, aparece un campo para escribir.
-2. **Menú.** Cuatro nodos unidos por la raíz.
-3. **Tus parcelas.**
-   - En el estado vacío, toca **Agregar parcela**:
-     - nombre;
-     - superficie en m², mecates o hectáreas (o largo × ancho);
-     - suelo escrito a tu modo, por ejemplo «k'ankab rojo»;
-     - «¿Ya se sembró antes?» → Sí, con cultivo, año, cómo te fue, causa y cosecha;
-     - prioridad;
-     - mapa: mueve el mapa o usa tu ubicación.
-   - Toca **Guardar parcela**: aparece el esquema del terreno.
-   - **Agregar semilla:** con el semáforo del mes.
-   - Quita una semilla: pide el motivo y lo guarda en **Historial**.
-   - Para una demo con más datos: **Ver con parcelas de ejemplo**.
-4. **Semillas de temporada.**
-   - Semáforo por zona del mes actual; toca «jun» para ver la temporada de siembra.
-   - Ficha con fuente y «por confirmar».
-   - Buscador abajo y sabucán (pendiente en el servidor).
-5. **Predicción a futuro.**
-   - Toca una parcela: «x de y señales a favor».
-   - Toca cada variable para ver por qué y si el dato es histórico, actual o ambos.
-6. **Opciones para tu parcela** (`#/opciones/ej-cenote`): el centro de la demo.
-   - Entra desde el detalle de la parcela («¿Qué siembro el próximo ciclo?»), desde Predicción, después de «Terminar siembra» en Información o diciendo «qué siembro» al micrófono.
-   - «Meses estimados con cultivo en pie», de 24: 10 con lo que haces hoy, 12 con canavalia entre el maíz y 10 con un ciclo de canavalia. La milpa de ejemplo declara maíz, frijol y calabaza; el cálculo cubre el maíz y lo dice.
-   - Cambia la fecha de siembra del escenario (1 y 15 de junio, 1 y 15 de julio): todo se vuelve a calcular. Con el 15 de julio, las rachas secas tocan la floración en 28 de 28 años.
-   - Abre «¿Por qué?»: el dato del clima con su periodo y sus años, el calendario del plan, el beneficio, la contrapartida, de dónde sale cada supuesto y las fuentes. La canavalia sale «Sin estimación».
-   - Toca «Escuchar» en una tarjeta o «Escuchar las opciones»: la app la lee en voz alta.
-   - «Quiero explorar este plan» confirma «Plan guardado en este dispositivo». Al volver a abrir la parcela sigue elegido, y «Ver las fechas en el calendario» las marca como plan, no como siembra.
-   - Abajo, como material secundario, la soya. En el Solar de Xbalam (otra zona) aparece el aviso de que las fechas se revisaron para Tekax.
-7. **Información.**
-   - «Terminar siembra» de la temporada en curso (ya pasó la cosecha estimada del maíz de ejemplo).
-   - Compara la predicción contra el resultado real y abre una temporada pasada para ver lo que midió NASA ese año.
-   - Acepta compartir: las contribuciones se encolan y se envían cuando hay servidor.
+La app responde a una pregunta: **¿cómo siembro mi parcela los próximos dos años sin acabarme la tierra?** Hay dos casos de uso (decisión [`0004`](../docs/decisiones/0004-mvp-tierra-y-tiempo.md)):
+
+1. **Inicio.** Escribe tu nombre. Aparece «Cuidemos tu tierra»: **Empezar** (cuestionario) o **Mira un ejemplo** (Pablo o Juan).
+2. **Pablo, tierra cansada.**
+   - **Diagnóstico.** «Tu tierra está cansada», con sus razones: 4+ años, sin descanso, con quema, mala cosecha.
+   - **El tiempo de tu tierra.** 14 de 24 meses sin cultivo. Con maíz y canavalia, 2 meses más cubierta.
+   - Clima de la temporada en palabras y referencia de Tekax (2.22 y 2.35 t/ha, promedio del municipio).
+   - **Ver tu plan de 2 años.** Tres estrategias: la sugerida arriba y la de hoy para comparar. Cada una con cinco líneas: por qué, datos, qué gana, qué falta saber y qué revisar con el técnico.
+   - Como Pablo necesita cosechar, se sugiere la intercalada y una nota dice que la cobertura recupera más rápido. Cambia «¿Qué buscas?» a «Cuidar mi tierra» (Cambiar mis respuestas) y la sugerida pasa a ser el ciclo de canavalia.
+   - **¿Cuándo me conviene sembrar?** Barras por fecha: en cuántos años la sequía tocó la floración. Su fecha (15 de junio) contra la mejor del punto.
+3. **Juan, tierra nueva.** «Tierra nueva»: lo que se hace normalmente (roza, tumba y quema) queda como referencia. Se sugiere milpa con canavalia desde el primer ciclo, más los consejos de no quemar y dejar franjas de monte.
+4. **Tu propia parcela.** Menú → «Registra tu parcela»: 4 pasos (dónde, cómo está tu tierra, suelo y tamaño, qué buscas). Al guardar se pide el clima de ese punto a la NASA (vía FastAPI) y se abre el diagnóstico. Mueve el pin a otro lugar: los números cambian.
+5. **Guardar el plan.** «Quiero este plan» lo guarda en el teléfono y «Ver las fechas en el calendario» lo marca en Inicio.
+6. **Cerrar el ciclo.** En Información, «Terminar siembra»: el resultado y el año se suman al diagnóstico.
 
 ## Estructura
 
@@ -160,14 +138,15 @@ app/
 | `#/menu` | Menú |
 | `#/semillas` | Semillas de temporada |
 | `#/parcelas` | Tus parcelas (`?tab=historial`) |
-| `#/parcelas/nueva` | Agregar parcela |
+| `#/parcelas/nueva` | Cuestionario de la parcela (4 pasos) |
 | `#/parcelas/:id` | Detalle (`?sembrar=semillaId` abre la hoja de siembra) |
 | `#/parcelas/:id/editar` | Editar |
 | `#/prediccion` | Predicción a futuro |
-| `#/prediccion/:id` | Señales de una parcela |
+| `#/prediccion/:id` | ¿Cuándo me conviene sembrar? Mejor fecha y señales |
 | `#/informacion` | Información (`?registrar=1` abre «Terminar siembra») |
 | `#/opciones` | Opciones: elegir parcela (si hay una sola, entra directo) |
-| `#/opciones/:id` | Opciones para tu parcela: ¿qué siembro el próximo ciclo? |
+| `#/opciones/:id` | Tu plan de 2 años: tres estrategias, la sugerida según el diagnóstico |
+| `#/diagnostico/:id` | Diagnóstico de tu tierra (se abre al terminar el cuestionario) |
 | `#/inicio?cal=AAAA-MM` | Inicio con el calendario abierto en ese mes |
 
 ## El motor de comparación

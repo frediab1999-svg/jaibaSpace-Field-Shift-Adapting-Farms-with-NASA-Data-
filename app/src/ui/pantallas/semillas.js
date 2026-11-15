@@ -1,12 +1,11 @@
 // SEMILLAS DE TEMPORADA: qué conviene sembrar en el mes elegido, en la zona de TU parcela.
 // Sin una parcela con zona no se dice si conviene o no: solo la época de siembra del catálogo,
 // y se pide la ubicación. Arriba se ve el terreno de la parcela (o la península por zonas).
-// Se pueden elegir varias semillas para el sabucán o para sembrarlas juntas en la parcela.
-// El sabucán es la lista de semillas apartadas; se guarda en el teléfono (pendiente en el servidor).
+// Se pueden elegir varias semillas para sembrarlas juntas en la parcela.
 import { html, pintar, delegar, esc, presionado } from '../../shared/dom.js';
 import { IMG, imagenCultivo, letrero } from '../../shared/assets.js';
 import { icono, greca } from '../../shared/icons.js';
-import { barraMenu, abrirHoja } from '../layout.js';
+import { barraMenu } from '../layout.js';
 import * as repos from '../../storage/repos.js';
 import * as catalogo from '../../modules/crops/catalogo.js';
 import * as climaMod from '../../modules/climate/clima.js';
@@ -34,7 +33,6 @@ export async function montar(pantalla) {
   const estado = { mes: f.getMonth() + 1, dia: f.getDate(), sel: null, q: '', vista: activa?.superficieM2 ? 'terreno' : 'zonas', varias: false, elegidas: [] };
   const nombreActiva = activa ? `${activa.nombre}${activa.esEjemplo ? ' (ejemplo)' : ''}` : '';
 
-  const sabucan = () => repos.kv.get('sabucan', []) || [];
   const via = (s, zona = zonaUsuario, mes = estado.mes) => catalogo.viabilidad(s, { mes, dia: mes === f.getMonth() + 1 ? estado.dia : 15, zona, reglas });
   const temporada = () => (catalogo.listas().temporadasDelAnio || []).find((x) => x.meses.includes(estado.mes));
   const ordenadas = () => (conZona
@@ -95,13 +93,12 @@ export async function montar(pantalla) {
   }
 
   function tiras() {
-    const bolsa = sabucan();
     return ordenadas().map((s) => {
       const c = catalogo.cultivo(s.cultivoId);
       const v = conZona ? via(s) : null;
       const marcada = estado.varias ? estado.elegidas.includes(s.id) : estado.sel === s.id;
       const lectura = v ? `${catalogo.ESTADO_TXT[v.estado]} en tu zona` : `se siembra ${catalogo.epocaCorta(s)}`;
-      return html`<button class="semilla-tile" data-act="sel" data-id="${s.id}" ${estado.varias ? html`role="checkbox" aria-checked="${presionado(marcada)}"` : html`aria-pressed="${presionado(marcada)}"`} aria-label="${s.name}: ${lectura}${bolsa.includes(s.id) ? ', en tu sabucán' : ''}">
+      return html`<button class="semilla-tile" data-act="sel" data-id="${s.id}" ${estado.varias ? html`role="checkbox" aria-checked="${presionado(marcada)}"` : html`aria-pressed="${presionado(marcada)}"`} aria-label="${s.name}: ${lectura}">
         ${v ? html`<span class="semilla-tile__estado" style="background:${catalogo.ESTADO_COLOR[v.estado]}" aria-hidden="true"></span>` : ''}
         ${estado.varias && marcada ? html`<span class="semilla-tile__check" aria-hidden="true">${icono('check', { tam: 14, grosor: 3 })}</span>` : ''}
         <span class="semilla-tile__foto"><img src="${imagenCultivo(c.imagen)}" alt="" loading="lazy"></span>
@@ -113,7 +110,6 @@ export async function montar(pantalla) {
   function ficha(s, { completa = true } = {}) {
     const c = catalogo.cultivo(s.cultivoId);
     const v = conZona ? via(s) : null;
-    const enBolsa = sabucan().includes(s.id);
     return html`<div class="tarjeta columna" style="gap:12px">
       <div class="resultado-semilla">
         <img class="foto" src="${imagenCultivo(c.imagen)}" alt="">
@@ -133,7 +129,6 @@ export async function montar(pantalla) {
         <span class="fuente"><strong>Fuente:</strong> ${s.source ? fuenteLegible(s.source) : 'sin fuente todavía'}${catalogo.origen('seeds') === 'ejemplo' ? '. Catálogo de ejemplo del prototipo.' : '.'}</span>
         ${(s.porConfirmar || []).map((p) => html`<span class="porconfirmar">Por confirmar: ${p}</span>`)}` : ''}
       <div class="fila" style="flex-wrap:wrap;gap:8px">
-        <button class="btn btn--chico ${enBolsa ? 'btn--vidrio' : 'btn--dorado'}" data-act="bolsa" data-id="${s.id}" aria-pressed="${presionado(enBolsa)}">${icono(enBolsa ? 'check' : 'bolsa', { tam: 18 })}${enBolsa ? 'En tu sabucán' : 'Al sabucán'}</button>
         ${activa ? html`<a class="btn btn--chico btn--primario" href="#/parcelas/${activa.id}?sembrar=${s.id}">${icono('brote', { tam: 18 })}Sembrar en ${nombreActiva}</a>` : ''}
         ${!completa ? html`<button class="btn btn--texto" data-act="sel" data-id="${s.id}">Ver ficha</button>` : ''}
       </div>
@@ -147,8 +142,7 @@ export async function montar(pantalla) {
     return html`<div class="tarjeta barra-varias" aria-live="polite">
       <strong>${n ? `${n} ${n === 1 ? 'semilla elegida' : 'semillas elegidas'}` : 'Toca las semillas que quieras juntar'}</strong>
       <div class="fila" style="flex-wrap:wrap;gap:8px">
-        <button class="btn btn--chico btn--dorado" data-act="variasBolsa" ${n ? '' : 'disabled'}>${icono('bolsa', { tam: 18 })}Al sabucán</button>
-        ${activa ? html`<a class="btn btn--chico btn--primario" ${n ? html`href="#/parcelas/${activa.id}?sembrar=${ids}"` : html`aria-disabled="true"`}>${icono('brote', { tam: 18 })}Sembrar en ${nombreActiva}</a>` : ''}
+        ${activa ? html`<a class="btn btn--chico btn--primario" ${n ? html`href="#/parcelas/${activa.id}?sembrar=${ids}"` : html`aria-disabled="true"`}>${icono('brote', { tam: 18 })}Sembrar en ${nombreActiva}</a>` : html`<a class="btn btn--chico btn--primario" href="#/parcelas/nueva">${icono('mas', { tam: 18 })}Primero agrega tu parcela</a>`}
       </div>
     </div>`;
   }
@@ -164,7 +158,6 @@ export async function montar(pantalla) {
     const u = repos.kv.get('usuario');
     const t = temporada();
     const s = catalogo.semilla(estado.sel);
-    const n = sabucan().length;
     pintar(pantalla, html`
       <div class="fondo" aria-hidden="true"><img class="fondo__foto" src="${IMG.fondo}" alt=""><div class="fondo__velo" style="background:rgba(18,20,14,.28)"></div><div class="fondo__arriba" style="height:300px"></div><div class="fondo__abajo"></div></div>
       <div class="scroll scroll--con-menu" style="padding-top:52px" id="scrollSemillas">
@@ -186,8 +179,7 @@ export async function montar(pantalla) {
         <div class="fila fila--entre">
           <span class="seccion__titulo" style="font-size:16px">Semillas</span>
           <div class="fila" style="gap:8px">
-            <button class="btn-sabucan" data-act="varias" aria-pressed="${presionado(estado.varias)}">${icono(estado.varias ? 'cerrar' : 'check', { color: '#f2cf7a', tam: 18, grosor: 2 })}${estado.varias ? 'Listo' : 'Elegir varias'}</button>
-            <button class="btn-sabucan" data-act="abrirBolsa" aria-label="Abrir mi sabucán, ${n} semillas">${icono('bolsa', { color: '#f2cf7a', tam: 22, grosor: 1.8 })}<span class="contador">${n}</span></button>
+            <button class="btn-pastilla" data-act="varias" aria-pressed="${presionado(estado.varias)}">${icono(estado.varias ? 'cerrar' : 'check', { color: '#f2cf7a', tam: 18, grosor: 2 })}${estado.varias ? 'Listo' : 'Elegir varias'}</button>
           </div>
         </div>
         <div class="tiras" id="tiras">${tiras()}</div>
@@ -224,44 +216,6 @@ export async function montar(pantalla) {
     centrarMes();
   }
 
-  function alternarBolsa(id) {
-    const b = sabucan();
-    const dentro = b.includes(id);
-    repos.kv.set('sabucan', dentro ? b.filter((x) => x !== id) : [...b, id]);
-    avisar(dentro ? 'La sacaste del sabucán' : 'Guardada en tu sabucán');
-  }
-
-  function hojaBolsa() {
-    const hoja = abrirHoja(pantalla, {
-      titulo: 'Mi sabucán',
-      papel: true,
-      cuerpo: () => {
-        const lista = sabucan().map((id) => catalogo.semilla(id)).filter(Boolean);
-        return html`
-          <div class="fila" style="gap:12px;align-items:flex-start">
-            <img src="${IMG.fotos.sabucan}" alt="Sabucán bordado" style="width:72px;height:80px;object-fit:cover;border-radius:10px;transform:rotate(-3deg);box-shadow:0 8px 16px -8px rgba(0,0,0,.5)">
-            <p style="font-size:14.5px;color:#4d4234">Tu morral de semillas: aparta las que piensas conseguir o sembrar. En el calendario de Inicio te marcamos cuándo abre y cierra su época de siembra, y desde aquí puedes sembrarlas todas juntas en tu parcela.<br><span style="font-size:13px;color:#6b5d4a">Se guarda solo en este teléfono.</span></p>
-          </div>
-          ${lista.length && activa ? html`<a class="btn btn--primario btn--bloque" href="#/parcelas/${activa.id}?sembrar=${lista.map((x) => x.id).join(',')}" data-act="cerrarHoja">${icono('brote', { tam: 18 })}Sembrar ${lista.length === 1 ? 'esta' : `estas ${lista.length}`} en ${nombreActiva}</a>` : ''}
-          ${lista.length ? lista.map((s) => html`<div class="fila" style="padding:10px 12px;border-radius:16px;background:#ece3cf">
-            <img src="${imagenCultivo(catalogo.cultivo(s.cultivoId).imagen)}" alt="" style="width:44px;height:44px;border-radius:50%;object-fit:cover">
-            <span class="crece columna" style="gap:0"><strong>${s.name}</strong><span style="font-size:13px;color:#6b5d4a">${conZona ? `${catalogo.ESTADO_TXT[via(s).estado]} en ${MESES[estado.mes - 1]}` : `Se siembra ${catalogo.epocaCorta(s)}`}</span></span>
-            <button class="btn btn--chico" style="background:rgba(122,40,64,.1);color:#7a2840" data-act="quitarBolsa" data-id="${s.id}" aria-label="Quitar ${s.name} del sabucán">${icono('basura', { tam: 18 })}</button>
-          </div>`) : html`<p style="text-align:center;color:#6b5d4a;padding:12px">Tu sabucán está vacío.</p>`}`;
-      },
-      alMontar: (nodo, h) => {
-        nodo.addEventListener('click', (e) => {
-          const b = e.target.closest('[data-act="quitarBolsa"]');
-          if (!b) return;
-          alternarBolsa(b.dataset.id);
-          h.repintar();
-        });
-      },
-      alCerrar: () => repintarParcial(),
-    });
-    return hoja;
-  }
-
   const quitar = delegar(pantalla, 'click', {
     sel: (el) => {
       const id = el.dataset.id;
@@ -269,18 +223,9 @@ export async function montar(pantalla) {
       estado.sel = id; repintarParcial(); pantalla.querySelector('#ficha')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     },
     varias: () => { estado.varias = !estado.varias; estado.elegidas = estado.varias && estado.sel ? [estado.sel] : []; repintarParcial(); },
-    variasBolsa: () => {
-      const b = sabucan();
-      const nuevas = estado.elegidas.filter((id) => !b.includes(id));
-      repos.kv.set('sabucan', [...b, ...nuevas]);
-      avisar(nuevas.length ? `${nuevas.length} ${nuevas.length === 1 ? 'semilla guardada' : 'semillas guardadas'} en tu sabucán` : 'Ya estaban en tu sabucán');
-      repintarParcial();
-    },
     vista: (el) => { estado.vista = el.dataset.v; repintarParcial(); },
     mes: (el) => { estado.mes = Number(el.dataset.m); repintarParcial(); },
     zona: (el) => { if (!conZona) return; const z = climaMod.zonaPorId(el.dataset.id); const s = catalogo.semilla(estado.sel); const v = via(s, z); avisar(`${climaMod.NOMBRE_CORTO_ZONA[z.id]}: ${v.razones[v.razones.length - 1]}`); },
-    bolsa: (el) => { alternarBolsa(el.dataset.id); repintarParcial(); },
-    abrirBolsa: hojaBolsa,
     vozBuscar: () => {
       if (!hayVoz) { pantalla.querySelector('#buscarSemilla')?.focus(); return; }
       const b = pantalla.querySelector('[data-act="vozBuscar"]');

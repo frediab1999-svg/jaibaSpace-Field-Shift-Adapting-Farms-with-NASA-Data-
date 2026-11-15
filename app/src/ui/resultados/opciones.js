@@ -1,19 +1,22 @@
-// OPCIONES PARA TU PARCELA: «¿Qué siembro el próximo ciclo?». Compara tres alternativas para
-// los próximos dos ciclos cuando la tierra tiene poco tiempo para descansar:
-//   a) lo que el productor hace hoy (o «Maíz continuo de ejemplo» si no está registrado),
+// TU PLAN DE 2 AÑOS («Opciones para tu parcela»). Compara SIEMPRE tres estrategias para los
+// próximos dos ciclos, incluida la actual (requisito del reto):
+//   a) lo que el productor hace hoy (o, en tierra nueva, lo que se hace normalmente: maíz cada año),
 //   b) maíz con canavalia intercalada en el mismo ciclo,
 //   c) un ciclo de canavalia de cobertura y después maíz.
-// Los números los calcula el motor en el teléfono (motor/comparacion.js y motor/estrategias.js)
-// con los datos publicados. La app no decide: compara. El productor elige y su elección se
-// guarda en el dispositivo; elegir un plan NO registra una siembra ni se envía al servidor.
+// El diagnóstico de la tierra (motor/diagnostico.js) decide el orden y cuál lleva el sello
+// «Sugerida para tu tierra». Cada tarjeta dice, a la vista: por qué está, qué dicen los datos,
+// qué gana la tierra, qué falta saber y qué revisar con un técnico. Lo técnico va plegado.
+// Los números los calcula el motor en el teléfono. La app sugiere; el productor decide.
 // Rutas: #/opciones (elegir parcela) · #/opciones/:id
 import { html, pintar, delegar, presionado } from '../../shared/dom.js';
-import { IMG } from '../../shared/assets.js';
+import { IMG, letrero } from '../../shared/assets.js';
 import { icono, subrayado } from '../../shared/icons.js';
-import { fondo, cabeza, avisoOjo } from '../layout.js';
+import { fondo, cabeza } from '../layout.js';
 import * as repos from '../../storage/repos.js';
 import * as catalogo from '../../modules/crops/catalogo.js';
 import * as climaMod from '../../modules/climate/clima.js';
+import { textoOrigen } from '../../modules/climate/climaPunto.js';
+import { fraseRazones } from '../../motor/diagnostico.js';
 import * as reglasMod from '../../modules/strategies/reglas.js';
 import { registrarEvento } from '../../modules/harvests/temporadas.js';
 import { franja24 } from '../componentes/franja24.js';
@@ -31,8 +34,14 @@ const TEXTOS = {
     gana: 'Es la práctica que ya conoces',
     cuesta: 'Entre una cosecha y la siguiente siembra no hay cultivo en pie',
   },
+  normal: {
+    titulo: 'Lo que se hace normalmente',
+    queEs: 'Tumbar, quemar y sembrar maíz cada año en el mismo terreno. Sirve para comparar.',
+    gana: 'Dos cosechas de maíz en los dos ciclos',
+    cuesta: 'La tierra queda descubierta entre una cosecha y la siguiente siembra y, año tras año, se cansa',
+  },
   plantilla: {
-    titulo: 'Maíz continuo de ejemplo',
+    titulo: 'Maíz cada año (ejemplo)',
     queEs: 'No tenemos registrado lo que siembras hoy. Esta plantilla es maíz de milpa sembrado cada año.',
     gana: 'Dos cosechas de maíz en los dos ciclos',
     cuesta: 'Entre una cosecha y la siguiente siembra no hay cultivo en pie',
@@ -59,7 +68,7 @@ const TEXTOS = {
     alOido: 'Nunca desmontes monte para sembrarla.',
   },
 };
-const textos = (e) => (e.esPlantilla ? TEXTOS.plantilla : TEXTOS[e.id]) || { titulo: e.nombre, queEs: '', gana: '', cuesta: '' };
+export const textos = (e, nueva = false) => (e.esActual && nueva ? TEXTOS.normal : e.esPlantilla ? TEXTOS.plantilla : TEXTOS[e.id]) || { titulo: e.nombre, queEs: '', gana: '', cuesta: '' };
 
 const MOTIVO = {
   sin_reglas: 'no hay reglas de etapas para este cultivo',
@@ -96,7 +105,7 @@ function elegirParcela(pantalla) {
     <div class="scroll">
       <div class="entra d1" style="padding:0 4px"><span class="hero__etiqueta">Próximos dos ciclos</span>
         <h1 class="titulo-grande">¿Para qué parcela?</h1>${subrayado(180)}
-        <p class="texto-intro" style="margin-top:6px">Elige la parcela y comparamos tres formas de sembrarla los próximos dos ciclos.</p></div>
+        <p class="texto-intro" style="margin-top:6px">Elige la parcela y te mostramos tres formas de sembrarla los próximos dos años.</p></div>
       ${lista.length ? lista.map((p, i) => {
         const suelo = catalogo.suelos().find((s) => s.id === p.tipoSueloId);
         return html`<a class="tarjeta tarjeta--boton fila entra d${Math.min(i + 2, 7)}" href="#/opciones/${p.id}" style="text-decoration:none;gap:12px">
@@ -113,13 +122,13 @@ function elegirParcela(pantalla) {
         <a class="btn btn--primario btn--bloque" href="#/parcelas/nueva">${icono('mas')}Agregar parcela</a>
       </div>`}
     </div>
-    ${cabeza({ titulo: 'Opciones para tu parcela', sub: '¿Qué siembro el próximo ciclo?' })}
+    ${cabeza({ titulo: 'Tu plan de 2 años', sub: '¿Qué siembro el próximo ciclo?' })}
   `);
   return null;
 }
 
 // =====================================================================
-// OPCIONES DE UNA PARCELA
+// PLAN DE 2 AÑOS DE UNA PARCELA
 // =====================================================================
 function opciones(pantalla, id) {
   const p0 = repos.parcelas.porId(id);
@@ -132,116 +141,121 @@ function opciones(pantalla, id) {
   const parcela = () => repos.parcelas.porId(id);
   const todas = () => (estado.r ? [...estado.r.principales, ...estado.r.secundarias] : []);
   const buscar = (eid) => todas().find((x) => x.id === eid);
-
-  // ---------------- Piezas ----------------
-  const pila = () => html`<svg class="pila" viewBox="0 0 64 34" width="64" height="34" aria-hidden="true">
-    <rect x="2" y="3" width="54" height="28" rx="6" fill="none" stroke="#f3ead6" stroke-width="3"/>
-    <rect x="57" y="11" width="5" height="12" rx="2" fill="#f3ead6"/>
-    <rect x="7" y="8" width="14" height="18" rx="3" fill="#ff8f7a"/>
-    <path d="M30 9l-4 9h6l-4 8" fill="none" stroke="#f2cf7a" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
-  </svg>`;
+  const esNueva = () => estado.r?.diagnostico?.estado.id === 'nueva';
+  const tx = (e) => textos(e, esNueva());
+  const actual = () => estado.r?.principales.find((e) => e.esActual) || null;
 
   /** Nombres cortos de los cultivos que sí se pudieron evaluar en un indicador. */
   const evaluados = (x) => [...new Set(x.porCultivo.filter((c) => !c.sinEstimacion).map((c) => catalogo.cultivo(c.cultivo).name.toLowerCase()))];
+  const lugarClima = () => (estado.r?.origenClima === 'punto' ? 'en tu punto' : 'en tu zona');
 
-  function indicador(e, clave) {
-    const x = e[clave];
-    const esAgua = clave === 'agua';
-    const titulo = esAgua ? 'Rachas secas en la etapa sensible' : 'Calor fuerte en la etapa sensible';
-    const img = esAgua ? IMG.iconos.nube : IMG.iconos.sol;
-    if (x.sinEstimacion) {
-      return html`<div class="indicador">
-        <img class="parche parche--chico" src="${img}" alt="">
-        <span class="columna" style="gap:1px"><small>${titulo}</small><strong>Sin estimación</strong><small>${MOTIVO[x.motivo] || 'faltan datos'}</small></span>
-      </div>`;
-    }
-    return html`<div class="indicador">
-      <img class="parche parche--chico" src="${img}" alt="">
-      <span class="columna" style="gap:1px"><small>${titulo} (${evaluados(x).join(' y ')})</small>
-      <strong>${x.aniosConCoincidencia} de ${x.aniosEvaluados} años</strong>
-      <small>${pct(x.proporcionDias)} de los días de esa etapa</small></span>
+  function chipsCultivos(e) {
+    const ids = [...new Set(e.intervalos.map((x) => x.cultivo))];
+    return html`<div class="semillas-chips">
+      ${ids.map((c) => html`<span class="semilla-chip"><i style="background:${catalogo.cultivo(c).color}"></i>${catalogo.cultivo(c).name}</span>`)}
+      ${e.sinReglas.map((n) => html`<span class="semilla-chip" style="opacity:.75"><i style="background:#9a8f7c"></i>${n}</span>`)}
     </div>`;
   }
 
   function sellos(e) {
     const p = parcela();
     const out = [];
-    if (p.estrategiaElegida?.id === e.id) out.push(html`<span class="sello sello--si">${icono('check', { tam: 16 })}Plan guardado</span>`);
-    if (e.esActual) out.push(html`<span class="sello sello--crema">${e.esPlantilla ? 'Plantilla de ejemplo' : 'Lo que haces hoy'}</span>`);
-    if (e.escenarioIlustrativo) out.push(html`<span class="sello sello--esp">Fechas ilustrativas</span>`);
-    if (e.masMeses) out.push(html`<span class="sello sello--si sello--2">${e.empateMeses ? 'Empata en meses con cultivo en pie' : 'Más meses con cultivo en pie'}</span>`);
+    if (e.sugerida) out.push(html`<span class="sello sello--sugerida">${icono('estrella', { tam: 15 })}Sugerida para tu tierra</span>`);
+    if (e.esActual) out.push(html`<span class="sello sello--crema">${esNueva() ? 'Para comparar' : e.esPlantilla ? 'Ejemplo para comparar' : 'Lo que haces hoy'}</span>`);
+    if (p.estrategiaElegida?.id === e.id) out.push(html`<span class="sello sello--si sello--2">${icono('check', { tam: 16 })}Plan guardado</span>`);
     return out;
   }
 
-  function chipsCultivos(e) {
-    const ids = [...new Set(e.intervalos.map((x) => x.cultivo))];
-    return html`<div class="semillas-chips">
-      ${ids.map((c) => html`<span class="semilla-chip"><i style="background:${catalogo.cultivo(c).color}"></i>${catalogo.cultivo(c).name}</span>`)}
-      ${e.sinReglas.map((n) => html`<span class="semilla-chip" style="opacity:.75"><i style="background:#9a8f7c"></i>${n} (sin cálculo)</span>`)}
-    </div>`;
+  // ---------------- Las cinco líneas de cada estrategia ----------------
+  function lineaDatos(e) {
+    const x = e.agua;
+    const ref = actual();
+    const meses = e.cobertura.meses;
+    const difMeses = ref && !e.esActual ? meses - ref.cobertura.meses : 0;
+    const cubierta = `Tierra con cultivo ${meses} de ${e.cobertura.de} meses${difMeses > 0 ? ` (${difMeses} más que ${esNueva() ? 'lo normal' : 'hoy'})` : ''}.`;
+    if (x.sinEstimacion) return `${cubierta} Sobre la sequía no hay estimación: ${MOTIVO[x.motivo] || 'faltan datos'}.`;
+    return `${cubierta} ${lugarClima() === 'en tu punto' ? 'En tu punto' : 'En tu zona'}, una racha seca tocó la etapa delicada de${evaluados(x).length === 1 ? 'l' : ' los cultivos:'} ${evaluados(x).join(' y ')} en ${x.aniosConCoincidencia} de ${x.aniosEvaluados} años (NASA, ${x.periodo.desde}–${x.periodo.hasta}).`;
   }
 
-  /** Calendario del plan en palabras: siembra, cosecha y fin de cobertura por separado. */
+  function lineaFalta(e) {
+    if (e.sinReglas.length) return `Todavía no medimos ${e.sinReglas.join(', ').toLowerCase()} con el clima: solo el maíz.`;
+    const f = e.faltantes.find((x) => !/^De .* solo se conoce|^No se conoce/.test(x)) || e.faltantes[0];
+    if (f) return `${f.charAt(0).toUpperCase()}${f.slice(1)}${/[.?]$/.test(f) ? '' : '.'}`;
+    return 'Cómo responde tu parcela en particular: los datos son de varios años y de la región.';
+  }
+
+  function lineaTecnico(e) {
+    const t = tx(e);
+    const suelo = e.suelo.estado === 'no_recomendable'
+      ? ` En tu suelo (${estado.r.suelo.local?.nombre || 'pedregoso'}) el INIFAP no lo recomienda.`
+      : e.suelo.estado === 'sin_dato' ? ' Solo va en suelo rojo y profundo: confirma el tuyo.' : '';
+    return `${t.cuesta}.${t.alOido ? ` ${t.alOido}` : ''}${suelo}`;
+  }
+
+  function cinco(e) {
+    const t = tx(e);
+    const fila = (ico, color, titulo, texto) => html`<li><span class="cinco__ico" style="color:${color}">${icono(ico, { tam: 18, color })}</span><span><small>${titulo}</small>${texto}</span></li>`;
+    return html`<ul class="cinco">
+      ${fila('info', '#9fd6db', e.sugerida ? 'Por qué te la sugerimos' : 'Por qué está aquí', e.porQue)}
+      ${fila('grafica', '#f2cf7a', 'Lo que dicen los datos', lineaDatos(e))}
+      ${fila('brote', '#9fd97a', 'Qué gana tu tierra', `${t.gana}.`)}
+      ${fila('buscar', '#cfc6b3', 'Lo que todavía no sabemos', lineaFalta(e))}
+      ${fila('alerta', '#ffd27a', 'Revísalo con tu técnico', lineaTecnico(e))}
+    </ul>`;
+  }
+
+  // ---------------- Detalle técnico (plegado) ----------------
   function calendarioPlan(e) {
     return html`<ul>${e.intervalos.map((x) => {
       const nombre = catalogo.cultivo(x.cultivo).name.toLowerCase();
-      const fin = x.tipoFin === 'fin_cobertura' ? `fin estimado de la cobertura el ${x.finTxt} (se corta; no es una cosecha)` : `cosecha estimada el ${x.finTxt}`;
-      return html`<li>Ciclo ${x.ciclo}, ${nombre}: siembra el ${x.inicioTxt}; ${fin}.${x.supuesto ? html` <em>${x.supuesto}</em>` : ''}</li>`;
+      const fin = x.tipoFin === 'fin_cobertura' ? `se corta el ${x.finTxt} (no es cosecha)` : `cosecha estimada el ${x.finTxt}`;
+      return html`<li>Año ${x.ciclo}, ${nombre}: siembra el ${x.inicioTxt}; ${fin}.${x.supuesto ? html` <em>${x.supuesto}</em>` : ''}</li>`;
     })}</ul>`;
   }
 
-  /** El dato climático de un indicador, con valor, unidad, periodo, años evaluados y definiciones. */
   function datoClimatico(e, clave) {
     const r = estado.r;
     const x = e[clave];
     const esAgua = clave === 'agua';
+    if (!r.clima) return html`<li>${esAgua ? 'Rachas secas' : 'Calor'}: sin estimación (${MOTIVO.sin_clima}).</li>`;
     const evento = esAgua
-      ? `una racha de ${r.reglas.rachaRelevanteDias} días seguidos o más con menos de ${r.clima?.umbralDiaSecoMm ?? 1} mm de lluvia`
-      : `un episodio de ${r.reglas.episodioCalorRelevanteDias} días seguidos o más con ${r.clima?.umbralCalorC ?? 35} °C o más`;
-    if (!r.clima) return html`<li><strong>${esAgua ? 'Rachas secas' : 'Calor'}:</strong> Sin estimación. ${MOTIVO.sin_clima}.</li>`;
+      ? `${r.reglas.rachaRelevanteDias}+ días seguidos con menos de ${r.clima.umbralDiaSecoMm} mm`
+      : `${r.reglas.episodioCalorRelevanteDias}+ días seguidos con ${r.clima.umbralCalorC} °C o más`;
     return x.porCultivo.map((c) => {
       const nombre = catalogo.cultivo(c.cultivo).name;
-      if (c.sinEstimacion) return html`<li><strong>${nombre} (ciclo ${c.ciclo}), ${esAgua ? 'rachas secas' : 'calor'}:</strong> Sin estimación, porque ${MOTIVO[c.motivo]}. No significa que no haya riesgo.</li>`;
+      if (c.sinEstimacion) return html`<li>${nombre} (año ${c.ciclo}): sin estimación, porque ${MOTIVO[c.motivo]}. No significa que no haya riesgo.</li>`;
       const s = c.etapa.siembra;
-      return html`<li><strong>${nombre} (ciclo ${c.ciclo}), ${esAgua ? 'rachas secas' : 'calor'}:</strong>
-        en ${c.aniosConCoincidencia} de ${c.aniosEvaluados} años evaluados (${c.periodo.desde}–${c.periodo.hasta}), ${evento} coincidió con «${c.etapa.nombre.toLowerCase()}»
-        (días ${c.etapa.desdeDia} a ${c.etapa.hastaDia} después de sembrar el ${s.dia} de ${MESES[s.mes - 1]}).
-        En promedio, ${pct(c.proporcionDias)} de los ${c.diasEtapa} días de esa etapa quedaron dentro de esos eventos.${c.noEvaluados.length ? ` No se evaluaron ${c.noEvaluados.join(', ')} por tener datos incompletos.` : ''}</li>`;
+      return html`<li>${nombre} (año ${c.ciclo}), ${esAgua ? 'sequía' : 'calor'}: ${evento} tocaron «${c.etapa.nombre.toLowerCase()}» (días ${c.etapa.desdeDia} a ${c.etapa.hastaDia} después de sembrar el ${s.dia} de ${MESES[s.mes - 1]}) en ${c.aniosConCoincidencia} de ${c.aniosEvaluados} años; ${pct(c.proporcionDias)} de esos días en promedio.</li>`;
     });
   }
 
-  function porQue(e) {
+  function detalleTecnico(e) {
     const r = estado.r;
-    const tc = e.cobertura;
     return html`
-      <p style="font-weight:700;font-size:15px">Meses estimados con cultivo en pie: ${tc.meses} de ${tc.de}, de ${mesAnio(tc.ventana.desde)} a ${mesAnio(tc.ventana.hasta)}.</p>
-      <span class="fuente">Es una estimación por calendario: un mes cuenta si hay al menos ${tc.diasMinimos} días con algún cultivo en pie (dos cultivos el mismo día cuentan una vez). No mide cuánto cubre la planta ni el rastrojo.</span>
-      <span class="fuente"><strong>Calendario de este plan</strong> (si el maíz se siembra el ${r.escenario.siembraTexto})</span>
+      <span class="fuente"><strong>Fechas de este plan</strong> (si el maíz se siembra el ${r.escenario.siembraTexto})</span>
       ${calendarioPlan(e)}
-      <span class="fuente"><strong>El dato del clima</strong></span>
+      <span class="fuente"><strong>Clima en la etapa delicada</strong></span>
       <ul>${datoClimatico(e, 'agua')}${datoClimatico(e, 'calor')}</ul>
-      <span class="fuente">Mide lo que pasó otros años (exposición). No es la probabilidad de que el cultivo sobreviva, ni un rendimiento, ni un pronóstico del tiempo.</span>
-      ${e.esActual && e.declarados.length ? html`<span class="fuente"><strong>Lo que registraste:</strong> ${e.declarados.join(', ').toLowerCase()}${e.sinReglas.length ? `. El cálculo no cubre ${e.sinReglas.join(', ').toLowerCase()}: todavía no hay reglas de etapas para esos cultivos` : ''}.</span>` : ''}
-      ${e.beneficios.length ? html`<span class="fuente"><strong>El beneficio</strong></span><ul>${e.beneficios.map((x) => html`<li>${x}</li>`)}</ul>` : ''}
-      ${e.riesgos.length ? html`<span class="fuente"><strong>La contrapartida</strong></span><ul>${e.riesgos.map((x) => html`<li>${x}</li>`)}</ul>` : ''}
-      ${e.supuestos.length ? html`<span class="fuente"><strong>De dónde salen los supuestos</strong></span>
-        <ul>${e.supuestos.map((s) => html`<li><strong>${ESTADO_TXT[s.estado] || s.estado}</strong> (${s.campo}${s.fuente ? `; ${fuenteLegible(s.fuente)}` : ''}): ${s.nota}</li>`)}</ul>` : ''}
-      ${e.faltantes.map((x) => html`<span class="porconfirmar">Falta confirmar: ${x}</span>`)}
-      <span class="fuente"><strong>Fuentes:</strong></span>
+      <span class="fuente">Un mes cuenta «con cultivo» si hay al menos ${e.cobertura.diasMinimos} días con algo sembrado. Es lo que pasó otros años, no un pronóstico ni un rendimiento.</span>
+      ${e.beneficios.length ? html`<span class="fuente"><strong>Beneficios documentados</strong></span><ul>${e.beneficios.map((x) => html`<li>${x}</li>`)}</ul>` : ''}
+      ${e.riesgos.length ? html`<span class="fuente"><strong>Riesgos documentados</strong></span><ul>${e.riesgos.map((x) => html`<li>${x}</li>`)}</ul>` : ''}
+      ${e.supuestos.length ? html`<span class="fuente"><strong>De dónde sale cada supuesto</strong></span>
+        <ul>${e.supuestos.map((s) => html`<li><strong>${ESTADO_TXT[s.estado] || s.estado}</strong>${s.fuente ? ` (${fuenteLegible(s.fuente)})` : ''}: ${s.nota}</li>`)}</ul>` : ''}
+      ${e.faltantes.length ? html`<span class="fuente"><strong>Falta confirmar</strong></span><ul>${e.faltantes.map((x) => html`<li>${x}</li>`)}</ul>` : ''}
+      <span class="fuente"><strong>Fuentes</strong></span>
       <ul class="fuentes-lista">
-        ${r.clima ? html`<li>Clima: ${r.clima.via}, lluvia ${r.clima.lluvia} y temperatura máxima ${r.clima.temperatura}; ${r.clima.aniosCompletos} años completos (${r.clima.periodo.desde}–${r.clima.periodo.hasta}), corte ${r.clima.corte}. Punto de referencia de la zona ${r.zona.nombre}: ${r.clima.punto.lat}, ${r.clima.punto.lon}. Es un dato regional, no una medición en tu parcela.</li>` : ''}
-        ${e.fuentes.map((x) => html`<li>${x}</li>`)}
+        ${r.clima ? html`<li>Clima: ${r.clima.via}, lluvia ${r.clima.lluvia} y temperatura ${r.clima.temperatura}; ${r.clima.aniosCompletos} años completos (${r.clima.periodo.desde}–${r.clima.periodo.hasta}). ${r.origenClima === 'punto' ? `Punto de tu parcela: ${r.clima.punto.lat}, ${r.clima.punto.lon}.` : `Punto de referencia de la zona ${r.zona?.nombre || ''}.`}</li>` : ''}
+        ${e.fuentes.map((x) => html`<li>${fuenteLegible(x)}</li>`)}
       </ul>`;
   }
 
   function tarjeta(e, i) {
-    const t = textos(e);
+    const t = tx(e);
     const tc = e.cobertura;
     const abierta = estado.abiertas.has(e.id);
     const hablando = estado.hablando === e.id;
     const elegida = parcela().estrategiaElegida?.id === e.id;
-    const noApta = e.suelo.estado === 'no_recomendable';
-    return html`<article class="tarjeta opcion-est entra d${Math.min(i + 4, 7)}" data-actual="${e.esActual ? 'true' : 'false'}" data-mejor="${e.masMeses ? 'true' : 'false'}" aria-labelledby="op-${e.id}">
+    return html`<article class="tarjeta opcion-est entra d${Math.min(i + 3, 7)}" data-actual="${e.esActual ? 'true' : 'false'}" data-sugerida="${e.sugerida ? 'true' : 'false'}" aria-labelledby="op-${e.id}">
       <div class="fila fila--entre" style="align-items:flex-start;gap:8px">
         <div class="opcion-est__sellos">${sellos(e)}</div>
         ${hayHabla ? html`<button class="btn-escuchar" data-act="escuchar" data-id="${e.id}" aria-pressed="${presionado(hablando)}" aria-label="${hablando ? 'Detener' : `Escuchar: ${t.titulo}`}">${icono(hablando ? 'alto' : 'bocina', { tam: 20 })}<span>${hablando ? 'Detener' : 'Escuchar'}</span></button>` : ''}
@@ -252,68 +266,68 @@ function opciones(pantalla, id) {
         ${t.queEs ? html`<p class="opcion-est__que">${t.queEs}</p>` : ''}
       </div>
       ${franja24(tc)}
-      <p class="opcion-est__desnuda"><b>${tc.meses}</b><span>meses estimados con cultivo en pie<small>de ${tc.de} meses, ${mesAnioCorto(tc.ventana.desde)} a ${mesAnioCorto(tc.ventana.hasta)}; sin cultivo: ${tc.de - tc.meses}</small></span></p>
-      <div class="indicadores">${indicador(e, 'agua')}${indicador(e, 'calor')}</div>
-      <div class="gana-cuesta">
-        <span class="gana">${icono('check', { tam: 18, color: '#9fd97a' })}<span><small>Beneficio</small>${t.gana}</span></span>
-        <span class="cuesta">${icono('alerta', { tam: 18, color: '#ffd27a' })}<span><small>Contrapartida</small>${t.cuesta}</span></span>
-      </div>
-      ${noApta ? html`<span class="sello sello--no" style="align-self:flex-start">No recomendable en tu suelo</span>
-        <span class="porconfirmar">El INIFAP ubica ${e.suelo.cultivos.map((c) => catalogo.cultivo(c).name.toLowerCase()).join(', ')} en suelos rojos y profundos (k'ankab y yaax-hom). Tu parcela es ${estado.r.suelo.local?.nombre || 'de otro suelo'} (${estado.r.suelo.wrb}).</span>` : ''}
-      ${e.suelo.estado === 'sin_dato' ? html`<span class="porconfirmar">${estado.r.suelo.local ? `Reconocimos tu suelo como ${estado.r.suelo.local.nombre}, pero su equivalencia con una clase de suelo oficial falta confirmarla` : 'No sabemos el suelo de tu parcela'}: ${e.suelo.cultivos.map((c) => catalogo.cultivo(c).name.toLowerCase()).join(', ')} solo se recomienda en suelo rojo y profundo.</span>` : ''}
+      <p class="opcion-est__desnuda"><b>${tc.meses}</b><span>de ${tc.de} meses con cultivo en pie<small>Sin cultivo: ${tc.de - tc.meses} meses (rayados)</small></span></p>
+      ${cinco(e)}
       <div class="acordeon opcion-est__porque" data-abierto="${abierta ? 'true' : 'false'}">
         <button class="acordeon__boton" data-act="porque" data-id="${e.id}" aria-expanded="${abierta ? 'true' : 'false'}" aria-controls="pq-${e.id}">
-          ${icono('info', { color: '#9fd6db' })}<span class="crece" style="font-weight:700">¿Por qué?</span>${icono('abajo', { clase: 'acordeon__flecha', tam: 20 })}
+          ${icono('libro', { color: '#9fd6db' })}<span class="crece" style="font-weight:700">Fuentes y supuestos</span>${icono('abajo', { clase: 'acordeon__flecha', tam: 20 })}
         </button>
-        ${abierta ? html`<div class="acordeon__cuerpo justificacion" id="pq-${e.id}">${porQue(e)}</div>` : ''}
+        ${abierta ? html`<div class="acordeon__cuerpo justificacion" id="pq-${e.id}">${detalleTecnico(e)}</div>` : ''}
       </div>
       ${elegida ? html`<div class="columna" style="gap:8px">
-          <span class="fuente" role="status"><strong>Plan guardado en este dispositivo.</strong> Es tu plan para el ciclo ${parcela().estrategiaElegida.anioCiclo}; todavía no es una siembra registrada.</span>
+          <span class="fuente" role="status"><strong>Plan guardado en este teléfono</strong> para el ciclo ${parcela().estrategiaElegida.anioCiclo}. Todavía no es una siembra registrada.</span>
           <a class="btn btn--vidrio btn--bloque" href="#/inicio?cal=${parcela().estrategiaElegida.anioCiclo}-06">${icono('calendario')}Ver las fechas en el calendario</a>
           <button class="btn btn--texto" data-act="quitar">Quitar este plan</button>
         </div>`
-        : html`<button class="btn ${e.masMeses ? 'btn--dorado' : 'btn--vidrio'} btn--bloque" data-act="elegir" data-id="${e.id}">${icono('check')}${e.esActual ? 'Seguir con este plan' : 'Quiero explorar este plan'}</button>`}
+        : html`<button class="btn ${e.sugerida ? 'btn--dorado' : 'btn--vidrio'} btn--bloque" data-act="elegir" data-id="${e.id}">${icono('check')}${e.esActual && !esNueva() ? 'Seguir como hoy' : 'Quiero este plan'}</button>`}
     </article>`;
   }
 
+  /** Arriba: el tiempo que la tierra queda cubierta con cada estrategia, en un vistazo. */
   function resumenMeses() {
     const r = estado.r;
-    return html`<section class="tarjeta columna entra d3" style="gap:10px" aria-labelledby="tituloMeses">
-      <div class="fila fila--entre"><strong class="tarjeta__titulo" id="tituloMeses">Meses estimados con cultivo en pie</strong><span class="tarjeta__sub" style="font-size:12.5px">de ${r.ventana.meses} meses</span></div>
-      <div class="desnuda-grid">${r.principales.map((e) => html`<div class="desnuda-item" data-actual="${e.esActual ? 'true' : 'false'}" data-oculta="false">
-        <b>${e.cobertura.meses}</b><span>meses${e.esActual ? ', hoy' : ''}</span><small>${textos(e).titulo}</small>
+    return html`<section class="tarjeta columna entra d2" style="gap:10px" aria-labelledby="tituloMeses">
+      <div class="fila fila--entre"><strong class="tarjeta__titulo" id="tituloMeses">¿Cuánto tiempo queda cubierta tu tierra?</strong></div>
+      <div class="desnuda-grid">${r.principales.map((e) => html`<div class="desnuda-item" data-actual="${e.esActual ? 'true' : 'false'}" data-sugerida="${e.sugerida ? 'true' : 'false'}">
+        <b>${e.cobertura.meses}</b><span>de ${e.cobertura.de} meses</span><small>${tx(e).titulo}</small>
         ${franja24(e.cobertura, { chica: true })}
       </div>`)}</div>
-      <span class="fuente">Estimación por calendario para ${mesAnio(r.ventana.desde)} a ${mesAnio(r.ventana.hasta)}, si el maíz se siembra el ${r.escenario.siembraTexto}. Un mes cuenta con ${r.reglas.diasMinimosPorMes} días o más de cultivo en pie.</span>
+      <span class="fuente">De ${mesAnio(r.ventana.desde)} a ${mesAnio(r.ventana.hasta)}. Rayado = meses sin cultivo, cuando la tierra queda expuesta al sol y a la lluvia.</span>
     </section>`;
   }
 
-  function escenario() {
-    const r = estado.r;
-    return html`<section class="columna entra d2" style="gap:8px">
-      <div class="seccion"><span class="seccion__titulo">Escenario: ¿cuándo siembras el maíz?</span></div>
-      <div class="chips prioridades" role="group" aria-label="Fecha de siembra del maíz en el escenario">${r.escenario.opciones.map((o) => html`<button type="button" class="chip" data-act="siembra" data-id="${o.valor}" aria-pressed="${presionado(r.escenario.siembra === o.valor)}">${o.etiqueta}${o.esRegistrada ? ' (tu fecha)' : ''}</button>`)}</div>
-      <span class="fuente">${r.escenario.origen === 'registrada' ? 'Usamos la fecha de siembra que registraste.' : r.escenario.origen === 'plan' ? 'No hay fecha registrada: usamos la del plan de ejemplo.' : 'Estás probando otra fecha de siembra.'} Las demás fechas se mueven los mismos días. Cambia la fecha y los resultados se vuelven a calcular.</span>
-    </section>`;
+  /** El diagnóstico que explica el orden, en una línea, con enlace. */
+  function diagnosticoCorto() {
+    const d = estado.r.diagnostico;
+    const razones = fraseRazones(d.estado.razones, 2);
+    return html`<a class="diag-chip entra d1" href="#/diagnostico/${id}" style="--c:${d.estado.color}">
+      <img src="${letrero(d.estado.letrero)}" alt="">
+      <span class="columna crece" style="gap:1px"><small>Tu tierra</small><strong>${d.estado.corto}</strong>${razones ? html`<em>${razones}.</em>` : ''}</span>
+      ${icono('der', { color: '#f2cf7a', tam: 18 })}
+    </a>`;
+  }
+
+  function consejos() {
+    const notas = estado.r.diagnostico.sugerencia.notas;
+    if (!notas.length) return '';
+    return html`<div class="nota-papel entra d3"><span class="mano">Para cuidar tu tierra</span>
+      <ul style="margin:6px 0 0;padding-left:18px;font-size:15px;line-height:1.5">${notas.map((n) => html`<li>${n}</li>`)}</ul></div>`;
   }
 
   function avisos() {
     const r = estado.r;
-    const p = parcela();
     const out = [];
-    if (r.sinZona) out.push('Cobertura pendiente: tu parcela todavía no tiene una zona de clima asignada. Los meses con cultivo en pie se estiman por calendario; las rachas secas y el calor quedan «Sin estimación».');
-    if (r.fueraDeAmbito) out.push(`Tu parcela está en la zona ${r.zona.nombre.split(' (')[0]}. ${r.notaAmbito || ''} Toma estas fechas como referencia.`);
-    if (!r.sinZona && p.zonaDistanciaKm > 50) out.push(`El punto de clima de tu zona está a ${numero(p.zonaDistanciaKm, 0)} km de tu parcela: el clima es una referencia regional.`);
-    return out.map((x) => html`<span class="porconfirmar" style="padding:0 4px">${x}</span>`);
+    if (r.sinZona && !r.clima) out.push('Marca dónde está tu parcela para medir la sequía y el calor. Por ahora solo contamos los meses con cultivo.');
+    else out.push(textoOrigen(r.origenClima, r.zona));
+    if (r.fueraDeAmbito) out.push('Las fechas de siembra de estos planes se revisaron para el sur de Yucatán: en tu zona tómalas como referencia.');
+    return out.map((x) => html`<span class="fuente" style="padding:0 4px">${x}</span>`);
   }
 
   function pieDatos() {
     const d = estado.r.datos;
     const v = estado.r.versiones;
-    const origen = d.origen === 'servidor'
-      ? `Datos descargados del servidor de jaibaSpace el ${new Date(d.descargadoEn).toLocaleString('es-MX')} (paquete ${d.version}, ${d.verificacion === 'sha256' ? 'verificado con SHA-256' : 'verificado por tamaño'}) y guardados en este dispositivo.`
-      : 'Datos de la copia incluida en la app (respaldo local): no se ha podido descargar el paquete del servidor.';
-    return html`<span class="fuente" style="padding:0 4px" data-origen-datos="${d.origen}">Calculado en tu teléfono. ${origen} Planes v${v.planes}, reglas v${v.reglas}${v.clima ? `, clima formato v${v.clima}` : ''}.</span>`;
+    const origen = d.origen === 'servidor' ? `Datos del servidor de jaibaSpace (paquete ${d.version}).` : 'Datos de la copia incluida en la app.';
+    return html`<span class="fuente" style="padding:0 4px" data-origen-datos="${d.origen}">Calculado en tu teléfono. ${origen} Planes v${v.planes}, reglas v${v.reglas}.</span>`;
   }
 
   function pintarTodo() {
@@ -326,39 +340,28 @@ function opciones(pantalla, id) {
       ${fondo()}
       <div class="scroll" id="scrollOpc">
         <div class="entra d1" style="padding:0 4px">
-          <span class="hero__etiqueta">Próximos dos ciclos · ${p.nombre}</span>
-          <h1 class="titulo-grande">¿Qué siembro el próximo ciclo?</h1>${subrayado(220)}
-          <p class="texto-intro" style="margin-top:6px">Tres formas de sembrar ${p.nombre} cuando la tierra tiene poco tiempo para descansar.</p>
+          <span class="hero__etiqueta">Próximos dos años · ${p.nombre}</span>
+          <h1 class="titulo-grande">Tu plan de 2 años</h1>${subrayado(200)}
+          <p class="texto-intro" style="margin-top:6px">Tres formas de sembrar ${p.nombre}. Una la sugerimos por cómo está tu tierra; las otras dos son para comparar.</p>
         </div>
-
-        ${hayHabla && r ? html`<button class="btn btn--jade btn--bloque entra d1" data-act="escucharTodo" aria-pressed="${presionado(estado.hablando === 'todo')}">${icono(estado.hablando === 'todo' ? 'alto' : 'bocina')}${estado.hablando === 'todo' ? 'Detener' : 'Escuchar las opciones'}</button>` : ''}
-
-        <section class="tarjeta fila entra d2" style="gap:14px;align-items:center">
-          ${pila()}
-          <div class="columna" style="gap:4px"><strong class="tarjeta__titulo" style="font-size:16.5px">¿Qué comparamos?</strong>
-          <p style="font-size:14.5px;color:var(--txt-2);line-height:1.45">Cuántos meses hay cultivo en pie en dos años y qué tan seguido la sequía o el calor tocaron la etapa delicada del cultivo. No promete cosechas ni que la tierra se recupere.</p></div>
-        </section>
-
         ${estado.error ? html`<div class="tarjeta"><p><strong>No pudimos comparar las opciones.</strong></p><p class="ayuda">${estado.error}</p></div>`
           : !r ? html`<div class="tarjeta vacio"><p>Comparando el calendario y los años de lluvia y calor…</p></div>`
           : html`
-            ${escenario()}
+            ${diagnosticoCorto()}
+            ${hayHabla ? html`<button class="btn btn--jade btn--bloque entra d1" data-act="escucharTodo" aria-pressed="${presionado(estado.hablando === 'todo')}">${icono(estado.hablando === 'todo' ? 'alto' : 'bocina')}${estado.hablando === 'todo' ? 'Detener' : 'Escuchar las opciones'}</button>` : ''}
             ${resumenMeses()}
             ${avisos()}
-            <div class="seccion"><span class="seccion__titulo">Tus tres opciones</span><span class="seccion__nota">Tú decides cuál explorar</span></div>
-            ${r.principales.map((e, i) => tarjeta(e, i))}
-            ${r.secundarias.length ? html`<div class="seccion"><span class="seccion__titulo">Otra opción documentada</span><span class="seccion__nota">Material secundario</span></div>
+            ${r.principales.map((e, i) => html`${tarjeta(e, i)}${i === 0 ? consejos() : ''}`)}
+            ${r.secundarias.length ? html`<div class="seccion"><span class="seccion__titulo">Otra opción para vender</span><span class="seccion__nota">Material secundario</span></div>
               ${r.secundarias.map((e, i) => tarjeta(e, i + 3))}` : ''}
           `}
-
         <div class="nota-papel">
           <span class="mano">La decisión es tuya y de tu técnico</span>
-          <p style="margin-top:6px;font-size:15px;line-height:1.5">La app no decide por ti: compara. Platica estas opciones con alguien de confianza antes de sembrar.</p>
+          <p style="margin-top:6px;font-size:15px;line-height:1.5">La app sugiere con lo que pasó otros años; no promete cosechas. Platica estas opciones con alguien de confianza antes de sembrar.</p>
         </div>
-        ${avisoOjo('Ojo: esto viene de lo que pasó otros años', `Usamos la lluvia y el calor de ${r?.clima ? `${r.clima.periodo.desde} a ${r.clima.periodo.hasta}` : 'años anteriores'} en tu zona. No es un pronóstico: el próximo año puede ser distinto.`)}
         ${r ? pieDatos() : ''}
       </div>
-      ${cabeza({ titulo: 'Opciones para tu parcela', sub: `${p.nombre}, ${superficie(p.superficieM2, p.unidadCaptura)}`, atras: { act: 'volver' }, etiquetaAtras: 'Volver' })}
+      ${cabeza({ titulo: 'Tu plan de 2 años', sub: `${p.nombre}, ${superficie(p.superficieM2, p.unidadCaptura)}`, atras: { act: 'volver' }, etiquetaAtras: 'Volver' })}
     `);
     const sc2 = pantalla.querySelector('#scrollOpc');
     if (sc2) sc2.scrollTop = y;
@@ -382,7 +385,7 @@ function opciones(pantalla, id) {
       const si = b.dataset.id === cual;
       b.setAttribute('aria-pressed', presionado(si));
       const e = buscar(b.dataset.id);
-      b.setAttribute('aria-label', si ? 'Detener' : `Escuchar: ${e ? textos(e).titulo : ''}`);
+      b.setAttribute('aria-label', si ? 'Detener' : `Escuchar: ${e ? tx(e).titulo : ''}`);
       b.innerHTML = `${icono(si ? 'alto' : 'bocina', { tam: 20 })}<span>${si ? 'Detener' : 'Escuchar'}</span>`;
     });
     const todo = pantalla.querySelector('[data-act="escucharTodo"]');
@@ -400,40 +403,26 @@ function opciones(pantalla, id) {
     detenerVoz = decir(texto, { alFin: () => { if (vivo && estado.hablando === cual) marcarHablando(null); } });
   }
 
-  const fraseAgua = (e) => (e.agua.sinEstimacion
-    ? 'Sobre las rachas secas no hay estimación.'
-    : `En ${e.agua.aniosConCoincidencia} de ${e.agua.aniosEvaluados} años una racha seca tocó la etapa más delicada de ${evaluados(e.agua).join(' y ')}.`);
-
   function textoOpcion(e) {
-    const t = textos(e);
-    const tc = e.cobertura;
-    return [
-      `${t.titulo}.`, t.queEs,
-      `Con este plan habría cultivo en pie ${tc.meses} de ${tc.de} meses, estimado por calendario.`,
-      fraseAgua(e),
-      `El beneficio: ${t.gana}.`, `La contrapartida: ${t.cuesta}.`, t.alOido || '',
-    ].filter(Boolean).join(' ');
+    const t = tx(e);
+    return [`${t.titulo}.`, e.porQue, t.queEs, lineaDatos(e), `Qué gana tu tierra: ${t.gana}.`, `Revísalo con tu técnico: ${lineaTecnico(e)}`].filter(Boolean).join(' ');
   }
 
   function textoTodo() {
     const p = parcela();
     const r = estado.r;
+    const s = r.principales.find((e) => e.sugerida);
     return [
-      `Opciones para ${p.nombre}, si siembras el maíz el ${r.escenario.siembraTexto}.`,
-      ...r.principales.map((e) => `${textos(e).titulo}: cultivo en pie ${e.cobertura.meses} de ${e.cobertura.de} meses.`),
-      'Son estimaciones por calendario. Toca la bocina de cada opción para escucharla completa. La decisión es tuya y de tu técnico.',
-    ].join(' ');
+      `Tu tierra en ${p.nombre}: ${r.diagnostico.estado.corto.toLowerCase()}.`,
+      s ? `Te sugerimos: ${tx(s).titulo}. ${s.porQue}` : '',
+      ...r.principales.map((e) => `${tx(e).titulo}: tierra con cultivo ${e.cobertura.meses} de ${e.cobertura.de} meses.`),
+      'Toca la bocina de cada opción para escucharla completa. La decisión es tuya y de tu técnico.',
+    ].filter(Boolean).join(' ');
   }
 
   // ---------------- Acciones ----------------
   const quitar = delegar(pantalla, 'click', {
     volver: () => { if (history.length > 1) history.back(); else ir(`#/parcelas/${id}`); },
-    siembra: (el) => {
-      if (estado.r?.escenario.siembra === el.dataset.id) return;
-      detenerVoz?.();
-      estado.siembra = el.dataset.id;
-      cargar();
-    },
     porque: (el) => {
       const eid = el.dataset.id;
       if (estado.abiertas.has(eid)) estado.abiertas.delete(eid); else estado.abiertas.add(eid);
@@ -451,7 +440,7 @@ function opciones(pantalla, id) {
       detenerVoz?.();
       const p = parcela();
       const r = estado.r;
-      const t = textos(e);
+      const t = tx(e);
       // La elección vive SOLO en este dispositivo (IndexedDB). No crea temporada ni siembras y
       // no se encola como contribución: un plan no es un registro de lo que ya se sembró.
       const guardada = repos.parcelas.guardar({
@@ -460,6 +449,7 @@ function opciones(pantalla, id) {
           id: e.id,
           nombre: t.titulo,
           esPlantilla: e.esPlantilla,
+          eraSugerida: !!e.sugerida,
           anioCiclo: r.escenario.anioBase,
           siembraEscenario: r.escenario.siembra,
           meses: e.cobertura.meses,
@@ -473,7 +463,7 @@ function opciones(pantalla, id) {
       });
       registrarEvento(guardada, { tipo: 'estrategia_elegida', titulo: `Guardaste el plan: ${t.titulo}`, detalle: `Para el ciclo ${r.escenario.anioBase}. Es un plan, no una siembra registrada. La decisión es tuya y de tu técnico.` });
       repos.kv.set('parcelaActivaId', p.id);
-      avisar('Plan guardado en este dispositivo');
+      avisar('Plan guardado en este teléfono');
       pintarTodo();
     },
     quitar: () => {
@@ -485,7 +475,13 @@ function opciones(pantalla, id) {
     },
   });
 
+  // Si el clima del punto llega mientras la pantalla está abierta, se vuelve a calcular
+  const dejarDeOir = repos.alCambiar((que) => {
+    if (que !== 'parcelas' || !vivo || !estado.r) return;
+    if (parcela()?.climaPunto?.estado === 'listo' && estado.r.origenClima !== 'punto') cargar();
+  });
+
   pintarTodo();
   cargar();
-  return () => { vivo = false; quitar(); detenerVoz?.(); callar(); };
+  return () => { vivo = false; quitar(); dejarDeOir(); detenerVoz?.(); callar(); };
 }

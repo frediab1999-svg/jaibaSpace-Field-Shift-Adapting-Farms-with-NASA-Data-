@@ -7,6 +7,7 @@ import { fondo, cabeza, abrirHoja, confirmar } from '../layout.js';
 import * as repos from '../../storage/repos.js';
 import * as catalogo from '../../modules/crops/catalogo.js';
 import * as climaMod from '../../modules/climate/clima.js';
+import { climaDeParcela } from '../../modules/climate/climaPunto.js';
 import * as reglasMod from '../../modules/strategies/reglas.js';
 import * as temporadas from '../../modules/harvests/temporadas.js';
 import * as cola from '../../services/sync/cola.js';
@@ -344,8 +345,9 @@ export async function montar(pantalla, params) {
     const fin = repos.temporadas.todos().filter((t) => t.estado === 'finalizada');
     for (const t of fin) {
       const p = repos.parcelas.porId(t.parcelaId);
-      if (!p?.zonaId) continue;
-      const c = await climaMod.clima(p.zonaId);
+      if (!p) continue;
+      const { clima: c } = await climaDeParcela(p);
+      if (!c) continue;
       const o = climaMod.anioObservado(c, t.anio);
       if (o && o.completa) estado.nasa.set(t.id, { ...o, mediana: c.resumen.medianaLluviaVentanaMm });
     }
