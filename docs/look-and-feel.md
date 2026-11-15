@@ -38,11 +38,11 @@ Los avisos de error explican qué hacer: «Mueve el mapa hasta tu parcela, usa t
 | `--guinda` | `#7a2840` | Acento principal sobre crema: avatar, chip de fecha, pin del mapa, botón del micrófono activo |
 | `--guinda-2` | `#8f2d56` | Temporada, nodos, textos de acento en el Menú |
 | `--pitaya` | `#d81159` | Acción principal (`.btn--primario`), eventos de clima |
-| `--dorado` / `--dorado-2` | `#f2cf7a` / `#ffbc42` | Subrayados, etiquetas, flechas de navegación, sabucán |
+| `--dorado` / `--dorado-2` | `#f2cf7a` / `#ffbc42` | Subrayados, etiquetas, flechas de navegación, sello «Sugerida» |
 | `--jade` / `--jade-2` | `#17686e` / `#218380` | Barra del Menú, previsión, compartir |
 | `--jade-claro` | `#9fd6db` | Subtítulos de cabeza, datos históricos, foco de campos |
 | `--crema` / `--crema-2` | `#f3ead6` / `#fffaf0` | Selección (chips, segmentos), avatar, globos del mapa |
-| `--papel` / `--papel-2` | `#f6f0e2` / `#ece3cf` | Calendario, diálogos, sabucán, notas de papel |
+| `--papel` / `--papel-2` | `#f6f0e2` / `#ece3cf` | Calendario, diálogos, notas de papel |
 | `--tierra` | `#2c2418` | Texto sobre papel y fondo de la etiqueta de voz |
 | `--monte` | `#3e4631` | Fondo mientras carga la foto |
 
@@ -63,7 +63,7 @@ El color nunca va solo: siempre lo acompañan un letrero y una palabra.
 |---|---|---|---|
 | Clima | `#d81159` pitaya | Rachas de 5 o más días sin lluvia (< 1 mm) y episodios de 3 o más días a ≥ 35 °C del último año completo (`app/data/clima/*.json`, NASA POWER, corte 2025-12-31) | Histórico |
 | Previsión | `#218380` jade | Fecha de siembra registrada + etapas de `reglas.json`: inicio y fin de la etapa sensible, y cosecha estimada | Actual (tu siembra) |
-| Siembra y cosecha | `#e0a020` dorado | Siembras y cosechas registradas con día exacto, y apertura y cierre de la ventana de siembra (catálogo `seeds`) de lo que siembras o tienes en el sabucán | Actual / catálogo |
+| Siembra y cosecha | `#e0a020` dorado | Siembras y cosechas registradas con día exacto, y apertura y cierre de la ventana de siembra (catálogo `seeds`) de lo que siembras | Actual / catálogo |
 | Temporada | `#8f2d56` con fondo al 7 % y borde punteado | `listas.json → temporadasDelAnio` más la frecuencia histórica NASA del mes («28 de 28 años…») | Histórico |
 
 ### 3.4 Zonas agroclimáticas (`zonas.json`)
@@ -115,7 +115,7 @@ Caveat nunca se usa en datos ni en botones.
 
   Es la superficie por defecto en Parcelas, Predicción e Información.
 - **Vidrio claro** solo en el Menú (`.nodo__circulo`, cabeza crema). Ahí el fondo es la misma foto, muy desenfocada.
-- **Papel** (`--papel`) para lo que se lee con calma: calendario, diálogos y sabucán.
+- **Papel** (`--papel`) para lo que se lee con calma: calendario, diálogos y notas.
 - **Polaroid con cinta** (`.polaroid`) para fotos reales, con pie en Caveat y una rotación de ±2°.
 - **Nota de papel** (`.nota-papel`) para el consejo «Para platicar con tu técnico».
 - **Greca maya** crema bajo la cabeza de cada pantalla, en el Inicio y en el calendario (en terracota).
@@ -147,7 +147,7 @@ Caveat nunca se usa en datos ni en botones.
 | Chips | `.chip[aria-pressed]` | Selección simple o múltiple; la seleccionada va en crema |
 | Opciones grandes | `.opcion` | «Sí, ya se usó» o «No, es nueva» |
 | Opciones con letrero | `.opcion-letrero` | «¿Cómo te fue?»: Bien, Regular o Mal |
-| Hoja inferior | `abrirHoja()` | Oscura por defecto; `papel: true` para sabucán. Cierra con velo, ✕ o Esc |
+| Hoja inferior | `abrirHoja()` | Oscura por defecto; `papel: true` para hojas de lectura. Cierra con velo, ✕ o Esc |
 | Diálogo | `confirmar()` | Papel; acción peligrosa en guinda |
 | Aviso | `avisar()` | Toast dorado de 2.8 s, `role=status` |
 | Acordeón | `.acordeon` | Variables de Predicción y registros de Información |
@@ -207,8 +207,8 @@ Micro-interacciones de 150 a 300 ms. Las animaciones decorativas de bucle están
    - meses para explorar;
    - maqueta de la península con semáforo por zona;
    - tira de semillas y ficha con razones, fuente y «por confirmar»;
-   - botones «Al sabucán» y «Sembrar en…»;
-   - buscador abajo y sabucán (pendiente en el servidor).
+   - botón «Sembrar en…»;
+   - buscador abajo.
 4. **Tus parcelas:**
    - pestañas Mis parcelas e Historial;
    - formulario con preguntas que cambian según «¿Ya se sembró antes?»;

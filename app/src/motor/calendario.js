@@ -6,6 +6,7 @@
 import * as repos from '../storage/repos.js';
 import * as catalogo from '../modules/crops/catalogo.js';
 import * as climaMod from '../modules/climate/clima.js';
+import { climaDeParcela } from '../modules/climate/climaPunto.js';
 import * as reglasMod from '../modules/strategies/reglas.js';
 import { sumarDias, MESES, fechaPrecisionADate, fuenteLegible } from '../shared/format.js';
 
@@ -33,8 +34,7 @@ export async function mes(anio, mesN, { parcelaId = null } = {}) {
   const parcelas = repos.parcelasActivas();
   const activa = parcelas.find((p) => p.id === parcelaId) || parcelas[0] || null;
   // Sin parcela con zona no se asume ninguna: no hay clima que mostrar todavía.
-  const zona = climaMod.zonaPorId(activa?.zonaId) || null;
-  const clima = zona ? await climaMod.clima(zona.id) : null;
+  const { clima, zona, origen: origenClima } = activa ? await climaDeParcela(activa) : { clima: null, zona: null, origen: null };
   const eventos = new Map();
   const ini = new Date(anio, mesN - 1, 1);
   const fin = new Date(anio, mesN, 0);
@@ -96,11 +96,8 @@ export async function mes(anio, mesN, { parcelaId = null } = {}) {
     }
   }
 
-  // --- Ventanas de siembra del catálogo para lo que siembras o tienes en el sabucán ---
-  const interes = new Set([
-    ...repos.siembras.todos().filter((s) => !s.eliminadaEn).map((s) => s.semillaId).filter(Boolean),
-    ...(repos.kv.get('sabucan', []) || []),
-  ]);
+  // --- Ventanas de siembra del catálogo para lo que siembras ---
+  const interes = new Set(repos.siembras.todos().filter((s) => !s.eliminadaEn).map((s) => s.semillaId).filter(Boolean));
   const vistos = new Set();
   catalogo.semillas().filter((s) => interes.has(s.id) && s.ventanaSiembra).forEach((s) => {
     const clave = `${s.cultivoId}-${s.ventanaSiembra.desde}`;
@@ -117,6 +114,7 @@ export async function mes(anio, mesN, { parcelaId = null } = {}) {
     temporada: t ? { ...t, evidencia } : null,
     zona,
     clima,
+    origenClima,
     reglas,
     parcela: activa,
     frecuencia: frec,

@@ -1,7 +1,9 @@
 from typing import Literal
 
-from fastapi import APIRouter, Depends, Response
+from fastapi import APIRouter, Depends, Query, Response
 
+from app.core.errors import AppError
+from app.modules.climate.punto import ClimaPuntoService, PuntoFueraDeCobertura, clima_punto_service
 from app.modules.published.deps import published_service
 from app.modules.published.service import PublishedService, document_response
 
@@ -39,3 +41,21 @@ def get_dataset_content(
     """El archivo completo (temporadas, rachas secas, episodios de calor, fuentes y definiciones)."""
     row = service.climate_dataset(dataset_id)
     return document_response(service.document(row.doc_id))
+
+
+@router.get("/point", summary="Clima histórico del punto de una parcela (NASA POWER)")
+def get_point(
+    lat: float = Query(..., ge=-90, le=90),
+    lon: float = Query(..., ge=-180, le=180),
+    service: ClimaPuntoService = Depends(clima_punto_service),
+) -> dict[str, object]:
+    """Lluvia (GPM IMERG) y temperatura máxima (MERRA-2) de 1998 a 2025 para el punto,
+    resumidas en rachas secas y episodios de calor, con la forma de los archivos de zona.
+    No se guarda la ubicación: solo el resultado por celda redondeada a dos decimales."""
+    try:
+        return service.obtener(lat, lon)
+    except PuntoFueraDeCobertura as e:
+        raise AppError("point_out_of_coverage", str(e), 422) from e
+    except OSError as e:  # sin red, NASA no responde o tarda demasiado
+        mensaje = "No pudimos descargar el clima de la NASA para este punto."
+        raise AppError("nasa_power_unavailable", mensaje, 502) from e

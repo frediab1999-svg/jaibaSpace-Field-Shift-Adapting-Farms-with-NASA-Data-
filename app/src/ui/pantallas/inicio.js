@@ -14,6 +14,7 @@ import { hayVoz, escuchar, interpretar, decir, marcarEscucha } from '../voz.js';
 import { ir } from '../../app/router.js';
 import { avisar } from '../../app/estado.js';
 import { t } from '../../i18n/index.js';
+import { cargarEjemplo } from '../../modules/parcel/ejemplo.js';
 
 const deIsoCorta = (iso) => { const [, m, d] = iso.split('-').map(Number); return `${d} de ${MESES[m - 1]}`; };
 
@@ -132,7 +133,7 @@ export function montar(pantalla, params = {}) {
         <span>${n}</span><span class="cal__marcas">${tipos.map((tp) => html`<span style="background:${cal.TIPOS[tp].color}"></span>`)}</span>
       </button>`);
     }
-    const zonaTxt = datos.zona ? (NOMBRE_CORTO_ZONA[datos.zona.id] || datos.zona.nombre) : null;
+    const zonaTxt = datos.origenClima === 'punto' ? 'tu parcela' : datos.zona ? (NOMBRE_CORTO_ZONA[datos.zona.id] || datos.zona.nombre) : null;
     const frec = datos.frecuencia;
     const leyenda = [...tiposMes].filter((k) => cal.TIPOS[k]?.leyenda);
 
@@ -178,7 +179,7 @@ export function montar(pantalla, params = {}) {
   }
 
   function climaDelDia(datos, sel) {
-    if (!datos.zona || !datos.clima) {
+    if (!datos.clima) {
       const p = datos.parcela;
       return html`<div class="cal__clima cal__clima--falta">
         ${icono('pin', { color: '#7a2840', tam: 18 })}
@@ -187,7 +188,7 @@ export function montar(pantalla, params = {}) {
         <a class="btn btn--chico btn--primario" href="${p ? `#/parcelas/${p.id}/editar` : '#/parcelas/nueva'}">${p ? 'Completar ubicación' : 'Agregar mi parcela'}</a></span>
       </div>`;
     }
-    const zonaTxt = NOMBRE_CORTO_ZONA[datos.zona.id] || datos.zona.nombre;
+    const zonaTxt = datos.origenClima === 'punto' ? 'tu parcela' : (NOMBRE_CORTO_ZONA[datos.zona.id] || datos.zona.nombre);
     const umbral = datos.reglas.rachaRelevanteDias;
     const medido = sel.getFullYear() <= (datos.ultimoAnio || 0) ? diaMedido(datos.clima, sel.getFullYear(), sel.getMonth() + 1, sel.getDate()) : null;
     if (medido) {
@@ -321,23 +322,33 @@ export function montar(pantalla, params = {}) {
     });
   }
 
-  // Primera vez: antes de decir qué conviene sembrar, pedimos lo que hace falta para decirlo.
+  // Primera vez: una sola pantalla que lleva al cuestionario (o a uno de los dos casos de ejemplo).
   function hojaBienvenida() {
     abrirHoja(pantalla, {
-      titulo: 'Para recomendarte, primero tu parcela',
+      titulo: 'Cuidemos tu tierra',
       cuerpo: html`<div class="columna" style="gap:14px">
-        <p class="texto-intro">Sin saber dónde está tu milpa no podemos decirte si conviene sembrar. Con estos datos lo calculamos:</p>
-        <ul class="lista-requisitos">
-          <li>${icono('pin', { tam: 20 })}<span><strong>Dónde está</strong><em>Con tu ubicación o tu municipio sabemos tu zona y su clima (NASA, 1998 a 2025).</em></span></li>
-          <li>${icono('brote', { tam: 20 })}<span><strong>Qué siembras y cuándo</strong><em>Para ubicar las etapas delicadas del cultivo en el calendario.</em></span></li>
-          <li>${icono('info', { tam: 20 })}<span><strong>Tu tipo de suelo, si lo sabes</strong><em>Si no lo sabes, lo dejamos pendiente; no lo inventamos.</em></span></li>
-        </ul>
-        <a class="btn btn--primario btn--bloque" href="#/parcelas/nueva" data-r="cerrar">${icono('mas')}Registrar mi parcela</a>
-        <a class="btn btn--vidrio btn--bloque" href="#/parcelas" data-r="cerrar">Primero ver un ejemplo</a>
+        <p class="texto-intro">Te hacemos <strong>4 preguntas</strong> sobre tu parcela y te decimos qué sembrar los próximos 2 años para que tu tierra no se canse, con 28 años de clima de la NASA.</p>
+        <a class="btn btn--primario btn--bloque" href="#/parcelas/nueva" data-r="cerrar">${icono('brote')}Empezar</a>
+        <span class="etiqueta" style="margin-top:4px">O mira un ejemplo</span>
+        <div class="opciones-2">
+          <button type="button" class="opcion" data-r="ejemplo" data-id="ej-pablo"><strong>Pablo</strong><span>Su tierra ya está cansada</span></button>
+          <button type="button" class="opcion" data-r="ejemplo" data-id="ej-juan"><strong>Juan</strong><span>Empieza en tierra nueva</span></button>
+        </div>
         <button class="btn btn--texto" data-r="cerrar">Ahora no</button>
       </div>`,
       alMontar: (nodo, hoja) => {
-        nodo.addEventListener('click', (e) => { if (e.target.closest('[data-r="cerrar"]')) { repos.kv.set('bienvenidaVista', true); hoja.cerrar(); } });
+        nodo.addEventListener('click', async (e) => {
+          const ej = e.target.closest('[data-r="ejemplo"]');
+          if (ej) {
+            ej.disabled = true;
+            repos.kv.set('bienvenidaVista', true);
+            await cargarEjemplo();
+            hoja.cerrar();
+            ir(`#/diagnostico/${ej.dataset.id}`);
+            return;
+          }
+          if (e.target.closest('[data-r="cerrar"]')) { repos.kv.set('bienvenidaVista', true); hoja.cerrar(); }
+        });
       },
     });
   }

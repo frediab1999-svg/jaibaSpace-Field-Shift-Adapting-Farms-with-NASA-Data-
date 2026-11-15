@@ -63,3 +63,10 @@ export const conjuntosClimaticos = (zoneId, kind) => pedir('/climate/datasets', 
  */
 export const estadisticas = ({ zoneId, cropId, seasonYear }) =>
   pedir('/statistics', { params: { zone_id: zoneId, crop_id: cropId, season_year: seasonYear } });
+
+/**
+ * GET /api/v1/climate/point?lat=&lon= → documento de clima del punto (misma forma que clima/<zona>.json,
+ * con zona.id = "punto"). El servidor lo pide a NASA POWER y lo guarda en caché por celda (2 decimales).
+ * 422 point_out_of_coverage (fuera de la península) · 502 nasa_power_unavailable.
+ */
+export const climaPunto = (lat, lon) => pedir('/climate/point', { params: { lat, lon }, limiteMs: 90000 });

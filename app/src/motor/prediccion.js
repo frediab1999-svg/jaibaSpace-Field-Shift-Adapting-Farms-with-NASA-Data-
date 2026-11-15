@@ -5,8 +5,11 @@
 import * as repos from '../storage/repos.js';
 import * as catalogo from '../modules/crops/catalogo.js';
 import * as climaMod from '../modules/climate/clima.js';
+import { climaDeParcela } from '../modules/climate/climaPunto.js';
+import { diagnosticoDe } from '../modules/parcel/tierra.js';
+import { exposicionPorFecha } from './diagnostico.js';
+import { opcionesDeSiembra, fechaTexto } from './comparacion.js';
 import * as reglasMod from '../modules/strategies/reglas.js';
-import * as api from '../services/api/endpoints.js';
 import { siembrasActuales } from '../modules/parcel/parcelas.js';
 import { MESES, numero, sumarDias, fechaCorta } from '../shared/format.js';
 
@@ -163,25 +166,6 @@ function variableLluvia(clima) {
   };
 }
 
-async function variableEscenario(zonaId) {
-  const r = await climaMod.escenarios(zonaId);
-  if (r.items.length) {
-    const it = r.items[0];
-    return {
-      id: 'escenario', nombre: 'Clima que viene', icono: 'nube', nivel: 'sin_dato', tipo: 'actual',
-      frase: `Hay un escenario publicado (${it.scenario || it.source}, ${it.period_start}–${it.period_end}). El motor aún no lo interpreta.`,
-      justificacion: { parrafos: ['El servidor ya publica el conjunto, pero falta acordar cómo mostrarlo.'], lista: r.items.map((x) => `${x.source} ${x.scenario || ''} ${x.period_start}–${x.period_end}, versión ${x.version}`), fuente: 'GET /api/v1/climate/datasets?kind=projection', periodo: '', n: '', porConfirmar: ['Regla para traducir escenarios a señales (pendiente de aprobación).'] },
-    };
-  }
-  return {
-    id: 'escenario', nombre: 'Clima que viene', icono: 'nube', nivel: 'sin_dato', tipo: 'sin',
-    frase: r.conexion ? 'El servidor todavía no publica escenarios climáticos para tu zona.' : 'Sin conexión: no pudimos preguntar al servidor por escenarios.',
-    justificacion: {
-      parrafos: ['Los escenarios de clima futuro están aprobados para el producto, pero su fuente y periodo aún no se definen. Cuando existan, aparecerán aquí como escenario, nunca como pronóstico de cosecha.'],
-      lista: [], fuente: 'GET /api/v1/climate/datasets?zone_id=…&kind=projection', periodo: '', n: '', porConfirmar: ['Fuente, escenarios y periodos de proyección (Rol 2).'],
-    },
-  };
-}
 
 function variableSuelo(parcela, ventanas, reglas) {
   const s = parcela.tipoSueloId ? catalogo.suelos().find((x) => x.id === parcela.tipoSueloId) : null;
@@ -273,81 +257,89 @@ function variableOtrasMilpas(parcela, ventanas) {
   };
 }
 
-async function variableZona(zona, ventanas) {
-  const anio = new Date().getFullYear() - 1;
-  const crop = ventanas[0].cultivo.id;
-  let r = null;
-  let error = null;
-  try { r = await api.estadisticas({ zoneId: zona.id, cropId: crop, seasonYear: anio }); } catch (e) { error = e; }
-  const base = { id: 'zona', nombre: 'Productores de tu zona', icono: 'cosecha' };
-  if (error || !r) {
-    return { ...base, nivel: 'sin_dato', tipo: 'sin', frase: 'Sin conexión con el servidor: no pudimos traer lo que reportan en tu zona.', justificacion: { parrafos: ['Las estadísticas colectivas solo existen en el servidor y se calculan con contribuciones anónimas consentidas.'], lista: [], fuente: `GET /api/v1/statistics?zone_id=${zona.id}&crop_id=${crop}&season_year=${anio}`, periodo: String(anio), n: '', porConfirmar: [] } };
-  }
-  if (r.status === 'insufficient_sample') {
-    return { ...base, nivel: 'sin_dato', tipo: 'actual', frase: `Aún no hay suficientes registros de ${ventanas[0].cultivo.name.toLowerCase()} en ${climaMod.NOMBRE_CORTO_ZONA[zona.id] || zona.nombre} para ${anio}.`, justificacion: { parrafos: ['Para proteger a cada productor, el servidor solo publica resultados cuando hay un mínimo de registros (MIN_STATS_SAMPLE_SIZE, 10 por defecto).'], lista: [], fuente: 'GET /api/v1/statistics', periodo: String(anio), n: 'menos del mínimo', porConfirmar: [] } };
-  }
-  const val = (m) => r.items.find((i) => i.metric === `outcome_${m}_count`)?.value || 0;
-  const n = r.record_count || 0;
-  const malos = val('poor') / (n || 1);
+
+
+const ORDEN = { riesgo: 0, atencion: 1, bien: 2, sin_dato: 3 };
+const z2 = (n) => String(n).padStart(2, '0');
+
+/** Estado de la tierra como señal (sale del cuestionario: motor/diagnostico.js). */
+function variableTierra(parcela) {
+  const { estado } = diagnosticoDe(parcela);
+  const nivel = { nueva: 'bien', buena: 'bien', cansandose: 'atencion', cansada: 'riesgo' }[estado.id] || 'sin_dato';
   return {
-    ...base,
-    nivel: malos >= 0.5 ? 'riesgo' : malos >= 0.25 ? 'atencion' : 'bien',
-    tipo: 'actual',
-    frase: `En ${anio}, ${n} productores reportaron: ${val('good')} bien, ${val('regular')} regular y ${val('poor')} mal.`,
-    justificacion: { parrafos: [r.items[0]?.method || ''], lista: [], fuente: 'GET /api/v1/statistics (contribuciones consentidas)', periodo: String(anio), n: `${n} registros`, porConfirmar: [] },
+    id: 'tierra', nombre: 'Cómo está tu tierra', icono: 'semilla', nivel, tipo: estado.id === 'sin_dato' ? 'sin' : 'actual',
+    frase: estado.id === 'sin_dato' ? 'Contesta cómo está tu tierra para tomarla en cuenta.' : `${estado.nombre}${estado.razones.length ? `: ${estado.razones.slice(0, 2).join(' y ')}` : ''}.`,
+    justificacion: {
+      parrafos: ['Sale de lo que contestaste en el cuestionario y de las temporadas que has cerrado en la app.', estado.puntos != null ? `Suma ${estado.puntos} puntos con la regla de la app (3 o 4: se está cansando; 5 o más: cansada).` : ''].filter(Boolean),
+      lista: estado.razones, tituloLista: estado.razones.length ? 'Lo que cuenta' : '',
+      fuente: 'Tus respuestas y tu historial en este teléfono.', periodo: '', n: '',
+      porConfirmar: ['La regla de puntos falta validarla con técnicos de la zona.'],
+    },
   };
 }
 
-/** Referencia oficial (no pronóstico) cuando existe en planes.json. */
-async function referenciaMunicipal(zona, ventanas) {
-  if (!ventanas.some((v) => v.cultivo.id === 'maiz')) return null;
-  const planes = await reglasMod.planes();
-  const texto = planes.planes.flatMap((p) => p.riesgos).find((t) => /t\/ha/.test(t));
-  const m = texto && texto.match(/En (\S+) el maíz de temporal rindió ([\d.]+) t\/ha en (\d{4}) y ([\d.]+) t\/ha en (\d{4})/);
-  if (!m) return null;
-  // La cifra es de un municipio: solo se muestra en la zona cuyo punto de clima está en ese municipio
-  const municipio = catalogo.municipios().find((x) => x.zonaId === zona.id);
-  if (!municipio || municipio.name !== m[1]) return null;
-  return { lugar: m[1], a1: { t: Number(m[2]), anio: m[3] }, a2: { t: Number(m[4]), anio: m[5] }, fuente: 'F16 SADER/DGSIAP, Cierre de la Producción Agrícola 2024 y 2025 (maíz grano, temporal). Es el promedio del municipio, no de una parcela.' };
+/**
+ * Mejor fecha para sembrar el maíz en el punto de la parcela: en cuántos años una racha seca
+ * tocó la floración y el llenado de grano según la fecha (1 y 15 de cada mes de la ventana oficial).
+ */
+function fechasDeSiembra(cultivos, clima, reglas) {
+  const maiz = catalogo.semillas().find((s) => s.cultivoId === 'maiz' && s.ventanaSiembra);
+  if (!maiz) return null;
+  const propia = cultivos.lista.find((c) => c.cultivoId === 'maiz' && c.fecha?.mes);
+  const tuFecha = propia ? `${z2(propia.fecha.mes)}-${z2(propia.fecha.dia || 15)}` : null;
+  const opciones = opcionesDeSiembra({ ventana: maiz.ventanaSiembra, base: '06-15', registrada: tuFecha });
+  const r = exposicionPorFecha({ clima, reglas, fechas: opciones.map((o) => o.valor) });
+  if (!r.fechas.length) return null;
+  return {
+    ...r,
+    tuFecha,
+    tuFechaDeMes: !!propia && !propia.fecha.dia,
+    ventana: maiz.ventanaSiembra,
+    fuenteVentana: maiz.source || null,
+    fechas: r.fechas.map((f) => ({ ...f, etiqueta: fechaTexto(f.valor), esTuya: f.valor === tuFecha, esMejor: f.valor === r.mejor.valor })),
+  };
 }
-
-const ORDEN = { riesgo: 0, atencion: 1, bien: 2, sin_dato: 3 };
 
 export async function analizar(parcela) {
   await Promise.all([climaMod.zonas(), reglasMod.reglas()]);
   const reglas = reglasMod.reglasSync();
-  const zona = climaMod.zonaPorId(parcela.zonaId) || climaMod.zonaPorDefecto();
-  const clima = await climaMod.clima(zona.id);
+  const { clima, zona, origen } = await climaDeParcela(parcela);
   const cultivos = cultivosParaAnalizar(parcela);
+  const tierra = variableTierra(parcela);
+  if (!clima) {
+    return {
+      parcela, zona: null, origenClima: null, sinClima: true, cultivosOrigen: cultivos.origen, ventanas: [],
+      variables: [tierra], extras: [], fechas: null,
+      resumen: { aFavor: tierra.nivel === 'bien' ? 1 : 0, total: tierra.nivel === 'sin_dato' ? 0 : 1, nivel: tierra.nivel === 'sin_dato' ? 'atencion' : tierra.nivel, peor: null },
+      referencia: null, fuenteClima: null, generadoEn: new Date().toISOString(),
+    };
+  }
   const ventanas = cultivos.lista.map((c) => ventanaSensible(c, clima));
 
-  const variables = [
-    variableSequia(ventanas, clima, parcela, reglas),
-    variableCalor(ventanas, clima, reglas),
-    variableLluvia(clima),
-    await variableEscenario(zona.id),
-    variableSuelo(parcela, ventanas, reglas),
-    variablePlagas(parcela),
-    variableOtrasMilpas(parcela, ventanas),
-    await variableZona(zona, ventanas),
-  ].filter(Boolean);
+  // Lo principal: máximo tres señales (sequía y calor en la etapa delicada, y cómo está la tierra)
+  const variables = [variableSequia(ventanas, clima, parcela, reglas), variableCalor(ventanas, clima, reglas), tierra].filter((v) => v && v.nivel !== 'sin_dato');
+  // Lo demás solo se muestra si tiene dato, plegado
+  const extras = [variableLluvia(clima), variableSuelo(parcela, ventanas, reglas), variablePlagas(parcela), variableOtrasMilpas(parcela, ventanas)]
+    .filter((v) => v && v.nivel !== 'sin_dato');
 
-  const conDato = variables.filter((v) => v.nivel !== 'sin_dato');
-  const aFavor = conDato.filter((v) => v.nivel === 'bien').length;
-  const riesgos = conDato.filter((v) => v.nivel === 'riesgo').length;
-  const atenciones = conDato.filter((v) => v.nivel === 'atencion').length;
+  const aFavor = variables.filter((v) => v.nivel === 'bien').length;
+  const riesgos = variables.filter((v) => v.nivel === 'riesgo').length;
+  const atenciones = variables.filter((v) => v.nivel === 'atencion').length;
   const nivel = riesgos >= 2 ? 'riesgo' : riesgos || atenciones ? 'atencion' : 'bien';
-  const peor = conDato.slice().sort((a, b) => ORDEN[a.nivel] - ORDEN[b.nivel])[0];
+  const peor = variables.slice().sort((a, b) => ORDEN[a.nivel] - ORDEN[b.nivel])[0];
 
   return {
     parcela,
     zona,
+    origenClima: origen,
     zonaAsignada: !!parcela.zonaId,
     cultivosOrigen: cultivos.origen,
     ventanas,
     variables,
-    resumen: { aFavor, total: conDato.length, nivel, peor: peor ? { id: peor.id, nombre: peor.nombre, nivel: peor.nivel } : null },
-    referencia: await referenciaMunicipal(zona, ventanas),
+    extras,
+    fechas: fechasDeSiembra(cultivos, clima, reglas),
+    resumen: { aFavor, total: variables.length, nivel, peor: peor ? { id: peor.id, nombre: peor.nombre, nivel: peor.nivel } : null },
+    referencia: null,
     fuenteClima: climaMod.fuenteTexto(clima),
     generadoEn: new Date().toISOString(),
   };

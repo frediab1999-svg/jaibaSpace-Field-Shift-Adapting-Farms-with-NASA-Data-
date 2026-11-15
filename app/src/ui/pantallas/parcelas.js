@@ -1,6 +1,9 @@
 // TUS PARCELAS: lista, detalle con esquema del terreno, semillas (CRUD) e historial con motivos.
 import { html, pintar, delegar, presionado } from '../../shared/dom.js';
-import { IMG } from '../../shared/assets.js';
+import { IMG, letrero } from '../../shared/assets.js';
+import { diagnosticoDe } from '../../modules/parcel/tierra.js';
+import { PREGUNTAS } from '../../motor/diagnostico.js';
+import { textoOrigen, guardado as climaGuardado } from '../../modules/climate/climaPunto.js';
 import { icono, subrayado } from '../../shared/icons.js';
 import { fondo, cabeza, confirmar } from '../layout.js';
 import * as repos from '../../storage/repos.js';
@@ -148,6 +151,7 @@ function detalle(pantalla, params) {
     const suelo = p.tipoSueloId ? catalogo.suelos().find((s) => s.id === p.tipoSueloId) : null;
     const zona = climaMod.zonaPorId(p.zonaId);
     const prioridad = reglasMod.prioridades().find((x) => x.id === p.prioridad);
+    const diag = diagnosticoDe(p);
     const eventos = repos.historialDe(p.id).slice(0, 3);
     const t = repos.temporadaEnCurso(p.id);
     const dato = (etq, val) => html`<div class="fila fila--entre" style="align-items:flex-start;gap:16px;padding:8px 0;border-bottom:1px dashed rgba(255,255,255,.16)"><span class="tarjeta__sub" style="flex-shrink:0">${etq}</span><span style="text-align:right;font-weight:600;font-size:15px">${val}</span></div>`;
@@ -162,7 +166,12 @@ function detalle(pantalla, params) {
           <span class="tarjeta__sub" style="text-align:center">${ocupada ? (libre >= 1 ? `${superficie(ocupada)} sembradas, ${superficie(libre)} libres` : 'Toda la parcela está sembrada') : `${superficie(p.superficieM2, p.unidadCaptura)} sin sembrar todavía`}</span>
         </section>
 
-        ${p.foto ? html`<figure class="polaroid entra d3" style="width:260px;align-self:center"><img src="${p.foto}" alt="Foto de ${p.nombre}"><figcaption>${p.nombre}</figcaption></figure>` : ''}
+
+        <a class="diag-chip entra d2" href="#/diagnostico/${p.id}" style="--c:${diag.estado.color}">
+          <img src="${letrero(diag.estado.letrero)}" alt="">
+          <span class="columna crece" style="gap:1px"><small>Tu tierra</small><strong>${diag.estado.corto}</strong><em>Ver el diagnóstico</em></span>
+          ${icono('der', { color: '#f2cf7a', tam: 18 })}
+        </a>
 
         <section class="columna entra d3" style="gap:10px">
           <div class="seccion"><span class="seccion__titulo">Semillas de esta temporada</span><span class="seccion__nota">${t ? t.nombre : 'Sin temporada abierta'}</span></div>
@@ -188,21 +197,21 @@ function detalle(pantalla, params) {
           ${p.dimensiones ? dato('Medidas', `${numero(p.dimensiones.largoM, 0)} × ${numero(p.dimensiones.anchoM, 0)} m`) : ''}
           ${dato('Suelo', suelo ? (normalizar(p.sueloTexto).includes(normalizar(suelo.name)) ? `${suelo.name}${suelo.equivalenteWRB ? ` (${suelo.equivalenteWRB})` : ''}, ${suelo.descripcion.toLowerCase()}` : `${p.sueloTexto} (${suelo.name}${suelo.equivalenteWRB ? `, ${suelo.equivalenteWRB}` : ''})`) : p.sueloTexto ? `${p.sueloTexto} (sin reconocer)` : 'No lo sabemos')}
           ${dato('Lugar', p.municipioNombre ? `${p.origenMunicipio === 'declarado' ? 'En' : 'Cerca de'} ${p.municipioNombre}, ${p.estado}` : 'Sin ubicación')}
-          ${dato('Zona de clima', zona ? html`${climaMod.NOMBRE_CORTO_ZONA[zona.id]}${p.zonaDistanciaKm != null ? html`, a ${numero(p.zonaDistanciaKm, 1)} km del punto de clima (${zona.nombre.match(/\(([^)]+)\)/)?.[1] || ''})` : ', por tu municipio'}` : 'Cobertura pendiente: tu municipio todavía no tiene zona de clima')}
+          ${dato('Clima', climaGuardado(p.ubicacion) ? 'De tu punto (NASA POWER)' : zona ? `De referencia: ${climaMod.NOMBRE_CORTO_ZONA[zona.id]}` : 'Falta la ubicación')}
           ${dato('Ya se sembró antes', p.usadaAntes === true ? `Sí${p.aniosSeguidos ? `, ${catalogo.listas().aniosSeguidos.find((x) => x.id === p.aniosSeguidos)?.name.toLowerCase()}` : ''}` : p.usadaAntes === false ? `No, era ${catalogo.listas().usoPrevio.find((x) => x.id === p.usoPrevio)?.name.toLowerCase() || 'nueva'}` : 'Sin respuesta')}
-          ${dato('Lo que más te importa', prioridad?.name || 'Sin elegir')}
-          <span class="fuente" style="margin-top:8px">La zona se asigna con el punto de clima más cercano. Es una referencia regional, no una medición en tu parcela.</span>
+          ${dato('Lo que buscas', PREGUNTAS.objetivo.find((o) => o.id === p.objetivo)?.name || prioridad?.name || 'Sin elegir')}
+          <span class="fuente" style="margin-top:8px">${textoOrigen(climaGuardado(p.ubicacion) ? 'punto' : zona ? 'zona' : null, zona)}</span>
         </section>
 
-        <a class="tarjeta tarjeta--boton fila entra d4 tarjeta--opciones" href="#/opciones/${p.id}" style="text-decoration:none;gap:12px">
+        <a class="tarjeta tarjeta--boton fila entra d4" href="#/opciones/${p.id}" style="text-decoration:none;gap:12px">
           <img class="parche" src="${IMG.nodos.semillas}" alt="">
-          <div class="columna crece" style="gap:2px"><strong class="tarjeta__titulo">¿Qué siembro el próximo ciclo?</strong><span class="tarjeta__sub">${p.estrategiaElegida ? `Elegiste: ${p.estrategiaElegida.nombre}` : 'Para que tu tierra no se siga gastando'}</span></div>
+          <div class="columna crece" style="gap:2px"><strong class="tarjeta__titulo">Tu plan de 2 años</strong><span class="tarjeta__sub">${p.estrategiaElegida ? `Elegiste: ${p.estrategiaElegida.nombre}` : 'Para que tu tierra no se siga cansando'}</span></div>
           ${icono('der', { color: '#f2cf7a' })}
         </a>
 
         <a class="tarjeta tarjeta--boton fila entra d5" href="#/prediccion/${p.id}" style="text-decoration:none;gap:12px">
           <img class="parche" src="${IMG.iconos.nube}" alt="">
-          <div class="columna crece" style="gap:2px"><strong class="tarjeta__titulo">¿Cómo pinta esta parcela?</strong><span class="tarjeta__sub">Clima, sequías, plagas y tu historial</span></div>
+          <div class="columna crece" style="gap:2px"><strong class="tarjeta__titulo">¿Cuándo me conviene sembrar?</strong><span class="tarjeta__sub">La fecha que mejor aguantó la sequía en tu punto</span></div>
           ${icono('der', { color: '#f2cf7a' })}
         </a>
 
@@ -275,7 +284,7 @@ function detalle(pantalla, params) {
   });
 
   pintarTodo();
-  // ?sembrar=id o ?sembrar=id1,id2 (varias semillas a la vez, desde Semillas o el sabucán)
+  // ?sembrar=id o ?sembrar=id1,id2 (varias semillas a la vez, desde Semillas)
   const sembrarIds = (sembrarId || '').split(',').filter((x) => catalogo.semilla(x));
   if (sembrarIds.length) setTimeout(() => agregar(sembrarIds), 350);
   return () => { quitar(); };
