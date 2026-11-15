@@ -1,0 +1,16 @@
+# Solo entra a la imagen lo que copia el Dockerfile; esto evita subir basura o secretos al build.
+.git
+**/node_modules
+**/.venv
+**/__pycache__
+**/*.pyc
+**/.pytest_cache
+**/.ruff_cache
+**/*.egg-info
+app/dist
+app/.vite
+server/.env
+**/.env
+carpeta_hide
+data-pipeline/raw
+docs
