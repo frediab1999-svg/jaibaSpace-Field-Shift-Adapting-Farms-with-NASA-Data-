@@ -1,0 +1,89 @@
+@startuml
+title jaibaSpace - Casos de uso de la PWA multicultivo
+left to right direction
+skinparam packageStyle rectangle
+
+actor "Productor de temporal" as Productor
+actor "Tecnico o asesor" as Asesor
+actor "Administrador de datos" as Admin
+actor "Fuentes climaticas y publicas" as Fuentes
+
+rectangle "PWA JavaScript (telefono)" {
+  usecase "Consultar catalogos descargados" as Catalogos
+  usecase "Registrar parcela y ubicacion" as Parcela
+  usecase "Elegir cultivo y variedad" as Cultivo
+  usecase "Comparar opciones de manejo" as Comparar
+  usecase "Ver historial propio de cosechas" as Historial
+  usecase "Registrar siembra o cosecha" as Cosecha
+  usecase "Guardar cambios sin conexion" as Offline
+  usecase "Sincronizar cambios pendientes" as Sync
+  usecase "Consultar estadisticas por zona" as Estadisticas
+  usecase "Consultar escenarios climaticos" as Escenarios
+  usecase "Cambiar idioma: espanol o maya" as Idioma
+  usecase "Revisar fuentes, limites y datos faltantes" as Trazabilidad
+}
+
+rectangle "API FastAPI y servicios" {
+  usecase "Validar y recibir sincronizacion" as Recibir
+  usecase "Autorizar consulta de datos propios" as Autorizar
+  usecase "Calcular estadisticas agregadas" as Agregar
+  usecase "Servir catalogos, clima y escenarios" as Servir
+}
+
+database "PostgreSQL + PostGIS" as DB
+
+rectangle "Pipeline Python" {
+  usecase "Preparar clima historico y escenarios" as PipelineClima
+  usecase "Normalizar catalogos publicos y semillas" as PipelineCatalogos
+}
+
+Productor --> Parcela
+Productor --> Cultivo
+Productor --> Comparar
+Productor --> Historial
+Productor --> Cosecha
+Productor --> Estadisticas
+Productor --> Escenarios
+Productor --> Idioma
+Productor --> Trazabilidad
+Asesor --> Comparar
+Asesor --> Historial
+Asesor --> Estadisticas
+Asesor --> Trazabilidad
+Admin --> PipelineClima
+Admin --> PipelineCatalogos
+Fuentes --> PipelineClima
+Fuentes --> PipelineCatalogos
+
+Comparar .> Catalogos : <<include>>
+Comparar .> Trazabilidad : <<include>>
+Cosecha .> Offline : <<extend>>
+Parcela .> Offline : <<extend>>
+Sync .> Recibir : <<include>>
+Sync .> Autorizar : <<include>>
+Estadisticas .> Agregar : <<include>>
+Estadisticas .> Autorizar : <<include>>
+Escenarios .> Servir : <<include>>
+Catalogos .> Servir : <<extend>>
+Recibir --> DB
+Autorizar --> DB
+Agregar --> DB
+Servir --> DB
+PipelineClima --> DB : publica datos versionados
+PipelineCatalogos --> DB : publica catalogos validados
+
+note bottom of Offline
+  La PWA conserva borradores, catalogos y cola de cambios
+  en el dispositivo. La sincronizacion ocurre con conexion.
+end note
+
+note bottom of Estadisticas
+  Mostrar zona, periodo, cantidad de registros y limites.
+  No exponer parcelas o productores individuales.
+end note
+
+note bottom of Escenarios
+  Escenarios climaticos; no son pronosticos de cosecha.
+  Fuentes y escenarios deben quedar identificados.
+end note
+@enduml
