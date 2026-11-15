@@ -1,0 +1,16 @@
+{
+  "name": "jaibaspace-milpa-pwa",
+  "private": true,
+  "version": "0.1.0",
+  "description": "PWA offline-first de jaibaSpace: semillas de temporada, parcelas, predicción con datos NASA e historial de cosechas.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --port 5173 --host",
+    "build": "vite build",
+    "preview": "vite preview --port 5173",
+    "test": "node --test tests/motor.test.js tests/estrategias.test.js tests/climaDia.test.js"
+  },
+  "devDependencies": {
+    "vite": "^5.4.0"
+  }
+}

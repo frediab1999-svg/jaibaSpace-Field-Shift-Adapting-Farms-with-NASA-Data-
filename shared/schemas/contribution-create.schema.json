@@ -1,0 +1,93 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://jaibaspace.local/schemas/contribution-create",
+  "title": "ContributionCreate (POST /api/v1/contributions), copia de server/app/modules/contributions/schemas.py",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "submission_id",
+    "consent_id",
+    "zone_id",
+    "crop_id",
+    "season_year"
+  ],
+  "properties": {
+    "submission_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "consent_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "zone_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 80
+    },
+    "crop_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 80
+    },
+    "variety_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "maxLength": 100
+    },
+    "season_year": {
+      "type": "integer",
+      "minimum": 1900,
+      "maximum": 2200
+    },
+    "sowing_date": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date"
+    },
+    "harvest_date": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date"
+    },
+    "outcome": {
+      "enum": [
+        "good",
+        "regular",
+        "poor",
+        null
+      ]
+    },
+    "perceived_cause": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "maxLength": 120
+    },
+    "quantity": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "minimum": 0
+    },
+    "quantity_unit": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "maxLength": 40
+    },
+    "quantity_is_estimate": {
+      "type": "boolean",
+      "default": false
+    }
+  }
+}

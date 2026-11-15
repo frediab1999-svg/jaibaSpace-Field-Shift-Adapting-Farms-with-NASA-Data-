@@ -1,0 +1,77 @@
+{
+  "catalog": "crops",
+  "version": "0.1-prototipo",
+  "esEjemplo": true,
+  "nota": "Fixture del prototipo con la misma forma que GET /api/v1/catalogs/crops ({catalog, items, count}). La PWA lo usa mientras el servidor responda una lista vacía o no haya conexión. Los campos extra (nombreMaya, color, reglasId) se proponen al contrato.",
+  "items": [
+    {
+      "id": "maiz",
+      "name": "Maíz",
+      "nombreMaya": "Ixi'im",
+      "nombreCientifico": "Zea mays",
+      "color": "#f2b632",
+      "imagen": "semilla-maiz.jpg",
+      "reglasId": "maiz",
+      "source": "app/data/reglas.json v0.3 (FAO-56, FAO TM3, INIFAP 2026)",
+      "updated_at": "2026-11-14"
+    },
+    {
+      "id": "frijol",
+      "name": "Frijol",
+      "nombreMaya": "Bu'ul",
+      "nombreCientifico": "Phaseolus spp. / Vigna unguiculata",
+      "color": "#6b2f4a",
+      "imagen": "semilla-frijol.jpg",
+      "reglasId": null,
+      "source": null,
+      "porConfirmar": ["Etapas y sensibilidad del frijol (Rol 3)"],
+      "updated_at": "2026-11-14"
+    },
+    {
+      "id": "calabaza",
+      "name": "Calabaza",
+      "nombreMaya": "K'úum",
+      "nombreCientifico": "Cucurbita argyrosperma",
+      "color": "#e47a2e",
+      "imagen": "semilla-calabaza.jpg",
+      "reglasId": null,
+      "source": null,
+      "porConfirmar": ["Etapas y sensibilidad de la calabaza (Rol 3)"],
+      "updated_at": "2026-11-14"
+    },
+    {
+      "id": "chile",
+      "name": "Chile",
+      "nombreMaya": "Iik",
+      "nombreCientifico": "Capsicum chinense / C. annuum",
+      "color": "#c8202f",
+      "imagen": "semilla-chile.jpg",
+      "reglasId": null,
+      "source": null,
+      "porConfirmar": ["Etapas y sensibilidad del chile de temporal (Rol 3)"],
+      "updated_at": "2026-11-14"
+    },
+    {
+      "id": "canavalia",
+      "name": "Canavalia",
+      "nombreMaya": null,
+      "nombreCientifico": "Canavalia ensiformis",
+      "color": "#5d9e4b",
+      "imagen": "ico-semilla.jpg",
+      "reglasId": "canavalia",
+      "source": "app/data/reglas.json v0.3 (USDA-NRCS, FAO TM3)",
+      "updated_at": "2026-11-14"
+    },
+    {
+      "id": "soya",
+      "name": "Soya",
+      "nombreMaya": null,
+      "nombreCientifico": "Glycine max",
+      "color": "#c9a44a",
+      "imagen": "ico-semilla.jpg",
+      "reglasId": "soya",
+      "source": "app/data/reglas.json v0.3 (INIFAP 2026 pp. 77-78)",
+      "updated_at": "2026-11-14"
+    }
+  ]
+}

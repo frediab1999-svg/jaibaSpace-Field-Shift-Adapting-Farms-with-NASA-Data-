@@ -1,0 +1,49 @@
+services:
+  api:
+    build:
+      context: .
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      APP_HOST: 0.0.0.0
+      APP_PORT: 8000
+      # Archivos publicados que carga `python -m app.seed` (montados abajo, solo lectura)
+      PUBLISHED_DIR: /srv/jaibaspace/published
+      # Si existe el build de la PWA (app/dist), la API también la sirve en http://localhost:8000/
+      PWA_DIST_DIR: /srv/jaibaspace/published/dist
+    volumes:
+      # La fuente de los datos es el repositorio: zonas, clima, planes, reglas y catálogos
+      - ../app/data:/srv/jaibaspace/published/data:ro
+      # Perfil y parcelas ficticios de demostración
+      - ../app/fixtures:/srv/jaibaspace/published/fixtures:ro
+      # Build de la PWA (opcional): `npm run build` en app/ y luego `docker compose restart api`
+      - ../app/dist:/srv/jaibaspace/published/dist:ro
+    ports:
+      # 0.0.0.0 para que el celular llegue por la red local (http://IP-de-la-computadora:8000)
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  db:
+    image: postgis/postgis:16-3.4
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      # Solo desarrollo local. En producción, usar red privada/servicio gestionado y no publicar este puerto.
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+volumes:
+  postgres_data:

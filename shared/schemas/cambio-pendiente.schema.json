@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://jaibaspace.local/schemas/cambio-pendiente",
+  "title": "Cambio pendiente de sincronizar (RF-09)",
+  "type": "object",
+  "required": [
+    "id",
+    "tipoEntidad",
+    "entidadId",
+    "payload",
+    "estado"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "tipoEntidad": {
+      "enum": [
+        "consent",
+        "contribution"
+      ]
+    },
+    "entidadId": {
+      "type": "string"
+    },
+    "accion": {
+      "const": "POST"
+    },
+    "payload": {
+      "type": "object"
+    },
+    "estado": {
+      "enum": [
+        "pendiente",
+        "enviada",
+        "error"
+      ]
+    },
+    "intentos": {
+      "type": "integer"
+    },
+    "ultimoError": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "creadoEn": {
+      "type": "string"
+    },
+    "enviadoEn": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  }
+}
