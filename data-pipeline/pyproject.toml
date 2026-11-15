@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "jaibaspace-data-pipeline"
+version = "0.1.0"
+description = "Adquisición, validación y exportación reproducible de datos de jaibaSpace"
+readme = "README.md"
+requires-python = ">=3.12,<3.14"
+dependencies = []
+
+[project.scripts]
+jaibaspace-pipeline = "clima:main"
+
+[tool.setuptools]
+py-modules = [
+    "clima",
+    "pipeline_config",
+    "pipeline_errors",
+    "pipeline_io",
+    "pipeline_metadata",
+    "pipeline_version",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["sources", "sources.*", "normalize", "validate", "aggregate", "workflows", "publishers"]
+namespaces = false
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]

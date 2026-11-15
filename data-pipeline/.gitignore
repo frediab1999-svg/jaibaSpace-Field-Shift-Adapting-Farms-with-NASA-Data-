@@ -1,0 +1,16 @@
+# Variables locales; nunca subir credenciales.
+.env
+
+# Entorno y caché de Python.
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+
+# Respuestas originales e intermedias reproducibles.
+/raw/*
+!/raw/.gitkeep
+/staging/*
+!/staging/.gitkeep

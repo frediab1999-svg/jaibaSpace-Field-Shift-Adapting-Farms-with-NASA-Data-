@@ -1,0 +1,24 @@
+[paths]
+sites_file = "config/sites.json"
+raw_dir = "raw"
+staging_dir = "staging"
+exports_dir = "exports"
+
+[nasa_power]
+base_url = "https://power.larc.nasa.gov/api/temporal/daily/point"
+community = "AG"
+time_standard = "UTC"
+timeout_seconds = 180
+retries = 3
+
+[climate.historical]
+start_date = "2001-01-01"
+end_date = "2025-12-31"
+parameters = ["IMERG_PRECTOT", "T2M_MAX", "T2M_MIN"]
+
+[climate.summary]
+dry_day_threshold_mm = 1.0
+minimum_dry_streak_days = 10
+summary_window_start = "06-01"
+summary_window_end = "08-31"
+temperature_usage = "context_only_until_agronomic_rules_and_station_validation"

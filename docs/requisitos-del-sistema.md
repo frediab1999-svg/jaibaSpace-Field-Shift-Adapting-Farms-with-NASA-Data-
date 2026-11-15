@@ -41,7 +41,7 @@ El sistema apoya decisiones agrícolas de productores de temporal de la Penínsu
 |---|---|---|
 | RNF-01 — Offline primero | La interfaz y datos descargados funcionan sin conexión. | Se pueden abrir la app, consultar datos en caché y guardar registros pendientes en el dispositivo. |
 | RNF-02 — Sincronización segura | Los cambios se transmiten cuando hay conexión y autorización. | La API valida esquema y permiso; los errores no borran el registro local. |
-| RNF-03 — Prototipo sin login | El prototipo no crea cuentas ni expone historiales individuales en el servidor. | La API no tiene endpoints de lectura de parcelas/cosechas individuales; el historial personal queda en el dispositivo. |
+| RNF-03 — Prototipo sin login | El prototipo no crea cuentas ni expone historiales individuales en el servidor. | La API no tiene endpoints de lectura de parcelas/cosechas individuales; el historial queda disponible en el dispositivo y los registros autorizados se almacenan en servidor solo para agregación. |
 | RNF-04 — Privacidad geográfica | La ubicación se usa según la finalidad informada. | El producto muestra cuándo usa ubicación precisa y usa zona/municipio para agregación pública. |
 | RNF-05 — Calidad de agregados | No se publican grupos que permitan inferir registros individuales o que tengan cobertura insuficiente. | Se aplica un umbral mínimo configurable, definido antes de habilitar estadísticas públicas. |
 | RNF-06 — Trazabilidad | Resultados climáticos y catálogos son auditables. | Cada conjunto identifica fuente, fecha, versión, escenario y transformaciones pertinentes. |
@@ -68,7 +68,7 @@ La proyección climática puede requerir un pipeline y conjuntos de datos separa
 
 ## 6. Datos principales
 
-- Datos de parcela guardados localmente; contribuciones seudónimas con ubicación generalizada en servidor.
+- Datos e historial de parcela disponibles localmente; los registros autorizados de parcela y cosecha se almacenan también en el servidor con ubicación generalizada. No hay endpoints para recuperar registros individuales.
 - Cultivos, variedades, etapas y prácticas configurables.
 - Historial de siembra y cosecha con campos opcionales y unidades locales.
 - Consentimiento y finalidad de uso estadístico.
@@ -88,10 +88,10 @@ La proyección climática puede requerir un pipeline y conjuntos de datos separa
 
 1. Fuente, escenario, resolución y periodo de las proyecciones climáticas.
 2. Política de retención, exportación y eliminación de contribuciones seudónimas.
-4. Umbral mínimo para publicar estadísticas por zona y cultivo.
-5. Fuentes públicas concretas para semillas, variedades y datos territoriales.
-6. Alcance y revisión comunitaria del maya, incluyendo selección de variante y audios.
-7. Contrato API y modelo de base de datos versionado para el alcance multicultivo y sin login.
+3. Umbral mínimo para publicar estadísticas por zona y cultivo.
+4. Fuentes públicas concretas para semillas, variedades y datos territoriales.
+5. Alcance y revisión comunitaria del maya, incluyendo selección de variante y audios.
+6. Contrato API y modelo de base de datos versionado para el alcance multicultivo y sin login.
 
 ## 9. Trazabilidad con documentación relacionada
 

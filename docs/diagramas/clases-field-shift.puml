@@ -1,167 +1,243 @@
 @startuml
-title jaibaSpace - Modelo de dominio multicultivo
+title jaibaSpace - Modelo de dominio y persistencia del prototipo
+left to right direction
 hide methods
 skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
 
-class Parcela {
-  id: UUID
-  alias: String
-  ubicacion: Point
-  municipioId: String
-  sueloId: String
-  sincronizada: Boolean
+legend right
+  == Lectura del diagrama ==
+  Clases en «implementado» corresponden a modelos,
+  esquemas o servicios presentes en el repositorio.
+  Clases en «objetivo documentado» o «pendiente» representan
+  capacidades previstas que aún no están implementadas.
+  Las flechas punteadas indican referencia por identificador,
+  no una relación ORM o clave foránea existente.
+endlegend
+
+package "PWA / dispositivo (objetivo documentado)" {
+  class ParcelaLocal <<objetivo documentado>> {
+    alias: String
+    ubicacion: Point?
+    zonaId: String?
+    suelo: String?
+  }
+
+  class TemporadaLocal <<objetivo documentado>> {
+    cultivoId: String
+    variedadId: String?
+    seasonYear: Integer
+    sowingDate: Date?
+    harvestDate: Date?
+    outcome: good | regular | poor?
+    perceivedCause: String?
+    quantity: Decimal?
+    quantityUnit: String?
+    quantityIsEstimate: Boolean
+  }
+
+  class ColaSincronizacion <<objetivo documentado>> {
+    submissionId: UUID
+    estado: pendiente | enviada | error
+  }
+
+  class ConsentimientoLocal <<objetivo documentado>> {
+    consentId: UUID
+    finalidad: collective_statistics
+    otorgado: Boolean
+    noticeVersion: String
+    decidedAt: DateTime
+  }
 }
 
-class Consentimiento {
-  id: UUID
-  finalidad: String
-  otorgadoEn: DateTime
-  revocadoEn: DateTime
-  usarParaEstadistica: Boolean
+package "API / servidor (implementado)" {
+  class ConsentRecord <<SQLAlchemy>> {
+    consentId: UUID {PK}
+    purpose: String
+    granted: Boolean
+    noticeVersion: String
+    decidedAt: DateTime
+  }
+
+  class Contribution <<SQLAlchemy>> {
+    submissionId: UUID {PK}
+    consentId: UUID {FK}
+    zoneId: String
+    cropId: String
+    varietyId: String?
+    seasonYear: Integer
+    sowingDate: Date?
+    harvestDate: Date?
+    outcome: String?
+    perceivedCause: String?
+    quantity: Decimal?
+    quantityUnit: String?
+    quantityIsEstimate: Boolean
+    receivedAt: DateTime
+  }
+
+  class CatalogItem <<Pydantic DTO>> {
+    id: String
+    name: String
+    source: String?
+    updatedAt: String?
+  }
+
+  class ClimateDatasetInfo <<Pydantic DTO>> {
+    datasetId: String
+    zoneId: String
+    kind: historical | projection
+    source: String
+    scenario: String?
+    periodStart: Integer
+    periodEnd: Integer
+    resolution: String?
+    version: String
+    updatedAt: String
+  }
+
+  class StatisticsResponse <<Pydantic DTO>> {
+    status: available | insufficient_sample
+    zoneId: String
+    cropId: String
+    seasonYear: Integer
+    recordCount: Integer?
+    items: AggregateStatistic[]
+  }
+
+  class AggregateStatistic <<Pydantic DTO>> {
+    period: String
+    metric: String
+    value: Float
+    method: String
+    recordCount: Integer
+    updatedAt: String
+  }
 }
 
-class Cultivo {
-  id: String
-  nombreEs: String
-  nombreMaya: String
-  descripcion: String
-  fuentes: List
+package "Persistencia objetivo (documentación)" {
+  class ParcelaAutorizada <<pendiente>> {
+    parcelId: UUID
+    ubicacionGeneralizada: Point?
+    zoneId: String
+    soilId: String?
+  }
+
+  class ObservacionCosecha <<pendiente>> {
+    cropId: String
+    seasonYear: Integer
+    sowingDate: Date?
+    harvestDate: Date?
+    outcome: String?
+    quantity: Decimal?
+    quantityUnit: String?
+  }
+
+  class CatalogoGeografico <<pendiente>> {
+    id: String
+    nombre: String
+    geometria: Geometry?
+    version: String?
+  }
+
+  class EstadisticaPersistida <<pendiente>> {
+    zoneId: String
+    cropId: String
+    period: String
+    metric: String
+    value: Decimal
+    method: String
+    recordCount: Integer
+  }
 }
 
-class Variedad {
-  id: String
-  cultivoId: String
-  nombre: String
-  cicloDias: Integer
-  atributosDisponibles: Map
-  fuente: String
+package "Catálogos y reglas (objetivo documentado)" {
+  class Cultivo <<catálogo>> {
+    id: String
+    nombre: String
+    fuente: String?
+  }
+
+  class Variedad <<catálogo>> {
+    id: String
+    nombre: String
+    atributosDisponibles: Map
+    fuente: String?
+  }
+
+  class EstrategiaManejo <<reglas configurables>> {
+    id: String
+    objetivo: String
+    secuencia: List
+    criterios: List
+    beneficios: List
+    riesgos: List
+  }
 }
 
-class EtapaCultivo {
-  id: String
-  nombre: String
-  desdeDia: Integer
-  hastaDia: Integer
-  sensibilidadAgua: String
-  sensibilidadCalor: String
+package "Datos publicados por pipeline (objetivo documentado)" {
+  class ConjuntoClimatico <<artefacto versionado>> {
+    datasetId: String
+    zoneId: String
+    kind: historical | projection
+    source: String
+    scenario: String?
+    periodStart: Integer
+    periodEnd: Integer
+    resolution: String?
+    version: String
+    updatedAt: String
+  }
 }
 
-class EstrategiaManejo {
-  id: UUID
-  cultivoPrincipalId: String
-  objetivo: String
-  secuencia: List
-  criterios: List
-  beneficios: List
-  riesgos: List
-  porConfirmar: List
-}
+ConsentRecord "1" <-- "0..*" Contribution : consentId
+ParcelaAutorizada "1" *-- "0..*" ObservacionCosecha : historial autorizado
+CatalogoGeografico "1" <-- "0..*" ParcelaAutorizada : zona
+ObservacionCosecha ..> EstadisticaPersistida : fuente de agregación
+Contribution ..> Cultivo : cropId
+Contribution ..> Variedad : varietyId
+ParcelaLocal "1" *-- "0..*" TemporadaLocal : historial local
+TemporadaLocal ..> Cultivo : cultivoId
+TemporadaLocal ..> Variedad : variedadId
+TemporadaLocal "1" ..> "0..1" ColaSincronizacion : envío autorizado
+ConsentimientoLocal ..> ColaSincronizacion : habilita envío
+ColaSincronizacion ..> Contribution : POST de contribución
+ConsentimientoLocal ..> ConsentRecord : POST de consentimiento
+Cultivo "1" <-- "0..*" Variedad
+Cultivo ..> EstrategiaManejo : reglas aplicables
+ConjuntoClimatico ..> ClimateDatasetInfo : metadatos expuestos
+Contribution ..> StatisticsResponse : consulta agregada por zona/cultivo/año
+StatisticsResponse *-- "0..*" AggregateStatistic
+CatalogItem ..> Cultivo : forma genérica de respuesta de catálogo
 
-class RegistroTemporada {
-  id: UUID
-  parcelaId: UUID
-  ciclo: Integer
-  fechaSiembra: Date
-  fechaCosecha: Date
-  resultadoCualitativo: String
-  causaPercibida: String
-  esEjemplo: Boolean
-  creadoEn: DateTime
-}
-
-class CantidadCosechada {
-  valor: Decimal
-  unidadLocal: String
-  conversionKg: Decimal
-  esEstimacion: Boolean
-}
-
-class Semilla {
-  id: String
-  cultivoId: String
-  variedadId: String
-  disponibilidad: String
-  zonaId: String
-  fuente: String
-  fechaActualizacion: Date
-}
-
-class ZonaAgroclimatica {
-  id: String
-  nombre: String
-  geometria: Polygon
-  puntoRepresentativo: Point
-}
-
-class ConjuntoClimatico {
-  id: UUID
-  zonaId: String
-  tipo: String
-  fuente: String
-  escenario: String
-  periodoInicio: Integer
-  periodoFin: Integer
-  resolucion: String
-  version: String
-  fechaActualizacion: Date
-}
-
-class EstadisticaAgregada {
-  id: UUID
-  zonaId: String
-  cultivoId: String
-  periodo: String
-  nRegistros: Integer
-  metrica: String
-  valor: Decimal
-  metodo: String
-  calculadaEn: DateTime
-}
-
-class Usuario {
-  id: UUID
-  idiomaPreferido: String
-  creadoEn: DateTime
-}
-
-class CambioPendiente {
-  id: UUID
-  tipoEntidad: String
-  entidadId: UUID
-  accion: String
-  creadoEn: DateTime
-  estado: String
-}
-
-Usuario "1" o-- "0..*" Parcela : administra
-Parcela "1" *-- "0..*" RegistroTemporada : historial
-Parcela "1" *-- "0..*" Consentimiento : permisos
-RegistroTemporada "1" *-- "0..1" CantidadCosechada : cantidad opcional
-RegistroTemporada "*" --> "1" Cultivo : corresponde a
-RegistroTemporada "*" --> "0..1" Variedad : usa
-Cultivo "1" *-- "1..*" EtapaCultivo : define etapas
-Cultivo "1" *-- "0..*" Variedad : tiene variedades
-Cultivo "1" <-- "0..*" EstrategiaManejo : aplica a
-Cultivo "1" <-- "0..*" Semilla : catalogo
-Parcela "*" --> "1" ZonaAgroclimatica : se asigna a
-ZonaAgroclimatica "1" *-- "0..*" ConjuntoClimatico : contiene
-ZonaAgroclimatica "1" *-- "0..*" EstadisticaAgregada : publica agregados
-Cultivo "1" <-- "0..*" EstadisticaAgregada : agrupa por cultivo
-Usuario "1" o-- "0..*" CambioPendiente : cola local
-
-note right of Parcela
-  La ubicacion precisa se mantiene bajo controles
-  de acceso y consentimiento. Para estadisticas se
-  usa una unidad geografica agregada.
+note bottom of Contribution
+  Implementación actual persistida en PostgreSQL.
+  Aún no incluye parcelaId ni geometría; esa ampliación
+  corresponde al modelo objetivo pendiente.
 end note
 
-note right of ConjuntoClimatico
-  Historico y proyeccion son tipos distintos.
-  Guardar fuente, escenario, periodo y version.
+note right of ParcelaAutorizada
+  La documentación establece el almacenamiento
+  de parcelas autorizadas. El contrato debe definir
+  precisión, consentimiento y relación con Contribution.
+  La API no expondrá lectura individual.
 end note
 
-note bottom of EstadisticaAgregada
-  Publicar solo agregados que superen un umbral
-  minimo de registros, pendiente de definicion.
+note bottom of ConsentRecord
+  El servidor registra la declaración de consentimiento.
+  No hay identidad de usuario ni revocación implementada.
 end note
+
+note bottom of StatisticsResponse
+  Las estadísticas se calculan desde contribuciones al consultar;
+  la respuesta actual no se guarda como tabla.
+  La persistencia de resultados agregados pertenece
+  a la arquitectura objetivo y está pendiente.
+end note
+
+note bottom of ClimateDatasetInfo
+  DTO disponible; no equivale a una tabla de conjuntos climáticos.
+  El servidor aún no persiste ni publica artefactos del pipeline.
+end note
+
 @enduml

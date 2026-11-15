@@ -1,0 +1,87 @@
+@startuml
+title jaibaSpace - Registro local y sincronización consentida
+autonumber
+hide footbox
+
+actor Productor
+participant "PWA" as PWA
+database "Almacenamiento local\n(IndexedDB, objetivo)" as Local
+participant "API FastAPI" as API
+database "PostgreSQL" as DB
+
+note over PWA,Local
+  El historial y la cola local son requisitos documentados;
+  la PWA todavía no tiene implementación en el repositorio.
+end note
+
+Productor -> PWA: Captura temporada
+PWA -> Local: Guarda borrador e historial local
+Local --> PWA: Temporada guardada
+PWA --> Productor: Confirma guardado local
+
+Productor -> PWA: Decide sobre uso en estadísticas
+PWA -> Local: Guarda decisión, consentId y noticeVersion
+
+alt Rechaza
+  PWA -> Local: Conserva temporada solo en el dispositivo
+  PWA --> Productor: No se envía contribución
+else Acepta
+  PWA -> Local: Crea submissionId y encola consentimiento y temporada
+  alt Hay conexión
+    PWA -> API: POST /api/v1/consent\n(consentId, purpose, granted, noticeVersion, decidedAt)
+    API -> DB: Inserta ConsentRecord
+    DB --> API: ConsentRecord guardado
+    API --> PWA: 201 consentId y granted
+  else Sin conexión
+    Local --> PWA: Consentimiento y temporada pendientes
+    PWA --> Productor: Se enviarán al recuperar conexión
+    ... La PWA detecta que volvió la conexión ...
+    PWA -> API: POST /api/v1/consent\n(consentId, purpose, granted, noticeVersion, decidedAt)
+    API -> DB: Inserta ConsentRecord
+    DB --> API: ConsentRecord guardado
+    API --> PWA: 201 consentId y granted
+  end
+
+  PWA -> API: POST /api/v1/contributions\n(submissionId, consentId, zona, cultivo, temporada)
+  API -> DB: Valida consentimiento y busca submissionId
+  DB --> API: ConsentRecord y resultado de búsqueda
+  alt Consentimiento válido y envío nuevo
+    API -> DB: Inserta Contribution
+    DB --> API: Contribution guardada
+    API --> PWA: accepted
+  else submissionId ya recibido
+    API --> PWA: already_received
+  else Consentimiento ausente o no autorizado
+    API --> PWA: 403 consent_required
+  end
+
+  alt Envío accepted o already_received
+    PWA -> Local: Marca solicitud como enviada
+  else La API rechaza o no responde
+    PWA -> Local: Conserva temporada y marca error para reintento
+  end
+end
+
+... En otra consulta, cualquier usuario puede solicitar un agregado ...
+Productor -> PWA: Consulta estadísticas por zona, cultivo y año
+PWA -> API: GET /api/v1/statistics\n(zone_id, crop_id, season_year)
+API -> DB: Cuenta y agrupa contribuciones
+DB --> API: Conteo y resultados autorreportados
+alt Muestra menor al umbral configurado
+  API --> PWA: insufficient_sample, sin resultados
+else Muestra suficiente
+  API --> PWA: available, método, periodo y cantidad de registros
+end
+PWA --> Productor: Muestra agregado o indica muestra insuficiente
+
+note right of DB
+  El servidor persiste consentimientos y contribuciones.
+  No persiste parcelas ni expone historiales individuales.
+  Los agregados se calculan al consultar; no se guardan como tabla.
+end note
+
+note over PWA,API
+  El submissionId permite deduplicar reintentos.
+  Un fallo de red conserva el registro local para reintentar.
+end note
+@enduml

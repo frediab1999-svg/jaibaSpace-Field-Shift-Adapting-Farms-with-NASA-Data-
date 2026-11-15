@@ -19,9 +19,9 @@ Las fuentes concretas para proyecciones y semillas, la retención de datos y el 
 ## Principios de arquitectura
 
 1. **Offline primero:** la PWA permite consultar datos previamente descargados y registrar información local aunque no haya conexión.
-2. **Sincronización posterior:** las contribuciones autorizadas se envían a la API cuando hay conexión; el historial de uso permanece en el dispositivo.
-3. **Sin login en el prototipo:** no hay cuentas ni endpoints para recuperar parcelas individuales desde el servidor. La API recibe solo contribuciones destinadas a agregación, con consentimiento.
-4. **Separar dato individual de estadística:** el servidor calcula y publica estadísticas colectivas, sin ofrecer consulta de parcelas o historiales individuales.
+2. **Sincronización posterior:** con conexión, los registros de parcela y cosecha autorizados se sincronizan y se almacenan en el servidor; el dispositivo conserva la copia local y el historial para uso offline.
+3. **Sin login en el prototipo:** no hay cuentas ni endpoints para recuperar parcelas o historiales individuales. El servidor almacena los registros autorizados, pero la API expone estadísticas colectivas por zona y periodo.
+4. **Separar dato individual de estadística:** los registros individuales almacenados se usan para calcular estadísticas colectivas; la API no ofrece consulta de parcelas o historiales individuales.
 5. **Catálogos configurables:** cultivos, variedades, etapas, semillas y estrategias se modelan como datos, no como supuestos fijos del código.
 6. **Trazabilidad:** cada conjunto climático o catálogo conserva fuente, fecha, versión y limitaciones.
 7. **Escenarios, no certezas:** una proyección climática identifica escenario, periodo y fuente, y no se expresa como rendimiento garantizado.
@@ -96,13 +96,13 @@ La estructura es una propuesta lógica; no exige crear todos los directorios des
 |---|---|---|
 | PWA | Captura, comparación disponible localmente, consulta de datos descargados y presentación | Sí, con datos previamente sincronizados |
 | IndexedDB | Borradores de parcela, historial local, catálogos y cola de cambios | Sí |
-| API FastAPI | Recibir contribuciones seudónimas consentidas; servir catálogos, proyecciones y estadísticas colectivas | No; la PWA conserva funciones locales |
-| PostgreSQL/PostGIS | Guardar contribuciones para agregación y consultar relaciones espaciales y agregados; no contiene cuentas del prototipo | No |
+| API FastAPI | Recibir y validar registros autorizados de parcelas y cosechas; servir catálogos, proyecciones y estadísticas colectivas | No; la PWA conserva funciones locales |
+| PostgreSQL/PostGIS | Almacenar parcelas autorizadas, observaciones de cosecha, catálogos geográficos y resultados agregados; no contiene cuentas del prototipo | No |
 | Pipeline Python | Descargar, normalizar y versionar clima, escenarios y catálogos | Se ejecuta fuera del flujo del usuario |
 
 ## Entidades que deberá contemplar el contrato nuevo
 
-- **Contribución de parcela:** identificador aleatorio de envío, zona o ubicación generalizada, suelo conocido, cultivo y consentimiento. Es seudónima, no es una cuenta ni habilita recuperar un expediente individual.
+- **Contribución de parcela:** registro autorizado con identificador de envío, ubicación o zona, suelo conocido, cultivo y consentimiento. Se almacena para generar agregados; es seudónimo, no es una cuenta ni habilita consultar un expediente individual mediante la API.
 - **Cultivo y variedad:** catálogo extensible con etapas, calendario y fuentes.
 - **Estrategia:** cultivos, secuencia o asociación, objetivo, reglas y limitaciones.
 - **Registro de temporada/cosecha:** fechas aproximadas, cultivo, resultado cualitativo, causa y cantidad opcional con unidad local.
@@ -135,4 +135,4 @@ Los campos desconocidos deben poder omitirse. Una respuesta subjetiva se almacen
 5. Incorporar fuentes verificadas para semillas y escenarios climáticos.
 6. Añadir español y maya con revisión humana y probar el flujo sin conexión.
 
-La prioridad es entregar incrementos utilizables y explicables. El historial personal permanece local en el prototipo. El usuario puede autorizar una contribución para estadísticas colectivas; estas no deben mostrar grupos tan pequeños que permitan inferir un registro individual. El umbral se define antes de publicar agregados.
+La prioridad es entregar incrementos utilizables y explicables. El historial permanece disponible localmente en el dispositivo; los registros de parcela y cosecha autorizados también se almacenan en el servidor para calcular estadísticas colectivas. La API no expone expedientes individuales. Las estadísticas no deben mostrar grupos tan pequeños que permitan inferir un registro; el umbral se define antes de publicar agregados.

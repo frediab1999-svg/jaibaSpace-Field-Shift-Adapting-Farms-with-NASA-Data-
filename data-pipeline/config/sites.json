@@ -1,0 +1,109 @@
+{
+  "schema_version": "1.0.0",
+  "site_id_policy": "Los IDs locales son slugs estables derivados del municipio y se mantienen en este catálogo.",
+  "period": {
+    "start": "2001-01-01",
+    "end": "2025-12-31"
+  },
+  "sites": [
+    {
+      "id": "uman-demo",
+      "municipality": "Umán",
+      "state": "Yucatán",
+      "zone_id": "noroeste-yuc",
+      "latitude": 20.91791,
+      "longitude": -89.75,
+      "mvp_reference": true
+    },
+    {
+      "id": "valladolid-demo",
+      "municipality": "Valladolid",
+      "state": "Yucatán",
+      "zone_id": "oriente-yuc",
+      "latitude": 20.72597,
+      "longitude": -88.20417,
+      "mvp_reference": false
+    },
+    {
+      "id": "tizimin-demo",
+      "municipality": "Tizimín",
+      "state": "Yucatán",
+      "zone_id": "oriente-yuc",
+      "latitude": 21.19208,
+      "longitude": -88.16861,
+      "mvp_reference": false
+    },
+    {
+      "id": "tekax-demo",
+      "municipality": "Tekax",
+      "state": "Yucatán",
+      "zone_id": "sur-puuc-yuc",
+      "latitude": 20.24097,
+      "longitude": -89.29111,
+      "mvp_reference": false
+    },
+    {
+      "id": "oxkutzcab-demo",
+      "municipality": "Oxkutzcab",
+      "state": "Yucatán",
+      "zone_id": "sur-puuc-yuc",
+      "latitude": 20.31654,
+      "longitude": -89.36758,
+      "mvp_reference": false
+    },
+    {
+      "id": "hopelchen-demo",
+      "municipality": "Hopelchén",
+      "state": "Campeche",
+      "zone_id": "los-chenes-camp",
+      "latitude": 19.78197,
+      "longitude": -89.844,
+      "mvp_reference": true
+    },
+    {
+      "id": "escarcega-demo",
+      "municipality": "Escárcega",
+      "state": "Campeche",
+      "zone_id": "sur-camp",
+      "latitude": 18.64397,
+      "longitude": -90.745,
+      "mvp_reference": false
+    },
+    {
+      "id": "candelaria-demo",
+      "municipality": "Candelaria",
+      "state": "Campeche",
+      "zone_id": "sur-camp",
+      "latitude": 18.22197,
+      "longitude": -91.047,
+      "mvp_reference": false
+    },
+    {
+      "id": "felipe-carrillo-puerto-demo",
+      "municipality": "Felipe Carrillo Puerto",
+      "state": "Quintana Roo",
+      "zone_id": "zona-maya-qroo",
+      "latitude": 19.61297,
+      "longitude": -88.045,
+      "mvp_reference": true
+    },
+    {
+      "id": "bacalar-demo",
+      "municipality": "Bacalar",
+      "state": "Quintana Roo",
+      "zone_id": "sur-qroo",
+      "latitude": 18.71397,
+      "longitude": -88.392,
+      "mvp_reference": false
+    },
+    {
+      "id": "muna-demo",
+      "municipality": "Muna",
+      "state": "Yucatán",
+      "zone_id": "sur-puuc-yuc",
+      "latitude": 20.52597,
+      "longitude": -89.75,
+      "mvp_reference": false
+    }
+  ]
+}

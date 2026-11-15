@@ -1,0 +1,35 @@
+[historical_climate]
+kind = "historical"
+source = "NASA POWER Daily API"
+source_url = "https://power.larc.nasa.gov/api/temporal/daily/point"
+time_standard = "UTC"
+limitations = "Once puntos de demostración en siete zonas; no equivalen a mediciones dentro de cada parcela. La temperatura es descriptiva hasta validar reglas agronómicas con estaciones."
+
+[historical_climate.parameters.precipitation]
+code = "IMERG_PRECTOT"
+product = "GPM IMERG"
+unit = "mm/day"
+resolution_approx = "0.1 degrees (~10 km)"
+
+[historical_climate.parameters.maximum_temperature]
+code = "T2M_MAX"
+product = "MERRA-2"
+unit = "C"
+resolution_approx = "0.5 x 0.625 degrees (~50 km)"
+
+[historical_climate.parameters.minimum_temperature]
+code = "T2M_MIN"
+product = "MERRA-2"
+unit = "C"
+resolution_approx = "0.5 x 0.625 degrees (~50 km)"
+
+[climate_projections]
+configured = false
+source = ""
+scenario = ""
+note = "La fuente, los escenarios y los períodos deben seleccionarse antes de procesar proyecciones."
+
+[seed_catalogs]
+configured = false
+source = ""
+note = "No hay una fuente de semillas confirmada en la documentación vigente."

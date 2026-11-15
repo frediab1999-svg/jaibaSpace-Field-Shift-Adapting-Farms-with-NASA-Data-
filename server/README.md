@@ -2,6 +2,8 @@
 
 Servidor FastAPI para el prototipo multicultivo de jaibaSpace. Esta versión no tiene login ni cuentas. Recibe contribuciones seudónimas para estadísticas colectivas; el historial personal permanece en el dispositivo.
 
+La arquitectura objetivo, definida en [`../docs/contexto-general-proyecto.md`](../docs/contexto-general-proyecto.md), contempla almacenar en PostgreSQL/PostGIS parcelas autorizadas, observaciones de cosecha, catálogos geográficos y resultados agregados. La implementación actual es parcial: la migración solo crea tablas de consentimiento y contribuciones; todavía no persiste parcelas, geometrías, catálogos ni resultados agregados.
+
 ## Requisitos
 
 - Python 3.12 o 3.13, según el rango de `pyproject.toml`.
@@ -34,12 +36,12 @@ alembic upgrade head
 uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
-La migración habilita la extensión PostGIS y crea las tablas de consentimiento y contribuciones. Aunque PostGIS ya está habilitado, todavía no hay una columna espacial ni almacenamiento de geometrías para parcelas.
+La migración habilita la extensión PostGIS y crea las tablas de consentimiento y contribuciones. El almacenamiento de parcelas y geometrías previsto en la arquitectura todavía no está implementado.
 
 ## Principios del prototipo
 
 - No hay endpoints de login ni de lectura de parcelas o historiales individuales.
-- Las contribuciones se envían solo con autorización para uso estadístico.
+- Los registros de parcelas y cosechas autorizados se almacenarán en el servidor para generar estadísticas; la implementación actual recibe contribuciones para ese fin.
 - Los endpoints de estadísticas devuelven agregados por zona, cultivo y periodo.
 - Un identificador de envío sirve para deduplicación; no autentica ni identifica una cuenta.
 - Los datos del pipeline y los escenarios deben exponer fuente, periodo y versión.
