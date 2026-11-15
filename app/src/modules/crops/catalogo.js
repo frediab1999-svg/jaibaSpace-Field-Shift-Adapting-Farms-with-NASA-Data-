@@ -1,23 +1,16 @@
-// Catálogos de cultivos, variedades y semillas.
-// 1) Intenta GET /api/v1/catalogs/{nombre}. 2) Si el servidor no responde o responde vacío,
-// usa el fixture de app/data/catalogos (marcado esEjemplo) y lo dice en pantalla.
-import * as api from '../../services/api/endpoints.js';
-import { json } from '../../shared/datos.js';
+// Catálogos de cultivos, semillas, suelos, municipios y listas de captura.
+// Salen del paquete que publica FastAPI (GET /api/v1/catalogs/{nombre}, descargado por
+// services/contenido.js) o, si nunca se pudo descargar, del respaldo local de
+// app/data/catalogos. Los catálogos siguen marcados esEjemplo: son del prototipo.
+import { json, origenDatos } from '../../shared/datos.js';
 import { normalizar } from '../../shared/format.js';
 
 const estado = { crops: null, seeds: null, listas: null, soils: null, municipios: null, origen: {} };
 
 async function cargarCatalogo(nombre) {
-  try {
-    const r = await api.catalogo(nombre);
-    if (r && Array.isArray(r.items) && r.items.length) {
-      estado.origen[nombre] = 'servidor';
-      return r.items;
-    }
-  } catch { /* sin conexión: usamos el fixture */ }
-  const local = await json(`catalogos/${nombre}.json`);
-  estado.origen[nombre] = 'ejemplo';
-  return local.items;
+  const doc = await json(`catalogos/${nombre}.json`);
+  estado.origen[nombre] = doc.esEjemplo ? 'ejemplo' : origenDatos().origen;
+  return doc.items;
 }
 
 export async function cargar() {
@@ -25,7 +18,7 @@ export async function cargar() {
     cargarCatalogo('crops'),
     cargarCatalogo('seeds'),
     json('catalogos/listas.json'),
-    json('catalogos/soils.json'), // catálogo propuesto: el servidor aún no lo publica
+    json('catalogos/soils.json'),
     json('catalogos/municipios.json'),
   ]);
   Object.assign(estado, { crops, seeds, listas, soils: soils.items, municipios: municipios.items });
@@ -124,10 +117,10 @@ export function viabilidad(s, { mes, dia = 15, zona = null, reglas = null }) {
   // Aptitud del suelo predominante de la zona (zonas.json + reglas.json)
   const c = cultivo(s.cultivoId);
   if (zona && reglas && c.reglasId) {
+    // zonas.json nombra los suelos con la clave WRB de reglas.json (leptosol, luvisol), no con el nombre local
     const aptitudes = (zona.suelosPredominantes || [])
-      .map((id) => suelos().find((x) => x.id === id))
-      .filter((x) => x && x.reglasId && reglas.suelos[x.reglasId])
-      .map((x) => ({ suelo: x, apt: reglas.suelos[x.reglasId].aptitud?.[c.reglasId] }))
+      .filter((id) => reglas.suelos[id]?.aptitud)
+      .map((id) => ({ suelo: { name: reglas.suelos[id].equivalenteWRB || id }, apt: reglas.suelos[id].aptitud[c.reglasId] }))
       .filter((x) => x.apt);
     if (aptitudes.length) {
       const mejor = aptitudes.sort((a, b) => rangoApt(b.apt) - rangoApt(a.apt))[0];

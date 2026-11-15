@@ -332,3 +332,26 @@ Consultadas el 2026‑11‑15. Las páginas son las impresas en cada documento.
 4. **DGSIAP:** filtrar el CSV por `Idestado` 31 e `Idmunicipio` 79 (Tekax), ciclo «Primavera-Verano», modalidad «Temporal» (2). Valor por hectárea = `Valorproduccion` ÷ `Cosechada`.
 5. **Ubicación:** prueba de punto en polígono (*ray casting*) contra la geometría de F03.
 6. Los scripts de cálculo (Python estándar, sin dependencias) se hicieron fuera del repositorio. Comprueban que cada ciclo dure lo mismo que sus etapas, y se pueden pasar a `data-pipeline/`.
+
+---
+
+## Adenda del 2026-11-15: `planes.json` 0.4 y la opción intercalada
+
+Esta sección no es parte del informe del Rol 3. La agregó la implementación de la primera versión funcional (`docs/decisiones/0002-primera-version-funcional.md`) y queda **para revisión del Rol 3**.
+
+- **Formato 0.4.** Un ciclo puede tener varios cultivos: `{ numero, cultivos: [{ cultivo, siembra, fin, tipoFin, proposito, supuesto }] }`. `tipoFin` es `cosecha` o `fin_cobertura`. Los ciclos de un cultivo del formato 0.3 siguen siendo válidos; en ellos, la fecha `cosecha` de un ciclo con propósito `cobertura` se trata como fin de la cobertura.
+- **Plan nuevo `milpa-canavalia`** (`escenarioIlustrativo`): maíz Sac Beh del 15-jun al 12-nov y canavalia del 15-jul al 29-nov, en el mismo ciclo, los dos años. El prototipo de pantalla ya la mostraba; faltaba en `planes.json`.
+- **Sus dos fechas no están medidas en Tekax.** La siembra a 30 días es `pendiente_validacion_campo`. El fin aplica la regla de este informe para la canavalia sola: corte al empezar a florecer, 137 días después de sembrarla (F09). No se usa la permanencia «hasta marzo».
+- **Resultado con esas fechas:** 12 meses con cultivo en pie de 24, frente a 10 de `actual` y 10 de `cobertura`. La exposición a rachas secas y calor es la del maíz (25 de 28 años; 21.1 %); la canavalia queda «Sin estimación» porque no tiene etapa sensible.
+- **El motor no usa** `pesosPorPrioridad`, `niveles` ni los atributos `fijacionNitrogeno` e `ingresoForraje` en la pantalla. Siguen en los archivos.
+- **`ambito.zonas = ["yuc-sur"]`** en `planes.json` declara que las fechas y etapas se revisaron para Tekax.
+- **Suelos.** `catalogos/soils.json` marca la equivalencia k'ankab y yaax-hom → Luvisol como `verificado_fuente` (F01, p. 75) y la de tsek'el → Leptosol como `pendiente_validacion`, de acuerdo con la sección 9 de este informe.
+
+Fuentes agregadas (consultadas el 2026-11-15; solo se revisaron los resúmenes disponibles en línea, no los artículos completos):
+
+- **F24.** Ayala Sánchez, A., Krishnamurthy, L. y Basulto Graniel, J. A. *Leguminosas de cobertera para mejorar y sostener la productividad de maíz en el sur de Yucatán.* Terra Latinoamericana 27(1): 63–69. Sur de Yucatán; *Canavalia ensiformis* y *Mucuna pruriens* asociadas al maíz (variedad Blanco Uxmal) o en barbecho corto. Al inicio perjudicaron el desarrollo y el rendimiento del maíz asociado o rotado; hacia el cuarto año se observó un beneficio en grano. Ficha: https://biblat.unam.mx/en/revista/terra-latinoamericana-edo-de-mex/articulo/leguminosas-de-cobertera-para-mejorar-y-sostener-la-productividad-de-maiz-en-el-sur-de-yucatan
+- **F25.** Castillo-Caamal, J. B. y Caamal-Maldonado, J. A. (2011). *Efecto de la fecha de siembra del frijol terciopelo (Mucuna sp.) como cultivo de cobertera en el rendimiento de maíz.* Tropical and Subtropical Agroecosystems 14: 101–108. Yucatán. **Especie: Mucuna, no canavalia.** Siembra simultánea con el maíz: −59 % de grano; a los 20 días: −25 %. Revista de la Universidad Autónoma de Yucatán (revista.ccba.uady.mx); falta fijar el enlace exacto del artículo.
+- **F26.** Programa regional de maíz de Centroamérica (PCCMCA), documento del MAG de Costa Rica: canavalia sembrada 30 días después del maíz, sin efecto en el rendimiento del maíz. **Ensayos fuera de Yucatán.** Falta fijar la referencia bibliográfica exacta (año, autores y página).
+
+Estas tres fuentes no son oficiales de Yucatán. Si el Rol 3 decide que la opción intercalada no debe publicarse con ellas, basta con quitar el plan `milpa-canavalia` de `planes.json`: la pantalla compara los planes que estén publicados.
+

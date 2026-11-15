@@ -16,26 +16,6 @@ export const TIPOS = {
   temporada: { nombre: 'Temporada', color: '#8f2d56', icono: 'calendario', leyenda: 'Temporada' },
 };
 
-// Fechas de cada opción (planes.json y plan «Nuevo enfoque»). anio: 0 = año del ciclo, 1 = el siguiente.
-const FECHAS_PLAN = {
-  'milpa-canavalia': [
-    { fecha: '06-15', texto: 'Sembrar el maíz', detalle: 'Al entrar las lluvias, hasta el 15 de julio (INIFAP).' },
-    { fecha: '07-15', texto: 'Sembrar la canavalia entre el maíz', detalle: 'Unos 30 días después del maíz para que no compita con él. El día exacto, por confirmar con tu técnico.' },
-    { fecha: '11-05', texto: 'Cosecha estimada del maíz', detalle: 'La canavalia se queda tapando la tierra.' },
-    { fecha: '03-31', anio: 1, texto: 'La canavalia deja de cubrir', detalle: 'Fecha de referencia para preparar la siguiente siembra.' },
-  ],
-  cobertura: [
-    { fecha: '06-15', texto: 'Sembrar la canavalia (año de descanso)', detalle: 'Este año no hay maíz: la canavalia recarga la tierra. La semilla no se come.' },
-    { fecha: '03-31', anio: 1, texto: 'La canavalia deja de cubrir', detalle: 'Fecha de referencia.' },
-    { fecha: '06-15', anio: 1, texto: 'Volver a sembrar maíz', detalle: 'Segundo año de la opción.' },
-  ],
-  'otro-grano': [
-    { fecha: '06-15', texto: 'Sembrar la soya', detalle: 'Ventana del INIFAP: 15 de junio a 15 de julio. Solo variedades convencionales.' },
-    { fecha: '10-08', texto: 'Cosecha estimada de la soya', detalle: '115 días para Huasteca 300.' },
-    { fecha: '06-15', anio: 1, texto: 'Volver a sembrar maíz', detalle: 'Segundo año de la opción.' },
-  ],
-};
-
 const dia = (iso) => { const [a, m, d] = iso.split('-').map(Number); return new Date(a, m - 1, d); };
 
 function agregar(mapa, d, evento) {
@@ -52,7 +32,7 @@ export async function mes(anio, mesN, { parcelaId = null } = {}) {
   const reglas = reglasMod.reglasSync();
   const parcelas = repos.parcelasActivas();
   const activa = parcelas.find((p) => p.id === parcelaId) || parcelas[0] || null;
-  const zona = climaMod.zonaPorId(activa?.zonaId) || climaMod.zonaPorId('yuc-noroeste');
+  const zona = climaMod.zonaPorId(activa?.zonaId) || climaMod.zonaPorDefecto();
   const clima = await climaMod.clima(zona.id);
   const eventos = new Map();
   const ini = new Date(anio, mesN - 1, 1);
@@ -126,14 +106,16 @@ export async function mes(anio, mesN, { parcelaId = null } = {}) {
     }
   }
 
-  // --- Opción elegida en «Opciones para tu parcela» (fechas del plan, por confirmar) ---
+  // --- Plan elegido en «Opciones para tu parcela» ---
+  // Las fechas las calculó el motor (motor/estrategias.js) con planes.json y se guardaron con la
+  // elección. Son estimaciones del plan: no son un registro de que ya se sembró.
   for (const p of parcelas) {
     const el = p.estrategiaElegida;
-    const marcas = el ? (FECHAS_PLAN[el.id] || []) : [];
-    for (const m of marcas) {
-      const [mm, dd] = m.fecha.split('-').map(Number);
-      const d = new Date(el.anioCiclo + (m.anio || 0), mm - 1, dd);
-      if (dentro(d)) agregar(eventos, d, { tipo: 'siembra', texto: `${m.texto} (${p.nombre})`, detalle: `${m.detalle} Es la opción que elegiste: ${el.nombre}.`, dato: 'plan' });
+    for (const m of el?.marcas || []) {
+      const d = dia(m.fecha);
+      if (!dentro(d)) continue;
+      const tipoTxt = m.tipo === 'fin_cobertura' ? 'Fin estimado de la cobertura: no es una cosecha.' : m.tipo === 'cosecha' ? 'Cosecha estimada con los días de ciclo de las reglas.' : 'Fecha de siembra del escenario.';
+      agregar(eventos, d, { tipo: 'siembra', texto: `${m.texto} (${p.nombre})`, detalle: `${tipoTxt} ${m.supuesto ? `${m.supuesto} ` : ''}Viene del plan que guardaste: ${el.nombre}. Todavía no es una siembra registrada.`, dato: 'plan' });
     }
   }
 

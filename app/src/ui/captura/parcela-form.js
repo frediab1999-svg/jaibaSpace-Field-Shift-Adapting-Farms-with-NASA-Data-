@@ -128,6 +128,17 @@ export async function montar(pantalla, params) {
 
   const bloqueLugar = () => {
     if (!f.ubicacion) return html`<span class="ayuda">Mueve el mapa hasta que el pin quede sobre tu parcela.</span>`;
+    if (f.ubicacion.origen === 'municipio') {
+      // Solo se conoce el municipio: la zona sale del catálogo municipal si existe; si no, queda pendiente
+      const m = catalogo.municipios().find((x) => x.id === f.ubicacion.municipioId);
+      const zona = m?.zonaId ? climaMod.zonaPorId(m.zonaId) : null;
+      return html`<div class="mapa-pick__lugar">
+        <span style="width:12px;height:12px;border-radius:50%;flex-shrink:0;background:${zona ? climaMod.COLOR_ZONA[zona.id] : '#9a8f7c'};box-shadow:0 0 0 3px rgba(255,255,255,.85)"></span>
+        <span class="columna" style="gap:0"><strong>Municipio de ${m?.name || ''}, ${m?.estado || ''}</strong>
+        <span>${zona ? `Zona ${climaMod.NOMBRE_CORTO_ZONA[zona.id]}, por tu municipio. No tenemos el punto exacto de tu parcela.` : 'No tenemos el punto exacto de tu parcela.'}</span></span>
+      </div>
+      ${zona ? '' : html`<p class="porconfirmar" style="margin-top:8px">Cobertura pendiente: este municipio todavía no tiene una zona de clima asignada. Si puedes, marca tu parcela en el mapa para usar el punto de clima más cercano.</p>`}`;
+    }
     const z = climaMod.zonaMasCercana(f.ubicacion);
     const mun = parcelasMod.municipioCercano(f.ubicacion);
     return html`<div class="mapa-pick__lugar">
@@ -235,7 +246,7 @@ export async function montar(pantalla, params) {
     if (id === 'planMes') f.plan.mes = Number(e.target.value);
     if (id === 'municipio' && e.target.value) {
       const m = catalogo.municipios().find((x) => x.id === e.target.value);
-      f.ubicacion = { lat: m.lat, lon: m.lon, precisionM: 5000, origen: 'municipio' };
+      f.ubicacion = { lat: m.lat, lon: m.lon, precisionM: 5000, origen: 'municipio', municipioId: m.id };
       f.ubicacionConfirmada = true;
       mapa?.irA(f.ubicacion, 13);
       repintar('#bloqueLugar', bloqueLugar());

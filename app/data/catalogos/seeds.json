@@ -12,9 +12,9 @@
       "disponibilidad": "semilla propia o de la comunidad",
       "zonaId": null,
       "ventanaSiembra": { "desde": "06-01", "hasta": "07-15" },
-      "cicloDias": 143,
+      "cicloDias": 150,
       "descripcion": "Se siembra con las primeras lluvias. La floración y el llenado del grano son la etapa que más sufre si falta agua.",
-      "source": "F01 INIFAP (2026) Agenda Técnica Agrícola Yucatán, p. 54 y 57; reglas.json",
+      "source": "F01 INIFAP (2026) Agenda Técnica Agrícola Yucatán, p. 54 y 57; reglas.json v0.3 (150 días, por confirmar para maíz criollo)",
       "porConfirmar": ["Días a floración y cosecha de la variedad criolla de cada productor"],
       "updated_at": "2026-11-14"
     },
@@ -26,9 +26,9 @@
       "disponibilidad": "por confirmar",
       "zonaId": null,
       "ventanaSiembra": { "desde": "06-01", "hasta": "07-15" },
-      "cicloDias": 143,
+      "cicloDias": 150,
       "descripcion": "Variedad mencionada en las reglas del proyecto. Su ciclo exacto está por confirmar.",
-      "source": "reglas.json (porConfirmar)",
+      "source": "reglas.json v0.3: F19 INIFAP (2017) y F01 INIFAP (2026), cosecha a 150 días (por confirmar en Tekax)",
       "porConfirmar": ["Ciclo y disponibilidad de la variedad Sac Beh"],
       "updated_at": "2026-11-14"
     },
@@ -40,9 +40,9 @@
       "disponibilidad": "por confirmar",
       "zonaId": null,
       "ventanaSiembra": { "desde": "06-01", "hasta": "07-15" },
-      "cicloDias": 143,
+      "cicloDias": 150,
       "descripcion": "Variedad mencionada en las reglas del proyecto. Su ciclo exacto está por confirmar.",
-      "source": "reglas.json (porConfirmar)",
+      "source": "reglas.json v0.3: F19 INIFAP (2017) y F01 INIFAP (2026), cosecha a 150 días (por confirmar en Tekax)",
       "porConfirmar": ["Ciclo y disponibilidad de la variedad Nukuch Nah"],
       "updated_at": "2026-11-14"
     },
@@ -124,10 +124,10 @@
       "disponibilidad": "por confirmar",
       "zonaId": null,
       "ventanaSiembra": { "desde": "06-01", "hasta": "07-31" },
-      "cicloDias": 300,
-      "descripcion": "Cubre el suelo hasta marzo y aporta nitrógeno. Aguanta la sequía.",
+      "cicloDias": 137,
+      "descripcion": "Leguminosa de cobertura. Como cobertura se corta cuando empieza a florecer, 4 a 5 meses después de sembrarla. Su semilla no se come sin tratarla.",
       "source": "F09 USDA-NRCS Plant Guide; planes.json (plan cobertura, siembra 15 de junio)",
-      "porConfirmar": ["Persistencia real hasta marzo en suelo pedregoso"],
+      "porConfirmar": ["Fecha real de floración en Tekax y cuánto dura la cubierta que deja al cortarla"],
       "updated_at": "2026-11-14"
     },
     {
@@ -141,7 +141,7 @@
       "cicloDias": 115,
       "descripcion": "Florece a los 40 días y madura a los 115. Pide suelo profundo (k'ankab).",
       "source": "F01 INIFAP (2026), pp. 75-78; planes.json (plan otro-grano)",
-      "porConfirmar": ["Fenología de Huasteca 300 en el Noroeste de Yucatán"],
+      "porConfirmar": ["Fenología de Huasteca 300 en Tekax"],
       "updated_at": "2026-11-14"
     }
   ]

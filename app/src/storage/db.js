@@ -2,8 +2,9 @@
 // Todo lo que captura el productor vive primero en su teléfono.
 
 const NOMBRE_DB = 'jaibaspace-milpa';
-const VERSION = 1;
-export const STORES = ['parcelas', 'temporadas', 'siembras', 'historial', 'cola', 'kv'];
+// v2: agrega 'contenido' (el paquete de datos publicado por el servidor, completo, para usarlo sin conexión)
+const VERSION = 2;
+export const STORES = ['parcelas', 'temporadas', 'siembras', 'historial', 'cola', 'kv', 'contenido'];
 
 let dbPromesa = null;
 let modoRespaldo = false;

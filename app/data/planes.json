@@ -1,5 +1,10 @@
 {
-  "version": "0.3",
+  "version": "0.4",
+  "formato": "0.4 = 0.3 más ciclos con varios cultivos. Un ciclo puede ser { numero, cultivo, siembra, cosecha, proposito } (un cultivo, formato 0.3) o { numero, cultivos: [{ cultivo, siembra, fin, tipoFin, proposito, supuesto }] } (asociación en el mismo ciclo). tipoFin es 'cosecha' o 'fin_cobertura'. En el formato 0.3, un ciclo con proposito 'cobertura' usa 'cosecha' como fecha de fin de la cobertura: no es una cosecha de grano.",
+  "ambito": {
+    "zonas": ["yuc-sur"],
+    "nota": "Las fechas, las etapas y las fuentes agrícolas de estos planes se revisaron para Tekax (Sur de Yucatán). En otras zonas la comparación agrícola está pendiente: el clima regional sí está publicado."
+  },
   "esEjemplo": true,
   "advertenciaIngreso": "El ingreso es variable e impredecible. Los valores de ingreso son de referencia (SADER/DGSIAP, cierre 2025, Tekax, temporal) y pueden no cumplirse: dependen del precio, de la lluvia y de que haya comprador. El cultivo también puede fallar.",
   "definiciones": {
@@ -47,6 +52,63 @@
         { "campo": "atributos.ingresoForraje", "estado": "calculado", "fuente": "F16", "nota": "Dos cosechas de maíz: 2 × 12 936 $/ha = 25 871 $/ha (Tekax, maíz grano, PV, temporal, 2025). Nivel medio: queda entre los otros dos planes." }
       ],
       "porConfirmar": ["Fecha real de siembra y días a floración de Sac Beh en Tekax", "Rendimiento de Sac Beh en milpa en Tekax"]
+    },
+    {
+      "id": "milpa-canavalia",
+      "nombre": "Maíz con canavalia intercalada",
+      "tipo": "asociacion",
+      "objetivo": "Mantener el maíz en los dos ciclos y sumar una leguminosa de cobertura entre los surcos, dentro del mismo ciclo.",
+      "esEjemplo": true,
+      "escenarioIlustrativo": true,
+      "descripcionCorta": "Siembro mi maíz al entrar las lluvias y, unos 30 días después, canavalia entre los surcos. En este escenario la corto cuando empieza a florecer.",
+      "ciclos": [
+        {
+          "numero": 1,
+          "cultivos": [
+            { "cultivo": "maiz", "siembra": "06-15", "fin": "11-12", "tipoFin": "cosecha", "proposito": "grano" },
+            { "cultivo": "canavalia", "siembra": "07-15", "fin": "11-29", "tipoFin": "fin_cobertura", "proposito": "cobertura", "supuesto": "Fechas ilustrativas: siembra 30 días después del maíz y corte al empezar a florecer (137 días después de sembrarla). Ninguna de las dos está medida en Tekax." }
+          ]
+        },
+        {
+          "numero": 2,
+          "cultivos": [
+            { "cultivo": "maiz", "siembra": "06-15", "fin": "11-12", "tipoFin": "cosecha", "proposito": "grano" },
+            { "cultivo": "canavalia", "siembra": "07-15", "fin": "11-29", "tipoFin": "fin_cobertura", "proposito": "cobertura", "supuesto": "Fechas ilustrativas: siembra 30 días después del maíz y corte al empezar a florecer (137 días después de sembrarla). Ninguna de las dos está medida en Tekax." }
+          ]
+        }
+      ],
+      "beneficios": [
+        "El plan conserva el ciclo de maíz en los dos años",
+        "Con las fechas de este escenario hay cultivo en pie unos días más en noviembre",
+        "La canavalia es una leguminosa: la USDA reporta que fija nitrógeno cuando crece sola como cobertura (167–205 lb N/acre); no hay una medición para canavalia intercalada en Tekax"
+      ],
+      "riesgos": [
+        "La canavalia puede competir con el maíz por agua, luz y nutrientes",
+        "En el sur de Yucatán, las leguminosas asociadas al maíz perjudicaron al inicio el desarrollo y el rendimiento del maíz; el beneficio en grano se observó hacia el cuarto año (Terra Latinoamericana)",
+        "En Yucatán, sembrar una leguminosa de cobertura (frijol terciopelo, no canavalia) el mismo día que el maíz le bajó el rendimiento 59 %, y sembrarla a los 20 días, 25 %",
+        "La semilla de canavalia es tóxica: no se come ni se da como alimento sin tratarla",
+        "De diciembre a mediados de junio el suelo queda sin cultivo en pie",
+        "El cálculo de sequía y calor solo cubre el maíz: la canavalia no tiene etapa sensible documentada"
+      ],
+      "fuentes": [
+        "F24 Ayala Sánchez, Krishnamurthy y Basulto Graniel. Leguminosas de cobertera para mejorar y sostener la productividad de maíz en el sur de Yucatán. Terra Latinoamericana 27(1): 63–69. Canavalia ensiformis y Mucuna pruriens asociadas al maíz (variedad Blanco Uxmal) o en barbecho corto: al inicio perjudicaron el desarrollo y el rendimiento del maíz asociado o rotado; hacia el cuarto año se observó un beneficio en grano",
+        "F25 Castillo-Caamal y Caamal-Maldonado (2011). Efecto de la fecha de siembra del frijol terciopelo (Mucuna sp.) como cultivo de cobertera en el rendimiento de maíz. Tropical and Subtropical Agroecosystems 14: 101–108. Yucatán. Especie: Mucuna, no canavalia. Siembra simultánea con el maíz: −59 % de grano; a los 20 días: −25 %",
+        "F26 Programa regional de maíz de Centroamérica (PCCMCA): canavalia sembrada 30 días después del maíz, sin efecto en el rendimiento del maíz. Ensayos fuera de Yucatán",
+        "F09 USDA-NRCS Plant Guide Canavalia ensiformis: florece a los 4–5 meses; como cobertura se termina cuando empieza a florecer; semilla tóxica sin tratamiento",
+        "F01 INIFAP (2026), pp. 54, 55 y 57, y F19 INIFAP (2017), pp. 11, 14 y 22 (maíz Sac Beh de milpa)"
+      ],
+      "trazabilidad": [
+        { "campo": "ciclos[].cultivos[maiz]", "estado": "verificado_fuente", "fuente": "F01, F19", "nota": "Las mismas fechas del plan «actual»: siembra del productor ficticio (simulado_demo) y cosecha a 150 días." },
+        { "campo": "ciclos[].cultivos[canavalia].siembra", "estado": "pendiente_validacion_campo", "fuente": "F25, F26", "nota": "30 días después del maíz es una fecha ilustrativa. La respalda un ensayo de Centroamérica con canavalia (sin efecto en el maíz) y, de forma indirecta, un ensayo de Yucatán con otra especie (frijol terciopelo), donde sembrar antes sí bajó el rendimiento. No hay un ensayo de canavalia intercalada a 30 días en Tekax." },
+        { "campo": "ciclos[].cultivos[canavalia].fin", "estado": "simulado_demo", "fuente": "F09", "nota": "Fin de cobertura, no cosecha. Se aplica la misma regla que al plan «cobertura»: se corta al empezar a florecer, 137 días después de sembrarla (punto medio de los 4–5 meses de la USDA). La USDA describe la canavalia sembrada sola; intercalada puede florecer en otra fecha." },
+        { "campo": "meses con cultivo en pie", "estado": "calculado", "nota": "Depende de las dos fechas ilustrativas de la canavalia. Si cambian, cambia el resultado." }
+      ],
+      "porConfirmar": [
+        "Cuántos días después del maíz conviene sembrar la canavalia en Tekax",
+        "Cuándo florece la canavalia intercalada y cuánto dura la cubierta que deja al cortarla",
+        "Si la canavalia intercalada le baja el rendimiento al maíz Sac Beh de milpa",
+        "Disponibilidad de semilla de canavalia"
+      ]
     },
     {
       "id": "cobertura",
