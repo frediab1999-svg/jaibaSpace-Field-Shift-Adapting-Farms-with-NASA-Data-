@@ -1,40 +1,91 @@
-# Declaración de uso de IA
+# Declaración de uso de inteligencia artificial — jaibaSpace
 
-Estado al **2026-11-15**. El repositorio no trae un formato del concurso para esta declaración, así que queda en este documento. Solo se atribuye lo que se puede comprobar en el repositorio o en el registro de la sesión de trabajo. Lo que no se pudo comprobar se dice así.
+Fecha: **15 de noviembre de 2026**. Alcance: implementación beta de jaibaSpace para NASA Space Apps Challenge.
 
-## Primera versión funcional (cambios sobre `develop` `89f5fca`)
+## Respuesta para el formulario de entrega
 
-**Herramienta: Claude Code (Fable).** El modelo de la sesión fue Fable 5.2 (`claude-fable-5-2`). Trabajó directamente sobre el repositorio, a partir de un encargo escrito que entregó un integrante del equipo. Una persona del equipo debe revisar el resultado antes de fusionarlo.
+Sí. Utilizamos herramientas de inteligencia artificial como apoyo para implementar y documentar nuestra solución. La idea del proyecto, el enfoque del problema, los objetivos, la dirección visual y las decisiones de producto fueron definidos por el equipo. Usamos la IA para acelerar la ejecución de esas decisiones.
 
-| Área | Qué hizo la IA |
+Utilizamos **Claude** para la implementación de todo el backend y, junto con **Stitch — Design with AI**, para apoyar la implementación del frontend siguiendo las ideas y la dirección de look and feel del equipo. Utilizamos **Gemini** para generar imágenes bajo las indicaciones del equipo. Utilizamos **Codex** para complementar y organizar la documentación, así como para revisar el repositorio y redactar instrucciones de ejecución local y esta declaración.
+
+Los datos climáticos utilizados proceden de NASA POWER; no son datos climáticos generados por un modelo de lenguaje. La asistencia de IA en código, cálculos o documentación no convierte las salidas del sistema en mediciones de campo ni en predicciones de rendimiento. El equipo asume la responsabilidad de revisar el contenido y de identificar los elementos asistidos por IA en la entrega final.
+
+## Dónde y cómo se utilizó IA
+
+| Área | Herramienta | Uso declarado | Ubicación principal |
+|---|---|---|---|
+| Backend | Claude | Generación y asistencia en la implementación de todo el backend: API, acceso a datos, configuración, migraciones y pruebas. | `server/` |
+| Frontend | Claude y Stitch — Design with AI | Apoyo en la implementación de la interfaz y sus funcionalidades a partir de las ideas, el diseño deseado y la dirección visual del equipo. Se declara la intervención de Stitch aunque la dirección creativa haya sido humana. | `app/`, especialmente `app/src/` |
+| Imágenes | Gemini | Generación de imágenes mediante indicaciones del equipo y posterior preparación para su uso en la web. Son imágenes generadas con IA, aunque hayan sido solicitadas, seleccionadas o editadas por el equipo. | Recursos identificados en la sección siguiente |
+| Documentación | Codex | Complementación, organización y revisión de textos; análisis del repositorio; instrucciones de arranque de la beta y redacción de esta declaración. | `docs/` y `README.md` |
+
+Esta tabla recoge los usos confirmados por el equipo para esta declaración. No atribuye versiones concretas de modelos ni certifica una revisión humana exhaustiva de cada archivo. Si se confirma otro uso de IA en scripts, datos derivados, pruebas u otros recursos, debe incorporarse antes de la entrega.
+
+## Imágenes generadas con Gemini
+
+El equipo confirmó que utilizó Gemini para generar imágenes. La relación documentada en `docs/look-and-feel.md` comprende los siguientes recursos de `app/src/assets/img/`:
+
+- `fondo-milpa.jpg`, `bordado.webp` y `mapa-peninsula.webp`.
+- `semilla-*.jpg` y `foto-*.jpg`.
+- `ico-*.jpg` y `letrero-*.webp`.
+
+Algunas de estas imágenes fueron retocadas y detalladas manualmente por integrantes del equipo de frontend para adaptarlas a las necesidades visuales y de uso del proyecto. Esta edición humana forma parte del trabajo del equipo y no cambia su origen como imágenes generadas con IA.
+
+Para estas imágenes, la atribución descriptiva es: **«Imagen generada con IA mediante Gemini, bajo indicaciones del equipo jaibaSpace»**. En las que recibieron cambios manuales, se añade: **«Retocada y adaptada manualmente por el equipo de frontend»**.
+
+Antes de entregar, el equipo debe completar el inventario si existen otros recursos generados con IA, incluidos `nodo-*.webp`, iconos de instalación o imágenes usadas en la presentación. La lista anterior no certifica la procedencia de los recursos que no identifica.
+
+## Datos y resultados del sistema
+
+Los archivos climáticos de `app/data/clima/` se obtienen mediante el pipeline del proyecto a partir de NASA POWER, con los productos GPM IMERG y MERRA-2. Los eventos y resúmenes publicados son datos procesados; no deben presentarse como observaciones directas de cada parcela.
+
+Los planes y reglas agrícolas de `app/data/planes.json` y `app/data/reglas.json` incluyen fuentes, supuestos y elementos pendientes de validación. Las parcelas de demostración de `app/fixtures/ejemplo-milpa.json` son ficticias y no representan registros reales de productores. El origen oficial de una fuente no supone que NASA haya validado la interpretación agrícola o avalado el producto.
+
+El motor implementado con asistencia de IA calcula indicadores a partir de los datos y reglas publicados. No se presenta como un modelo de aprendizaje automático entrenado para predecir cosechas.
+
+## Identificación requerida en la entrega
+
+De acuerdo con el texto de participación facilitado por el equipo, además de responder el formulario deben identificarse los elementos generados con IA dentro del proyecto final:
+
+| Tipo de contenido | Identificación que debe acompañarlo |
 |---|---|
-| **Backend** | Modelos y migración `0002_published_content` (documentos publicados, zonas con punto PostGIS, índice de clima, perfil y parcelas de demo). Carga idempotente `python -m app.seed`. Rutas `/bundle`, `/climate/zones`, `/climate/datasets…`, `/strategies/plans`, `/strategies/rules`, `/catalogs/{nombre}` y `/demo`. `/ready` con comprobación de esquema y contenido. CORS para la red local, opción de servir la PWA y montaje de datos en Docker Compose. |
-| **Frontend** | Descarga, validación y guardado del paquete de datos (`services/contenido.js`, `shared/datos.js`, IndexedDB). Reescritura de la pantalla «Opciones para tu parcela» sobre el diseño existente. Franja de 24 meses con ventana móvil. Demo desde el servidor. Corrección de las referencias a la zona de Umán que el cambio a Tekax dejó rotas (calendario, predicción, semillas, formulario de parcela). |
-| **Motor** | `motor/estrategias.js` y `motor/comparacion.js`: planes con varios cultivos por ciclo, meses con cultivo en pie, exposición histórica por etapa, años evaluables, «Sin estimación», práctica registrada o plantilla, y escenario de fecha de siembra. |
-| **Datos** | Auditoría `data-pipeline/auditar_datos.py` y su ejecución contra una descarga fresca de NASA POWER. Plan `milpa-canavalia` y formato 0.4 de `planes.json`. Correspondencia municipio–zona de tres municipios, estado de equivalencia de suelos, corrección de valores obsoletos del catálogo de semillas y reubicación de la parcela de demo en Tekax. |
-| **Pruebas** | Frontend: 26 pruebas nuevas (24 en `app/tests/estrategias.test.js` y 2 en `motor.test.js`) y el ajuste de una existente que dependía del archivo de Umán. Servidor: 15 pruebas nuevas sin base de datos, 3 de integración contra PostgreSQL/PostGIS y la corrección de una prueba de estadísticas que ya fallaba. Verificación de extremo a extremo en un navegador sin ventana. |
-| **Documentación** | Decisión `0002`, `server/README.md`, `app/README.md`, `README.md`, `data-pipeline/README.md`, `docs/entrega-datos-mvp.md`, la actualización de `docs/contrato-frontend-backend.md`, la adenda de `docs/rol-3-fuentes-y-rotaciones.md` y este documento. |
+| Imágenes y vídeos generados con IA | Marca de agua visible, por ejemplo **«Generado con IA · Gemini»** para las imágenes declaradas. Si se reutilizan en una presentación o vídeo, la identificación debe seguir siendo visible. |
+| Audio generado con IA, si se incorpora | Reconocimiento en el texto descriptivo y en los metadatos del archivo, indicando la herramienta utilizada. Este documento no declara generación de audio porque el equipo no la ha confirmado. |
+| Código asistido o generado con IA | Texto descriptivo que indique herramienta y alcance, acompañado de metadatos en los archivos o artefactos correspondientes. Esta declaración aporta la descripción general; deben conservarse también las atribuciones asociadas al código entregado. |
+| Datos generados o procesados con asistencia de IA, si corresponde | Descripción de la intervención, herramienta y procedencia, junto con metadatos del conjunto. Debe distinguirse la fuente original de cualquier transformación o contenido sintético. |
 
-**Lo que la IA no hizo en esta entrega:**
+Ejemplo de metadatos para un archivo de código, adaptado al lenguaje correspondiente y a su procedencia real:
 
-- No generó ni modificó imágenes, íconos ni fuentes tipográficas.
-- No cambió el diseño visual, la navegación ni los recursos del frontend.
-- No decidió la zona piloto ni las reglas agrícolas: usó `zonas.json`, `reglas.json` y los planes que publicó el equipo. La única adición agrícola es el plan `milpa-canavalia`, marcado como escenario ilustrativo y pendiente de revisión del Rol 3.
-- No probó la app en un teléfono. La verificación fue en Microsoft Edge sin ventana, en Windows 11, con tamaño de pantalla de celular.
+```text
+ai_assisted: true
+ai_tool: Claude
+ai_scope: Implementación del backend a partir de requisitos del equipo
+human_responsibility: Equipo jaibaSpace
+ai_disclosure: docs/declaracion-uso-ia.md
+```
 
-**Fuentes consultadas por la IA en línea.** Para revisar los supuestos de la canavalia intercalada se hicieron tres búsquedas web. Solo se leyeron los resúmenes que devolvió el buscador, no los artículos completos. Están citadas como F24, F25 y F26 en `docs/rol-3-fuentes-y-rotaciones.md`, con ese límite declarado.
+Para documentación complementada con Codex, se puede usar el mismo esquema indicando `ai_tool: Codex` y el alcance concreto. No debe atribuirse una herramienta a un archivo sin confirmar su participación.
 
-## Trabajo anterior en el repositorio
+## Elementos de marca de NASA
 
-| Parte | Uso de IA | Cómo se sabe |
-|---|---|---|
-| Documentación base y auditoría de datos de la rama `docs/base_inicial_info` (PR #1, #3, #5 y #6) | Claude Code, con los modelos Opus 5.5 y Sonnet 5.5 | Registro de la misma sesión de trabajo |
-| Archivos de clima y zonas de la entrega de datos (PR #5) | Los generó un integrante con el pipeline del repositorio y los entregó a través de ChatGPT; Claude Code los verificó contra NASA | Lo indicó el integrante; la verificación está en el registro de la sesión |
-| Imágenes de `app/src/assets/img` (`fondo-milpa.jpg`, `bordado.webp`, `mapa-peninsula.webp`, `semilla-*.jpg`, `foto-*.jpg`, `ico-*.jpg`, `letrero-*.webp`) | **Generadas con Gemini** por el equipo, recortadas y optimizadas para web | `docs/look-and-feel.md`, sección de recursos. En esta entrega solo se reutilizaron, sin modificarlas |
-| Imágenes `nodo-*.webp` y los íconos de `app/public/icons` | No comprobado | No están en la lista de `docs/look-and-feel.md`. Debe declararlo quien las agregó (PR #10) |
-| Prototipo de la PWA (PR #10), reglas y planes agrícolas (PR #7 y #11), servidor inicial (PR #2 y #4) | No comprobado | Los hicieron otros integrantes. Si usaron IA, deben declararlo ellos |
-| Fuentes tipográficas y Leaflet | No son de IA | Licencias OFL y BSD-2, según `app/README.md` y `docs/look-and-feel.md` |
+El contenido generado con IA no puede utilizar, contener ni modificar elementos de marca o diseño de NASA, incluidos logotipos, banderas e identificadores de misión, conforme al texto proporcionado por el equipo. Antes de entregar deben revisarse las imágenes, vídeos y demás recursos generados para comprobar este requisito.
 
-## Datos que no son de IA
+La referencia a NASA POWER identifica la fuente de los datos; no expresa patrocinio ni aprobación de jaibaSpace por parte de NASA.
 
-El clima viene de NASA POWER (GPM IMERG y MERRA-2). Las reglas y los planes citan INIFAP, INEGI, SADER/DGSIAP, FAO y USDA. Ningún valor climático o agrícola fue inventado por un modelo: los números de la pantalla se calculan con esos archivos, y las pruebas reproducen los resultados publicados por el Rol 3.
+## Estado y comprobaciones antes de entregar
+
+Esta declaración documenta los usos confirmados por el equipo y proporciona el texto para el formulario. **La existencia de este archivo no certifica por sí sola que la entrega cumpla todos los requisitos de identificación.**
+
+- [x] Declarar Claude en el backend y Claude/Stitch en la implementación del frontend.
+- [x] Declarar Gemini en las imágenes y Codex en la documentación.
+- [x] Distinguir la dirección creativa del equipo de la generación asistida por IA.
+- [ ] Completar y verificar el inventario de recursos generados con IA.
+- [ ] Incorporar o verificar las marcas de agua visibles en todas las imágenes y vídeos que correspondan.
+- [ ] Incorporar o verificar los textos descriptivos y metadatos de código y datos asistidos por IA.
+- [ ] Identificar audio generado con IA si se incorpora en la entrega.
+- [ ] Revisar que el contenido generado no incluya elementos de marca o diseño de NASA.
+- [ ] Revisar esta declaración contra los archivos finales y copiar la respuesta al formulario.
+
+La creación de este documento no modifica imágenes, código funcional ni metadatos de otros archivos. Las comprobaciones pendientes deben completarse sobre la versión final que se entregue.
+
+<!-- ai_assisted: true; ai_tool: Codex; ai_scope: Redacción de la declaración a partir de información confirmada por el equipo y del texto de participación proporcionado; human_responsibility: Equipo jaibaSpace; date: 2026-11-15 -->
