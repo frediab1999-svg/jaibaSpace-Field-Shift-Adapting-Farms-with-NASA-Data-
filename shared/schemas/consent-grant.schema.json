@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://jaibaspace.local/schemas/consent-grant",
+  "title": "ConsentGrant (POST /api/v1/consent), copia de server/app/modules/consent/schemas.py",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "consent_id",
+    "purpose",
+    "granted",
+    "notice_version",
+    "decided_at"
+  ],
+  "properties": {
+    "consent_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "purpose": {
+      "const": "collective_statistics"
+    },
+    "granted": {
+      "type": "boolean"
+    },
+    "notice_version": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 40
+    },
+    "decided_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

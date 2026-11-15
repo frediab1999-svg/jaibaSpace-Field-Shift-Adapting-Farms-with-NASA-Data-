@@ -1,0 +1,138 @@
+{
+  "version": "0.3",
+  "esEjemplo": true,
+  "advertenciaIngreso": "El ingreso es variable e impredecible. Los valores de ingreso son de referencia (SADER/DGSIAP, cierre 2025, Tekax, temporal) y pueden no cumplirse: dependen del precio, de la lluvia y de que haya comprador. El cultivo también puede fallar.",
+  "definiciones": {
+    "estrategia": "Plan de qué sembrar, en qué orden y para qué objetivo, durante varios ciclos en la misma parcela.",
+    "cultivoContinuo": "Repetir el mismo cultivo en todos los ciclos; sirve como referencia.",
+    "rotacion": "Cambiar el cultivo entre ciclos en la misma parcela.",
+    "asociacion": "Sembrar dos o más cultivos juntos en el mismo ciclo; no es rotación."
+  },
+  "planes": [
+    {
+      "id": "actual",
+      "nombre": "Actual: maíz continuo",
+      "tipo": "continuo",
+      "objetivo": "Cosechar maíz en ambos ciclos.",
+      "esEjemplo": true,
+      "descripcionCorta": "Siembro maíz Sac Beh en la milpa cada año, a espeque, cuando entran las lluvias.",
+      "ciclos": [
+        { "numero": 1, "cultivo": "maiz", "siembra": "06-15", "cosecha": "11-12", "proposito": "grano" },
+        { "numero": 2, "cultivo": "maiz", "siembra": "06-15", "cosecha": "11-12", "proposito": "grano" }
+      ],
+      "atributos": { "fijacionNitrogeno": "bajo", "ingresoForraje": "medio" },
+      "beneficios": [
+        "Práctica conocida: no requiere semilla nueva ni maquinaria",
+        "Dos cosechas de maíz en los dos ciclos",
+        "Sac Beh es de polinización libre: el productor puede guardar su propia semilla"
+      ],
+      "riesgos": [
+        "El suelo queda sin cultivo de mediados de noviembre a mediados de junio",
+        "En Tekax el maíz de temporal rindió 2.22 t/ha en 2024 y 2.35 t/ha en 2025, pero ese promedio incluye parcelas mecanizadas; en milpa sobre suelo pedregoso el INIFAP reporta alrededor de 0.7 t/ha",
+        "La floración y el llenado del grano, de septiembre a octubre, son las etapas más sensibles a la falta de agua",
+        "El INIFAP dirige Sac Beh sobre todo al poniente, noroeste y centro del estado; para el sur recomienda variedades del sistema mecanizado",
+        "Si se queman los residuos, el suelo queda descubierto: el INIFAP recomienda reducir o evitar la quema"
+      ],
+      "fuentes": [
+        "F01 INIFAP (2026) Agenda Técnica Agrícola Yucatán: p. 54, en milpa la siembra es a espeque, al inicio de las lluvias y hasta el 15 de julio, y se recomienda reducir o evitar la quema para usar los residuos como cobertura; p. 54, rendimiento de 0.7 t/ha en sistemas tradicionales sobre suelos pedregosos; p. 55, Sac Beh y Nukuch Nah para la milpa y fertilización 59-92-00; p. 57, dobla y madurez fisiológica de 45 a 50 días después de la floración, y cosecha a 140–150 dds en variedades de ciclo intermedio",
+        "F19 INIFAP (2017) Agenda Técnica Agrícola Yucatán: p. 11, Sac Beh es alto y tardío, con floración entre los 80 y 85 días; p. 14, cosecha entre los 150 y 160 dds; p. 22, Sac Beh para la milpa en k'ankab, de polinización libre (el productor puede obtener su propia semilla); p. 23, siembra con las lluvias regularizadas, con límite el 15 de julio",
+        "F21 INIFAP (18-jun-2026) Variedades mejoradas de maíz: Sac Beh y Nukuch Nah para el sistema tradicional, dirigidas principalmente al poniente, noroeste y centro de Yucatán; VS-536, V-540, V-561 y V-562 para el sur, oriente y noreste, donde predominan sistemas mecanizados",
+        "F04 FAO TM3, cap. 2, cuadro 2: maíz, periodo sensible = floración y llenado de grano",
+        "F16 SADER/DGSIAP, Cierre de la Producción Agrícola 2024 y 2025: Tekax, maíz grano, primavera-verano, temporal, 7 010 ha"
+      ],
+      "trazabilidad": [
+        { "campo": "siembra", "estado": "simulado_demo", "fuente": "F01, F19", "nota": "Fecha del productor ficticio, dentro de la ventana oficial: inicio de las lluvias, hasta el 15 de julio (F01, p. 54; F19, p. 23)." },
+        { "campo": "cosecha", "estado": "verificado_fuente", "fuente": "F01, F19", "nota": "150 dds es el único valor que está a la vez en el rango de 2026 (140–150, F01 p. 57) y en el de 2017 para Sac Beh (150–160, F19 p. 14)." },
+        { "campo": "atributos.fijacionNitrogeno", "estado": "verificado_fuente", "fuente": "F01", "nota": "El maíz no es leguminosa; el INIFAP recomienda fertilizar la milpa con 59-92-00 (p. 55)." },
+        { "campo": "atributos.ingresoForraje", "estado": "calculado", "fuente": "F16", "nota": "Dos cosechas de maíz: 2 × 12 936 $/ha = 25 871 $/ha (Tekax, maíz grano, PV, temporal, 2025). Nivel medio: queda entre los otros dos planes." }
+      ],
+      "porConfirmar": ["Fecha real de siembra y días a floración de Sac Beh en Tekax", "Rendimiento de Sac Beh en milpa en Tekax"]
+    },
+    {
+      "id": "cobertura",
+      "nombre": "Rotación con cobertura",
+      "tipo": "rotacion",
+      "objetivo": "Dedicar un ciclo a cubrir el suelo antes de volver al maíz.",
+      "esEjemplo": true,
+      "descripcionCorta": "El primer año siembro canavalia para cubrir el suelo y la corto cuando empieza a florecer; el segundo año vuelvo al maíz.",
+      "ciclos": [
+        { "numero": 1, "cultivo": "canavalia", "siembra": "06-15", "cosecha": "10-30", "proposito": "cobertura" },
+        { "numero": 2, "cultivo": "maiz", "siembra": "06-15", "cosecha": "11-12", "proposito": "grano" }
+      ],
+      "atributos": { "fijacionNitrogeno": "alto", "ingresoForraje": "bajo" },
+      "beneficios": [
+        "Cubre el 85 % del suelo a los 60 días de emerger",
+        "Fija nitrógeno: 167–205 lb N/acre (~187–230 kg N/ha), y no se cosecha",
+        "Resiste la sequía y crece en suelos pobres y secos"
+      ],
+      "riesgos": [
+        "En el primer ciclo no hay cosecha de maíz",
+        "La semilla de canavalia es tóxica: no se come ni se da como alimento sin tratarla",
+        "No crece bien en suelo que se encharca",
+        "Con calor extremo tira las hojas; crece mejor entre 14 y 27 °C",
+        "Se corta al empezar a florecer: de noviembre a mediados de junio el suelo queda sin cultivo, igual que con el maíz",
+        "Las fuentes oficiales no dicen cuánto dura la cubierta que deja al cortarla",
+        "No hay fuente oficial de Yucatán sobre la canavalia: sus datos son de la USDA (Estados Unidos)"
+      ],
+      "fuentes": [
+        "F09 USDA-NRCS Plant Guide Canavalia ensiformis (publicada en marzo de 2013): se siembra a fines de primavera o inicio de verano; 85 % de cobertura 60 días después de la emergencia; florece a los 4–5 meses; como cobertura se termina cuando empieza a florecer; fija 167–205 lb N/acre; resistente a la sequía; crece en suelos pobres y secos y no crece bien en suelo muy húmedo; crece mejor entre 57 y 81 °F y tira las hojas con calor extremo; semilla tóxica sin tratamiento",
+        "F01 INIFAP (2026), pp. 54, 55 y 57, y F19 INIFAP (2017), pp. 11, 14 y 22 (maíz del ciclo 2)"
+      ],
+      "trazabilidad": [
+        { "campo": "ciclos[0].siembra", "estado": "simulado_demo", "fuente": "F09", "nota": "Inicio del temporal, igual que el maíz; la USDA indica fines de primavera o inicio de verano." },
+        { "campo": "ciclos[0].cosecha", "estado": "simulado_demo", "fuente": "F09", "nota": "No es cosecha: es la terminación de la cobertura. La USDA indica cortarla cuando empieza a florecer y dice que florece a los 4–5 meses. 137 días es el punto medio. Los meses cubiertos son los mismos para cualquier fecha del 15-oct al 14-nov." },
+        { "campo": "atributos.fijacionNitrogeno", "estado": "verificado_fuente", "fuente": "F09", "nota": "167–205 lb N/acre (~187–230 kg N/ha). No se cosecha: por eso queda por encima de la soya." },
+        { "campo": "atributos.ingresoForraje", "estado": "calculado", "fuente": "F16", "nota": "Una sola cosecha de maíz en dos ciclos: 12 936 $/ha (Tekax, temporal, 2025)." }
+      ],
+      "porConfirmar": [
+        "Fecha real de inicio de la floración de la canavalia en Tekax",
+        "Cuánto dura la cubierta que deja al cortarla",
+        "Disponibilidad de semilla de canavalia"
+      ]
+    },
+    {
+      "id": "otro-grano",
+      "nombre": "Rotación con soya",
+      "tipo": "rotacion",
+      "objetivo": "Cosechar soya en el primer ciclo y volver al maíz en el segundo.",
+      "esEjemplo": true,
+      "descripcionCorta": "El primer año siembro soya Huasteca 300 al entrar las lluvias; el segundo año vuelvo al maíz.",
+      "ciclos": [
+        { "numero": 1, "cultivo": "soya", "siembra": "06-15", "cosecha": "10-08", "proposito": "grano" },
+        { "numero": 2, "cultivo": "maiz", "siembra": "06-15", "cosecha": "11-12", "proposito": "grano" }
+      ],
+      "atributos": { "fijacionNitrogeno": "medio", "ingresoForraje": "alto" },
+      "beneficios": [
+        "Fija nitrógeno si la semilla se inocula con Bradyrhizobium japonicum",
+        "Tekax es zona productora: 6 692 ha de soya de temporal en 2025, con 2.20 t/ha",
+        "Se siembra en suelos k'ankab y yaax-hom (Luvisoles), los que predominan en Tekax",
+        "Da el mayor ingreso bruto de referencia de los tres planes"
+      ],
+      "riesgos": [
+        "En el primer ciclo no hay cosecha de maíz",
+        "El paquete del INIFAP es mecanizado: barbecho a 30 cm, dos pasos de rastra, nivelación y trilla con máquina; en una parcela de milpa hay que rentar ese servicio",
+        "Si se siembra después del 20 de julio, el llenado del grano coincide con la época de roya",
+        "La floración, la formación de vainas y el llenado del grano, de finales de julio a principios de octubre, son las etapas más sensibles a la falta de agua",
+        "Solo se pueden sembrar variedades convencionales: la soya transgénica está prohibida en Yucatán desde 2017",
+        "De octubre a mediados de junio el suelo queda sin cultivo"
+      ],
+      "fuentes": [
+        "F01 INIFAP (2026) Agenda Técnica Agrícola Yucatán, soya, pp. 75–83: soya transgénica prohibida en Yucatán desde 2017 (p. 75); suelos k'ankab y yaax-hom (Luvisoles) del Cono Sur, en Tekax, Oxkutzcab, Akil y Tzucacab, con más de 1 100 mm al año (pp. 75–76); barbecho a 30 cm y dos pasos de rastra (p. 76); nivelación (p. 77); Huasteca 300 florece a los 40 días y llega a madurez fisiológica a los 115 (pp. 77–78); inoculación con Bradyrhizobium japonicum para la fijación de nitrógeno (pp. 78–79); siembra entre el 15 de junio y el 15 de julio, y roya si se siembra del 21 al 31 de julio (p. 79); fertilización con 18-46-00 (p. 80); cosecha con trilladora al madurar la planta (pp. 82–83)",
+        "F19 INIFAP (2017) Agenda Técnica Agrícola Yucatán, soya, pp. 32–34: Cono Sur (Tekax, Oxkutzcab, Akil y Tzucacab); Huasteca 300 del 15 de junio al 15 de julio",
+        "F04 FAO TM3, cap. 2, cuadro 2: soya, periodo sensible = floración y formación del rendimiento",
+        "F16 SADER/DGSIAP, Cierre 2024 y 2025: Tekax, soya, primavera-verano, temporal, 6 692 ha, 2.20 t/ha"
+      ],
+      "trazabilidad": [
+        { "campo": "ciclos[0].cultivo", "estado": "decision_modelo", "fuente": "F01", "nota": "Decisión del equipo: rotación sin asociación y solo con fuentes oficiales. Tekax está en el Cono Sur, la zona sojera de Yucatán (F01, p. 76)." },
+        { "campo": "ciclos[0].siembra", "estado": "simulado_demo", "fuente": "F01", "nota": "Primer día de la ventana oficial para Huasteca 300 (15 de junio a 15 de julio)." },
+        { "campo": "ciclos[0].cosecha", "estado": "verificado_fuente", "fuente": "F01", "nota": "Madurez fisiológica de Huasteca 300 a los 115 días; la trilla empieza en los días siguientes (p. 82)." },
+        { "campo": "atributos.fijacionNitrogeno", "estado": "decision_modelo", "fuente": "F01", "nota": "Es leguminosa y fija nitrógeno con inoculación (pp. 78–79), pero el INIFAP le recomienda 18-46-00 (p. 80) y su grano se cosecha; por eso queda por debajo de la canavalia, que no se cosecha." },
+        { "campo": "atributos.ingresoForraje", "estado": "calculado", "fuente": "F16", "nota": "Soya 16 332 $/ha + maíz 12 936 $/ha = 29 268 $/ha (Tekax, temporal, 2025; misma escala para los dos cultivos). Con el cierre 2024 el orden es el mismo. Ver advertenciaIngreso." }
+      ],
+      "porConfirmar": [
+        "Si el productor puede rentar la preparación mecanizada del terreno y la trilla",
+        "Disponibilidad de semilla de Huasteca 300"
+      ]
+    }
+  ]
+}

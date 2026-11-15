@@ -1,0 +1,57 @@
+{
+  "version": "0.2",
+  "nota": "Cobertura inicial del MVP: una zona por estado. Los puntos son referencias regionales. Los suelos predominantes son los dos grupos WRB de mayor superficie en el compendio municipal del INEGI.",
+  "zonas": [
+    {
+      "id": "yuc-sur",
+      "nombre": "Sur de Yucatán (Tekax)",
+      "estado": "Yucatán",
+      "punto": {
+        "lat": 19.8122,
+        "lon": -89.4702
+      },
+      "archivoClima": "clima/yuc-sur.json",
+      "suelosPredominantes": [
+        "luvisol",
+        "leptosol"
+      ],
+      "porConfirmar": [
+        "Phaeozem (17.42 %), Vertisol (9.65 %) y Nitisol (6.70 %) de Tekax no se modelan"
+      ]
+    },
+    {
+      "id": "camp-chenes",
+      "nombre": "Los Chenes, Campeche (Hopelchén)",
+      "estado": "Campeche",
+      "punto": {
+        "lat": 19.75,
+        "lon": -89.84
+      },
+      "archivoClima": "clima/camp-chenes.json",
+      "suelosPredominantes": [
+        "leptosol",
+        "luvisol"
+      ],
+      "porConfirmar": [
+        "INEGI, compendio de Hopelchén: Leptosol 45.54 %, Luvisol 16.59 %, Vertisol 12.91 %; el Vertisol no se modela"
+      ]
+    },
+    {
+      "id": "qroo-centro",
+      "nombre": "Zona maya de Quintana Roo (Felipe Carrillo Puerto)",
+      "estado": "Quintana Roo",
+      "punto": {
+        "lat": 19.58,
+        "lon": -88.05
+      },
+      "archivoClima": "clima/qroo-centro.json",
+      "suelosPredominantes": [
+        "leptosol",
+        "luvisol"
+      ],
+      "porConfirmar": [
+        "INEGI, compendio de Felipe Carrillo Puerto: Leptosol 61.51 %, Luvisol 10.87 %"
+      ]
+    }
+  ]
+}

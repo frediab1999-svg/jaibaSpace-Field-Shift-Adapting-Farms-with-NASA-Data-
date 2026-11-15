@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://jaibaspace.local/schemas/evento-historial",
+  "title": "Evento del historial de parcela (PROPUESTO)",
+  "type": "object",
+  "required": [
+    "id",
+    "parcelaId",
+    "tipo",
+    "titulo",
+    "fecha"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "parcelaId": {
+      "type": "string"
+    },
+    "parcelaNombre": {
+      "type": "string"
+    },
+    "tipo": {
+      "enum": [
+        "parcela_creada",
+        "parcela_editada",
+        "parcela_eliminada",
+        "parcela_restaurada",
+        "semilla_agregada",
+        "semilla_eliminada",
+        "cosecha_registrada",
+        "temporada_pasada"
+      ]
+    },
+    "titulo": {
+      "type": "string"
+    },
+    "detalle": {
+      "type": "string"
+    },
+    "motivoId": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "motivoTexto": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "nota": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "fecha": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

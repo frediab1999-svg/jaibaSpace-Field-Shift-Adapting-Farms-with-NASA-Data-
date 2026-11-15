@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://jaibaspace.local/schemas/senal-prediccion",
+  "title": "Señal de Predicción a futuro (salida de app/src/motor/prediccion.js; base del GET /signals PROPUESTO)",
+  "type": "object",
+  "required": [
+    "id",
+    "nombre",
+    "nivel",
+    "tipo",
+    "frase",
+    "justificacion"
+  ],
+  "properties": {
+    "id": {
+      "enum": [
+        "sequia",
+        "calor",
+        "lluvia",
+        "escenario",
+        "suelo",
+        "plagas",
+        "milpas",
+        "zona"
+      ]
+    },
+    "nombre": {
+      "type": "string"
+    },
+    "nivel": {
+      "enum": [
+        "bien",
+        "atencion",
+        "riesgo",
+        "sin_dato"
+      ]
+    },
+    "tipo": {
+      "enum": [
+        "historico",
+        "actual",
+        "ambos",
+        "sin"
+      ]
+    },
+    "frase": {
+      "type": "string"
+    },
+    "justificacion": {
+      "type": "object",
+      "properties": {
+        "parrafos": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "lista": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "barras": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "anio": {
+                "type": "integer"
+              },
+              "valor": {
+                "type": "number"
+              }
+            }
+          }
+        },
+        "fuente": {
+          "type": "string"
+        },
+        "periodo": {
+          "type": "string"
+        },
+        "n": {
+          "type": "string"
+        },
+        "porConfirmar": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}
